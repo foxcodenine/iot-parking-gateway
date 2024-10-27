@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: DockerfileApp
+    container_name: iot-parking-gateway_app
+    ports:
+      - "48080:8080"  # Maps port 48080 on the host to port 8080 in the container
+    volumes:
+      - .:/app  # Mounts the current directory into /app inside the container for live code updates (development only)
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    environment:
+      - CONFIG_PATH=/root/config/config.yaml  # Path to configuration file inside the container
+    networks:
+      - app-network  # Connects app to the shared network for internal communication
+
+# ----------------------------------------------------------------------
+
+  postgres:
+    image: postgres:14
+    container_name: iot-parking-gateway_postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    ports:
+      - "45432:5432"  # Maps port 45432 on the host to port 5432 in the container for PostgreSQL
+    volumes:
+      # - postgres-data:/var/lib/postgresql/data  # Persistent data storage for production
+      - /srv/docker/bind-mounts/iot-parking-gateway/postgres-data/:/var/lib/postgresql/data/  # Bind mount for dev, enables direct file access on host
+    networks:
+      - app-network  # Connects PostgreSQL to the shared network for internal communication
+
+# ----------------------------------------------------------------------
+
+  redis:  
+    build:
+      context: .
+      dockerfile: DockerfileRedis
+    container_name: iot-parking-gateway_redis
+    ports:
+      - "46379:6379"  # Maps port 46379 on the host to port 6379 in the container for Redis
+
+        # Run the init script
+    command: sh -c "./redis.sh"
+    # Run as privileged to allow the container to change the vm.overcommit_memory setting
+
+    privileged: true
+    volumes:
+      # - redis-data:/data  # Persistent Redis storage for production
+      - /srv/docker/bind-mounts/iot-parking-gateway/redis-data/:/data  # Bind mount for dev, enables direct file access on host
+    networks:
+      - app-network  # Connects Redis to the shared network for internal communication
+
+# ----------------------------------------------------------------------
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: iot-parking-gateway_rabbitmq
+    ports:
+      - "45672:5672"     # Maps port 45672 on the host to port 5672 in the container for RabbitMQ
+      - "55672:15672"   # Maps port 4515672 on the host to RabbitMQ management interface (port 15672 in the container)
+    networks:
+      - app-network  # Connects RabbitMQ to the shared network for internal communication
+
+# ----------------------------------------------------------------------
+
+# For production, use Docker volumes for persistence:
+# volumes:
+#   postgres-data:  # Uncomment this line in production to enable persistent PostgreSQL storage     
+#   redis-data:     # Uncomment this line in production to enable persistent Redis storage
+
+# ----------------------------------------------------------------------
+
+networks:
+  app-network:
+    driver: bridge  # Creates an isolated network for inter-service communication

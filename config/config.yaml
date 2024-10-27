@@ -1,0 +1,44 @@
+# config/config.yaml
+
+# Server settings
+server:
+  port: 8080  # Internal application port for Go server
+  environment: "development"  # Set to "production" or "development"
+
+# Database settings
+database:
+  postgres:
+    host: postgres  # Matches the service name in docker-compose
+    port: 5432
+    user: user  # Same as defined in docker-compose.yml for Postgres
+    password: password  # Same as defined in docker-compose.yml for Postgres
+    dbname: mydb  # Database name as defined in docker-compose.yml
+
+# Redis settings
+redis:
+  host: redis  # Matches the service name in docker-compose
+  port: 6379  # Internal Redis port
+  db: 0  # Default Redis database number
+
+# RabbitMQ settings
+rabbitmq:
+  host: rabbitmq  # Matches the service name in docker-compose
+  port: 5672  # Internal RabbitMQ port
+  username: guest  # Default RabbitMQ username
+  password: guest  # Default RabbitMQ password
+  vhost: "/"  # Default virtual host
+
+# UDP settings
+udp:
+  host: 0.0.0.0  # Listen on all interfaces
+  port: 9000  # Port to listen for incoming UDP data from parking sensors
+
+# Socket.io settings
+socketio:
+  namespace: "/realtime"  # Namespace for real-time updates
+  path: "/socket.io"  # Path for Socket.io
+
+# Logging settings
+logging:
+  level: "info"  # Log level (e.g., debug, info, warn, error)
+  format: "json"  # Log format (e.g., json or text)
