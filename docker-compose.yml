@@ -7,7 +7,7 @@ services:
       dockerfile: DockerfileApp
     container_name: iot-parking-gateway_app
     ports:
-      - "48080:8080"  # Maps port 48080 on the host to port 8080 in the container
+      - "48080:48080"  # Maps port 48080 on the host to port 8080 in the container
     volumes:
       - .:/app  # Mounts the current directory into /app inside the container for live code updates (development only)
     depends_on:

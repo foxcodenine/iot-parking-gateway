@@ -20,6 +20,9 @@ FROM alpine:latest
 # Set the working directory in the runtime container
 WORKDIR /root/
 
+# Set environment variable for production
+ENV GO_ENV=production
+
 # Copy the compiled binary from the builder container
 COPY --from=builder /app/server .
 
