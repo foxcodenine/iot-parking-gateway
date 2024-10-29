@@ -25,9 +25,9 @@ services:
     image: postgres:14
     container_name: iot-parking-gateway_postgres
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydb
+      POSTGRES_USER: parking_gateway_user
+      POSTGRES_PASSWORD: secure_parking_password
+      POSTGRES_DB: parking_gateway_db
     ports:
       - "45432:5432"  # Maps port 45432 on the host to port 5432 in the container for PostgreSQL
     volumes:

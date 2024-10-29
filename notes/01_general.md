@@ -14,3 +14,7 @@ https://github.com/go-chi/chi
 https://github.com/joho/godotenv
 
     go get github.com/joho/godotenv
+
+
+<!-- --------------------------------------------------------------- -->
+docker exec -it iot-parking-gateway_postgres psql -U parking_gateway_user -d parking_gateway_db
