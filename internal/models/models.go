@@ -12,6 +12,7 @@ var upper db2.Session
 
 // Models struct will hold references to all the database models.
 type Models struct {
+	Device Device
 }
 
 // New initializes the Models struct and sets up the upper/db session.

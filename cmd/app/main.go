@@ -10,6 +10,7 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/routes"
 	"github.com/foxcodenine/iot-parking-gateway/internal/config"
 	"github.com/foxcodenine/iot-parking-gateway/internal/db"
+	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/joho/godotenv"
 )
 
@@ -21,13 +22,23 @@ func main() {
 	fmt.Printf("App running in - %s\n", os.Getenv("GO_ENV"))
 	fmt.Printf("Starting web server - %s:%s/\n", appUrl, webPort)
 
-	_, err := db.OpenDB()
+	db, err := db.OpenDB()
 
 	if err != nil {
-		log.Fatal(err)
-	} else {
-		log.Println("connected to db")
+		log.Fatalf("Error connecting to db: %v", err)
 	}
+
+	app.DB = db
+
+	models, err := models.New(db)
+
+	if err != nil {
+		log.Fatalf("Error creating models: %v", err)
+	}
+
+	app.Models = models
+
+	models.Device.Create("0123456789ABCDE")
 
 	// Initialize and set the handlers repository
 	handlersRepo := handlers.Initialize(&app)
