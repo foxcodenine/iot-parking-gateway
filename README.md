@@ -32,7 +32,7 @@ The project is organized into a modular folder structure:
 
     iot-parking-gateway/
     ├── cmd/                     # Main entry point for the server
-    ├── config/                  # Configuration files
+    ├── config/                   # Configuration files
     ├── internal/                # Core application modules
     │   ├── db/                  # Database connections
     │   ├── models/              # Data models representing PostgreSQL tables

@@ -1,14 +1,14 @@
 package handlers
 
-import "github.com/foxcodenine/iot-parking-gateway/internal/appconfig"
+import "github.com/foxcodenine/iot-parking-gateway/internal/config"
 
 // Repository holds shared application configurations (AppConfig)
 type Repository struct {
-	App *appconfig.AppConfig
+	App *config.App
 }
 
 // Initialize initializes the Repository with AppConfig and returns it
-func Initialize(app *appconfig.AppConfig) *Repository {
+func Initialize(app *config.App) *Repository {
 	return &Repository{App: app}
 }
 

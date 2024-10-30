@@ -1,10 +1,10 @@
-package appconfig
+package config
 
 import (
 	"log"
 )
 
-type AppConfig struct {
+type App struct {
 	InfoLog  *log.Logger
 	ErrorLog *log.Logger
 }

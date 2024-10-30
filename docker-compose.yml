@@ -4,7 +4,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: DockerfileApp
+      dockerfile: config/app/Dockerfile
     container_name: iot-parking-gateway_app
     ports:
       - "48080:48080"  # Maps port 48080 on the host to port 8080 in the container
@@ -41,7 +41,7 @@ services:
   redis:  
     build:
       context: .
-      dockerfile: DockerfileRedis
+      dockerfile: config/redis/Dockerfile
     container_name: iot-parking-gateway_redis
     ports:
       - "46379:6379"  # Maps port 46379 on the host to port 6379 in the container for Redis
