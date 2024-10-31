@@ -24,5 +24,10 @@ func Routes() http.Handler {
 	// Define routes for each handler
 	mux.Get("/test", testHandler.Index)
 
+	// Mount device routes
+	mux.Route("/api", func(r chi.Router) {
+		r.Mount("/devices", DeviceRoutes(repo))
+	})
+
 	return mux
 }

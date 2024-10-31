@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,14 +20,15 @@ var appUrl string  // Application URL loaded from environment variables
 var webPort string // Application port loaded from environment variables
 
 func main() {
+
 	// Display environment and server details
-	fmt.Printf("App running in environment: %s\n", os.Getenv("GO_ENV"))
-	fmt.Printf("Starting web server at %s:%s/\n", appUrl, webPort)
+	app.InfoLog.Printf("App running in environment: %s\n", os.Getenv("GO_ENV"))
+	app.InfoLog.Printf("Starting web server at %s:%s/\n", appUrl, webPort)
 
 	// Initialize database connection
 	database, err := db.OpenDB()
 	if err != nil {
-		log.Fatalf("Error connecting to the database: %v", err)
+		app.ErrorLog.Fatalf("Error connecting to the database: %v", err)
 	}
 
 	// Ensure the database connection is closed on exit
@@ -38,7 +40,7 @@ func main() {
 	// Initialize models and add them to the app configuration
 	appModels, err := models.New(database)
 	if err != nil {
-		log.Fatalf("Error creating models: %v", err)
+		app.ErrorLog.Fatalf("Error creating models: %v", err)
 	}
 	app.Models = appModels
 
@@ -53,14 +55,21 @@ func main() {
 // ---------------------------------------------------------------------
 
 func init() {
+	// Initialize InfoLog and ErrorLog
+	app.InfoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	app.ErrorLog = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
 	// Load environment variables based on the GO_ENV variable
 	if err := loadEnv(); err != nil {
-		log.Fatalf("Error loading environment variables: %v", err)
+		app.ErrorLog.Fatalf("Error loading environment variables: %v", err)
 	}
 
 	// Set application URL and port from environment variables
 	appUrl = os.Getenv("APP_URL")
 	webPort = os.Getenv("APP_WEB_PORT")
+
+	// Register model types for serialization
+	gob.Register(models.Device{})
 }
 
 // ---------------------------------------------------------------------
@@ -86,7 +95,7 @@ func startServer() {
 
 	// Start the server and handle any startup errors
 	if err := srv.ListenAndServe(); err != nil {
-		log.Fatalf("Error starting the server: %v", err)
+		app.ErrorLog.Fatalf("Error starting the server: %v", err)
 	}
 }
 

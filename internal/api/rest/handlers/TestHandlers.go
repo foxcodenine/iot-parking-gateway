@@ -12,6 +12,6 @@ type TestHandler struct {
 
 // Index handles the /test route
 func (h *TestHandler) Index(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Test Route")   // Log to console for server-side tracking
-	fmt.Fprint(w, "Test Route") // Write response to client
+	Repo.App.InfoLog.Println("Test Route") // Log to console for server-side tracking
+	fmt.Fprint(w, "Test Route")            // Write response to client
 }
