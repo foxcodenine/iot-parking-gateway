@@ -7,28 +7,33 @@ import (
 	"github.com/upper/db/v4/adapter/postgresql"
 )
 
+// Global variables for the pgxpool connection and Upper ORM session.
 var db *pgxpool.Pool
 var upper db2.Session
 
-// Models struct will hold references to all the database models.
+// Models struct will hold references to all database models, e.g., Device.
 type Models struct {
 	Device Device
 }
 
-// New initializes the Models struct and sets up the upper/db session.
+// New initializes the Models struct and sets up the Upper ORM session.
 func New(conn *pgxpool.Pool) (Models, error) {
-	// Assign the connection pool to the db variable.
+
+	// Assign the pgxpool connection pool to the global db variable.
 	db = conn
 
-	// Get a standard sql.DB from the pgxpool connection.
+	// Convert the pgxpool connection to a standard sql.DB.
 	stdDB := stdlib.OpenDB(*conn.Config().ConnConfig)
 
-	// Initialize upper/db with the standard sql.DB.
+	// Initialize Upper ORM with the standard sql.DB connection.
 	upperSession, err := postgresql.New(stdDB)
 	if err != nil {
 		return Models{}, err
 	}
 
+	// Assign the Upper ORM session to the global upper variable.
 	upper = upperSession
+
+	// Return an initialized Models struct with model references.
 	return Models{}, nil
 }
