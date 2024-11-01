@@ -15,18 +15,15 @@ func Routes() http.Handler {
 	// Middleware
 	mux.Use(middleware.Recoverer)
 
-	// Retrieve the repository to access shared application configurations
-	repo := handlers.GetRepo()
-
 	// Initialize specific handlers using the repository
-	testHandler := &handlers.TestHandler{Repo: repo}
+	testHandler := &handlers.TestHandler{}
 
 	// Define routes for each handler
 	mux.Get("/test", testHandler.Index)
 
 	// Mount device routes
 	mux.Route("/api", func(r chi.Router) {
-		r.Mount("/devices", DeviceRoutes(repo))
+		r.Mount("/device", DeviceRoutes())
 	})
 
 	return mux

@@ -7,6 +7,8 @@ import (
 	up "github.com/upper/db/v4"
 )
 
+// -----------------------------------------------------------------------------
+
 // Device represents a parking device in the database with ID and timestamps.
 type Device struct {
 	DeviceID  string    `db:"device_id" json:"device_id"`
@@ -14,10 +16,14 @@ type Device struct {
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
+// -----------------------------------------------------------------------------
+
 // TableName returns the full table name for the Device model in PostgreSQL.
 func (d *Device) TableName() string {
 	return "parking.devices"
 }
+
+// -----------------------------------------------------------------------------
 
 // GetAll retrieves all devices from the database.
 func (d *Device) GetAll() ([]Device, error) {
@@ -31,6 +37,8 @@ func (d *Device) GetAll() ([]Device, error) {
 
 	return devices, nil
 }
+
+// -----------------------------------------------------------------------------
 
 // GetByID retrieves a single device by its ID.
 func (d *Device) GetByID(id string) (*Device, error) {
@@ -49,6 +57,8 @@ func (d *Device) GetByID(id string) (*Device, error) {
 	return &device, nil
 }
 
+// -----------------------------------------------------------------------------
+
 // Create inserts a new Device record in the database and returns the created device.
 func (d *Device) Create(id string) (*Device, error) {
 	collection := dbSession.Collection(d.TableName())
@@ -66,6 +76,8 @@ func (d *Device) Create(id string) (*Device, error) {
 
 	return &newDevice, nil
 }
+
+// -----------------------------------------------------------------------------
 
 // UpdateByID updates an existing device by its ID.
 func (d *Device) UpdateByID(id string, updatedFields map[string]interface{}) (*Device, error) {
@@ -92,3 +104,5 @@ func (d *Device) DeleteByID(id string) error {
 
 	return nil
 }
+
+// -----------------------------------------------------------------------------

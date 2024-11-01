@@ -12,15 +12,17 @@ func Initialize(app *config.App) *Repository {
 	return &Repository{App: app}
 }
 
-// Repo is a global instance of Repository, allowing access to shared configurations
-var Repo *Repository
+// repo is a global instance of Repository, allowing access to shared configurations
+var repo *Repository
+var app *config.App
 
 // SetHandlerRepository sets the global repository (used globally if needed)
 func SetHandlerRepository(r *Repository) {
-	Repo = r
+	repo = r
+	app = r.App
 }
 
 // GetRepo returns the global repository instance
 func GetRepo() *Repository {
-	return Repo
+	return repo
 }

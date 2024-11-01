@@ -37,6 +37,8 @@ https://github.com/jackc/pgx
 
 <!-- --------------------------------------------------------------- -->
 docker exec -it iot-parking-gateway_postgres psql -U parking_gateway_user -d parking_gateway_db
+go build -o server ./cmd/app
+
 
 
 

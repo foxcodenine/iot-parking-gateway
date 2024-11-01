@@ -5,10 +5,10 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func DeviceRoutes(repo *handlers.Repository) chi.Router {
+func DeviceRoutes() chi.Router {
 	r := chi.NewRouter()
 
-	deviceHandler := &handlers.DeviceHandler{Repo: repo}
+	deviceHandler := &handlers.DeviceHandler{}
 
 	r.Get("/", deviceHandler.ListDevices)
 	r.Get("/{id}", deviceHandler.GetDevice)
