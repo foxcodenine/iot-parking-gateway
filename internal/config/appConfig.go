@@ -7,7 +7,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type App struct {
+type AppConfig struct {
+	AppURL   string
+	HttpPort string
 	InfoLog  *log.Logger
 	ErrorLog *log.Logger
 	DB       *pgxpool.Pool

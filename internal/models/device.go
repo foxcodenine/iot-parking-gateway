@@ -2,6 +2,8 @@ package models
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	up "github.com/upper/db/v4"
@@ -63,15 +65,26 @@ func (d *Device) GetByID(id string) (*Device, error) {
 func (d *Device) Create(id string) (*Device, error) {
 	collection := dbSession.Collection(d.TableName())
 
+	// Set current time for CreatedAt and UpdatedAt
+	now := time.Now().UTC()
+
+	// Prepare the new device record
 	newDevice := Device{
 		DeviceID:  id,
-		CreatedAt: time.Now().UTC(),
-		UpdatedAt: time.Now().UTC(),
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 
-	_, err := collection.Insert(newDevice)
+	err := collection.InsertReturning(&newDevice)
 	if err != nil {
-		return nil, err
+		// Check if the error is a duplicate key violation (PostgreSQL SQL state 23505)
+		if strings.Contains(err.Error(), "SQLSTATE 23505") {
+			// Define a custom error for duplicate device entries
+			var ErrDuplicateDevice = errors.New("device with this ID already exists")
+			return nil, ErrDuplicateDevice
+		}
+		// Return any other errors with additional context
+		return nil, fmt.Errorf("failed to create device: %w", err)
 	}
 
 	return &newDevice, nil
@@ -85,24 +98,54 @@ func (d *Device) UpdateByID(id string, updatedFields map[string]interface{}) (*D
 
 	updatedFields["updated_at"] = time.Now().UTC()
 
-	err := collection.Find(up.Cond{"device_id": id}).Update(updatedFields)
+	// Check if the device exists by counting matching rows
+	res := collection.Find(up.Cond{"device_id": id})
+	count, err := res.Count()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error checking device existence: %w", err)
 	}
 
-	return d.GetByID(id) // return the updated device
+	// If no matching device is found, return a custom error
+	if count == 0 {
+		return nil, fmt.Errorf("device with ID %s not found", id)
+	}
+
+	err = res.Update(updatedFields)
+	if err != nil {
+		return nil, fmt.Errorf("error updating device: %w", err)
+	}
+
+	// Check if `device_id` was updated; if not, return an error
+	newID, ok := updatedFields["device_id"].(string)
+	if !ok {
+		return nil, fmt.Errorf("updated device with ID: %s not found", newID)
+	}
+
+	return d.GetByID(newID) // return the updated device
 }
 
 // DeleteByID deletes a device by its ID.
 func (d *Device) DeleteByID(id string) error {
 	collection := dbSession.Collection(d.TableName())
 
-	err := collection.Find(up.Cond{"device_id": id}).Delete()
+	// Check if the device exists by counting matching rows
+	res := collection.Find(up.Cond{"device_id": id})
+	count, err := res.Count()
 	if err != nil {
-		return err
+		return fmt.Errorf("error checking device existence: %w", err)
 	}
 
-	return nil
+	// If no matching device is found, return a custom error
+	if count == 0 {
+		return errors.New("device not found")
+	}
+
+	// Proceed with deletion since the device exists
+	if err := res.Delete(); err != nil {
+		return fmt.Errorf("failed to delete device: %w", err)
+	}
+
+	return nil // Successful deletion
 }
 
 // -----------------------------------------------------------------------------

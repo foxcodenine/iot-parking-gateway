@@ -4,17 +4,17 @@ import "github.com/foxcodenine/iot-parking-gateway/internal/config"
 
 // Repository holds shared application configurations (AppConfig)
 type Repository struct {
-	App *config.App
+	App *config.AppConfig
 }
 
 // Initialize initializes the Repository with AppConfig and returns it
-func Initialize(app *config.App) *Repository {
+func Initialize(app *config.AppConfig) *Repository {
 	return &Repository{App: app}
 }
 
 // repo is a global instance of Repository, allowing access to shared configurations
 var repo *Repository
-var app *config.App
+var app *config.AppConfig
 
 // SetHandlerRepository sets the global repository (used globally if needed)
 func SetHandlerRepository(r *Repository) {
