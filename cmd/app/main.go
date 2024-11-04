@@ -17,7 +17,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var app core.AppConfig // Holds application-wide dependencies
+var app core.App // Holds application-wide dependencies
 
 func main() {
 	// Initialize configuration and environment variables
