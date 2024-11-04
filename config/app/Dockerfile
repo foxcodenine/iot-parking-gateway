@@ -25,12 +25,17 @@ ENV GO_ENV=production
 
 # Copy the compiled binary from the builder container
 COPY --from=builder /app/server .
+COPY --from=builder /app/scripts/wait-for.sh ./wait-for.sh
 
 # Copy config files if needed
-COPY config/config.yaml ./config/config.yaml
+# COPY config/config.yaml ./config/config.yaml
+
+# Make sure the script is executable
+RUN chmod +x wait-for.sh
 
 # Expose the port your app runs on
 EXPOSE 8080
 
 # Run the binary
-CMD ["./server"]
+# Use the wait-for script to ensure the Postgres is ready before starting the server
+CMD ["./wait-for.sh", "postgres:5432", "--", "./server"]

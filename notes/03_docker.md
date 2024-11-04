@@ -35,15 +35,15 @@ Uncomment the following lines to enable bind mounts for development:
     services:
     app:
         volumes:
-        - .:/app  # Mounts local project directory to /app in container (development only)
+        - .:/app  # (development only) - Mounts the current directory into /app inside the container for live code updates 
 
     postgres:
         volumes:
-        - /srv/docker/bind-mounts/iot-parking-gateway/postgres-data/:/var/lib/postgresql/data/  # Postgres bind mount for dev
+        - /srv/docker/bind-mounts/iot-parking-gateway/postgres-data/:/var/lib/postgresql/data/  # (development only) - Bind mount for dev, enables direct file access on host
 
     redis:
         volumes:
-        - /srv/docker/bind-mounts/iot-parking-gateway/redis-data/:/data  # Redis bind mount for dev
+        - /srv/docker/bind-mounts/iot-parking-gateway/redis-data/:/data  # (development only) - Bind mount for dev, enables direct file access on host
 
     ```
 
@@ -69,7 +69,7 @@ Comment out the development bind mounts and uncomment the Docker-managed volumes
         #   - /srv/docker/bind-mounts/iot-parking-gateway/redis-data/:/data  # Comment out in production
         - redis-data:/data  # Uncomment this line in production to persist data
 
-    volumes:
+    volumes: # Uncomment this line in production to persist data
     postgres-data:
     redis-data:
     ```
@@ -78,3 +78,30 @@ This approach:
 
 - **Enables bind mounts** in development for easy, real-time updates.
 - **Switches to Docker-managed volumes** in production for secure and isolated data persistence.
+
+
+<!-- --------------------------------------------------------------- -->
+
+### Upload app to Docker Hub
+
+1. Build and Tag Your Docker Image:
+
+    $ docker build -t foxcodenine/iot-parking-gateway_app:latest -f config/app/Dockerfile .
+
+2. Log in to Docker Hub:
+
+    $ docker login
+
+3. Push the Image to Docker Hub:
+
+    docker push foxcodenine/iot-parking-gateway_app:latest
+
+4. Update the docker-compose.yml:
+
+    app:
+        image: foxcodenine/iot-parking-gateway_app:latest
+
+<!-- --------------------------------------------------------------- -->
+
+
+

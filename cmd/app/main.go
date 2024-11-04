@@ -9,14 +9,15 @@ import (
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/handlers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/routes"
-	"github.com/foxcodenine/iot-parking-gateway/internal/config"
+	"github.com/foxcodenine/iot-parking-gateway/internal/core"
+
 	"github.com/foxcodenine/iot-parking-gateway/internal/db"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/foxcodenine/iot-parking-gateway/internal/udp"
 	"github.com/joho/godotenv"
 )
 
-var app config.AppConfig // Holds application-wide dependencies
+var app core.AppConfig // Holds application-wide dependencies
 
 func main() {
 	// Initialize configuration and environment variables

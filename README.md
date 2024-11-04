@@ -63,7 +63,7 @@ Ensure you have the following installed:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/iot-parking-gateway.git
+git clone https://github.com/IoT-Solutions-Ltd/iot-parking-gateway
 cd iot-parking-gateway
 ```
     
