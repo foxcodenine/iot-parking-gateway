@@ -3,8 +3,12 @@ package udp
 import (
 	"fmt"
 	"net"
+	"strconv"
+	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
+	"github.com/foxcodenine/iot-parking-gateway/internal/models"
+	"github.com/google/uuid"
 )
 
 // handleUDPMessage processes incoming UDP messages.
@@ -25,6 +29,27 @@ func (s *UDPServer) handleUDPMessage(conn *net.UDPConn, data []byte, addr *net.U
 	fmt.Println(firmwareVersion, deviceID)
 	//  TODO:  save to redis
 
+	uuid1, err := uuid.NewUUID()
+
+	if err != nil {
+		helpers.LogError(err, "Failed to generate a new UUID for RawDataLog entry")
+	}
+
+	rawDataLog := models.RawDataLog{
+		Uuid:            uuid1,
+		DeviceID:        strconv.Itoa(deviceID),
+		FirmwareVersion: firmwareVersion,
+		NetworkType:     "nb",
+		RawData:         rawDataString,
+		CreatedAt:       time.Now(),
+	}
+
+	_ = s.app.Cache.RPush("raw-data-logs", rawDataLog)
+
+	aaaa, _ := s.app.Cache.LRangeAndDelete("raw-data-logs")
+
+	fmt.Println(aaaa)
+
 	// timestampHex, rawDataArray := helpers.Splice(rawDataArray, 0, 4, []string{})
 	// eventIDHex, rawDataArray := helpers.Splice(rawDataArray, 0, 1, []string{})
 
@@ -33,7 +58,7 @@ func (s *UDPServer) handleUDPMessage(conn *net.UDPConn, data []byte, addr *net.U
 
 	response := []byte("Acknowledged\n")
 
-	_, err := conn.WriteToUDP(response, addr)
+	_, err = conn.WriteToUDP(response, addr)
 	if err != nil {
 		helpers.LogError(err, "Error sending response")
 	}

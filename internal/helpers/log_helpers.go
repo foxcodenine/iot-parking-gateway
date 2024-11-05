@@ -2,6 +2,7 @@
 package helpers
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -16,9 +17,12 @@ func LogInfo(format string, args ...interface{}) {
 	infoLog.Printf(format, args...)
 }
 
-// LogError logs error messages with context.
+// LogError logs error messages with context including the correct caller location.
 func LogError(err error, msg string) {
-	errorLog.Printf("%s:\n%v\n", msg, err)
+	// The call depth of 2 usually points to the caller of LogError.
+	if err != nil {
+		errorLog.Output(2, fmt.Sprintf("%s:\n%v", msg, err))
+	}
 }
 
 // GetInfoLog returns the shared info log instance.

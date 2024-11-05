@@ -1,9 +1,13 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type RawDataLog struct {
-	Uuid            string    `db:"uuid" json:"uuid"`
+	Uuid            uuid.UUID `db:"uuid" json:"uuid"`
 	DeviceID        string    `db:"device_id" json:"device_id"`
 	FirmwareVersion int       `db:"firmware_version" json:"firmware_version"`
 	NetworkType     string    `db:"network_type" json:"network_type"`

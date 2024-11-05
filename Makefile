@@ -56,6 +56,14 @@ docker-up:
 docker-down:
 	docker-compose -f $(DOCKER_COMPOSE_FILE) down
 
+docker-down-vol:
+	docker-compose -f $(DOCKER_COMPOSE_FILE) down -v
+
+delete-bind-mounts:
+	rm -fr '/srv/docker/bind-mounts/iot-parking-gateway'
+  
+
+
 # --------------------------------------------------
 # Default target (if needed)
 # --------------------------------------------------

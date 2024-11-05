@@ -66,15 +66,10 @@ services:
     ports:
       - "${REDIS_PORT_EX}:${REDIS_PORT}"  # Maps Maps REDIS_PORT from the .env file to the container
     command: >
-      redis-server --requirepass ${REDIS_PASSWORD} 
+      sh -c "redis-server --requirepass ${REDIS_PASSWORD}
       --appendonly no
-      --save 300 1      
-      --dir /data && ./redis.sh'  
-         
-    # --save ""
-    # --appendonly yes 
-    # --appendfsync no
-    # Run the init script
+      --save 300 1
+      --dir /data && ./redis.sh"  
 
     # Run as privileged to allow the container to change the vm.overcommit_memory setting
     privileged: true
