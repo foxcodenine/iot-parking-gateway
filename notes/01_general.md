@@ -36,6 +36,14 @@ https://github.com/jackc/pgx
     go get github.com/jackc/pgx/v5/pgxpool
 
 <!-- --------------------------------------------------------------- -->
+
+### gomodule/redigo
+
+https://github.com/gomodule/redigo
+
+    $ go get github.com/gomodule/redigo/redis
+
+<!-- --------------------------------------------------------------- -->
 docker exec -it iot-parking-gateway_postgres psql -U parking_gateway_user -d parking_gateway_db
 go build -o server ./cmd/app
 

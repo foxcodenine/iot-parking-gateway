@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/core"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 )
 
@@ -11,11 +12,12 @@ import (
 type UDPServer struct {
 	Addr       string
 	Connection *net.UDPConn
+	app        *core.App
 }
 
 // NewServer initializes a new UDP server.
-func NewServer(addr string) *UDPServer {
-	return &UDPServer{Addr: addr}
+func NewServer(addr string, a *core.App) *UDPServer {
+	return &UDPServer{Addr: addr, app: a}
 }
 
 // Start initializes and listens on the specified UDP address.
@@ -47,7 +49,7 @@ func (s *UDPServer) listen() {
 			helpers.LogError(err, "Error reading UDP message")
 			continue
 		}
-		go handleUDPMessage(s.Connection, buffer[:n], addr)
+		go s.handleUDPMessage(s.Connection, buffer[:n], addr)
 	}
 }
 

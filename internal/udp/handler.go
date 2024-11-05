@@ -8,7 +8,7 @@ import (
 )
 
 // handleUDPMessage processes incoming UDP messages.
-func handleUDPMessage(conn *net.UDPConn, data []byte, addr *net.UDPAddr) {
+func (s *UDPServer) handleUDPMessage(conn *net.UDPConn, data []byte, addr *net.UDPAddr) {
 
 	rawDataString := string(data)
 
@@ -18,17 +18,18 @@ func handleUDPMessage(conn *net.UDPConn, data []byte, addr *net.UDPAddr) {
 
 	firmwareVersionHex, rawDataArray := helpers.Splice(rawDataArray, 0, 1, []string{})
 	deviceIDHex, rawDataArray := helpers.Splice(rawDataArray, 0, 7, []string{})
-	timestampHex, rawDataArray := helpers.Splice(rawDataArray, 0, 4, []string{})
-	eventIDHex, rawDataArray := helpers.Splice(rawDataArray, 0, 1, []string{})
-
-	fmt.Println(firmwareVersionHex, deviceIDHex, timestampHex, eventIDHex, rawDataArray)
 
 	firmwareVersion, _ := helpers.HexSliceToBase10(firmwareVersionHex)
 	deviceID, _ := helpers.HexSliceToBase10(deviceIDHex)
-	timestamp, _ := helpers.HexSliceToBase10(timestampHex)
-	eventID, _ := helpers.HexSliceToBase10(eventIDHex)
 
-	fmt.Println(firmwareVersion, deviceID, timestamp, eventID)
+	fmt.Println(firmwareVersion, deviceID)
+	//  TODO:  save to redis
+
+	// timestampHex, rawDataArray := helpers.Splice(rawDataArray, 0, 4, []string{})
+	// eventIDHex, rawDataArray := helpers.Splice(rawDataArray, 0, 1, []string{})
+
+	// timestamp, _ := helpers.HexSliceToBase10(timestampHex)
+	// eventID, _ := helpers.HexSliceToBase10(eventIDHex)
 
 	response := []byte("Acknowledged\n")
 

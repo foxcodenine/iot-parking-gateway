@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/gob"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/handlers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/routes"
+	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/core"
+	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/db"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
@@ -31,7 +32,10 @@ func main() {
 	initializeHandlers()
 
 	// Start the UDP server in a goroutine
-	udpServer := udp.NewServer(fmt.Sprintf(":%s", os.Getenv("UDP_PORT")))
+	udpServer := udp.NewServer(
+		fmt.Sprintf(":%s", os.Getenv("UDP_PORT")),
+		&app,
+	)
 	go func() {
 		if err := udpServer.Start(); err != nil {
 			app.ErrorLog.Fatalf("Failed to start UDP server: %v", err)
@@ -47,18 +51,31 @@ func main() {
 
 func initializeAppConfig() {
 	// Load InfoLog and ErrorLog
-	app.InfoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	app.ErrorLog = log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	app.InfoLog = helpers.GetInfoLog()
+	app.ErrorLog = helpers.GetErrorLog()
 
 	// Load environment and configuration
 	if err := loadEnv(); err != nil {
-		app.ErrorLog.Fatalf("Error loading environment variables: %v", err)
+		app.ErrorLog.Fatalf("Error loading environment variables: %v\n", err)
 	}
 	app.AppURL = os.Getenv("APP_URL")
 	app.HttpPort = os.Getenv("HTTP_PORT")
 
 	// Register model types for gob encoding
 	gob.Register(models.Device{})
+
+	redisPool, err := cache.CreateRedisPool()
+
+	if err != nil {
+		helpers.LogError(err, "Failed to connect to Redis")
+	} else {
+		helpers.LogInfo("Successfully connected to Redis on :%s", os.Getenv("REDIS_PORT"))
+	}
+
+	app.Cache = cache.RedisCache{
+		Conn:   redisPool,
+		Prefix: os.Getenv("REDIS_PREFIX"),
+	}
 }
 
 // ---------------------------------------------------------------------

@@ -11,22 +11,23 @@ DECRYPT_SCRIPT = ./scripts/decrypt.sh
 # Define paths to docker-compose files
 DOCKER_COMPOSE_FILE = ./docker-compose.yml
 
-# Check if password is provided
-ifeq ($(pw),)
-$(error PASSWORD is not set. Usage: make target pw=<password>)
-endif
-
 # Function to hash the password
 define CHECK_PASSWORD
   echo -n "$(1)" | sha1sum | awk '{print $$1}'
 endef
 
-# Check if the provided password matches the hashed password
-CHECKED_PASSWORD := $(shell $(call CHECK_PASSWORD,$(pw)))
-ifeq ($(CHECKED_PASSWORD),$(HASHED_PASSWORD))
-# Password is correct, continue
-else
-$(error PASSWORD does not match)
+# Password check logic, only for 'encrypt' and 'decrypt' targets
+ifneq ($(filter encrypt decrypt,$(MAKECMDGOALS)),)
+  # Check if password is provided
+  ifeq ($(pw),)
+    $(error PASSWORD is not set. Usage: make encrypt|decrypt pw=<password>)
+  endif
+
+  # Check if the provided password matches the hashed password
+  CHECKED_PASSWORD := $(shell $(call CHECK_PASSWORD,$(pw)))
+  ifneq ($(CHECKED_PASSWORD),$(HASHED_PASSWORD))
+    $(error PASSWORD does not match)
+  endif
 endif
 
 # --------------------------------------------------
@@ -51,7 +52,6 @@ decrypt:
 docker-up:
 	docker-compose -f $(DOCKER_COMPOSE_FILE) up -d postgres redis rabbitmq
 
-
 # Target to bring down docker services
 docker-down:
 	docker-compose -f $(DOCKER_COMPOSE_FILE) down
@@ -60,19 +60,8 @@ docker-down:
 # Default target (if needed)
 # --------------------------------------------------
 
-all: encrypt decrypt
-
-# 	------------------------------------------------
-
-#	make encrypt pw=<password>
-
-#	make decrypt pw=<password>
-
-#	make docker-up pw=<password>
-
-#	make docker-down pw=<password>
-
-# 	------------------------------------------------
-
-
-# 
+# Usage examples
+# make encrypt pw=<password>
+# make decrypt pw=<password>
+# make docker-up
+# make docker-down

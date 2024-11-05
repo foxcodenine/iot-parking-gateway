@@ -20,3 +20,13 @@ func LogInfo(format string, args ...interface{}) {
 func LogError(err error, msg string) {
 	errorLog.Printf("%s:\n%v\n", msg, err)
 }
+
+// GetInfoLog returns the shared info log instance.
+func GetInfoLog() *log.Logger {
+	return infoLog
+}
+
+// GetErrorLog returns the shared error log instance.
+func GetErrorLog() *log.Logger {
+	return errorLog
+}
