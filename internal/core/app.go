@@ -6,6 +6,7 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/robfig/cron/v3"
 )
 
 type App struct {
@@ -16,4 +17,5 @@ type App struct {
 	DB       *pgxpool.Pool
 	Models   models.Models
 	Cache    cache.RedisCache
+	Cron     *cron.Cron
 }

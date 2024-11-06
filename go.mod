@@ -17,6 +17,7 @@ require (
 	github.com/jackc/pgtype v1.14.3 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/robfig/cron/v3 v3.0.0 // indirect
 	github.com/segmentio/fasthash v1.0.3 // indirect
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/upper/db/v4 v4.9.0 // indirect
