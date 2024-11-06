@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/foxcodenine/iot-parking-gateway/internal/core"
+	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 )
 
@@ -12,12 +12,12 @@ import (
 type UDPServer struct {
 	Addr       string
 	Connection *net.UDPConn
-	app        *core.App
+	cache      *cache.RedisCache
 }
 
 // NewServer initializes a new UDP server.
-func NewServer(addr string, a *core.App) *UDPServer {
-	return &UDPServer{Addr: addr, app: a}
+func NewServer(addr string, c *cache.RedisCache) *UDPServer {
+	return &UDPServer{Addr: addr, cache: c}
 }
 
 // Start initializes and listens on the specified UDP address.

@@ -11,6 +11,7 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/core"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
+	"github.com/foxcodenine/iot-parking-gateway/internal/services"
 	"github.com/robfig/cron/v3"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/db"
@@ -33,18 +34,16 @@ func main() {
 	initializeHandlers()
 
 	// Start the UDP server in a goroutine
-	udpServer := udp.NewServer(
-		fmt.Sprintf(":%s", os.Getenv("UDP_PORT")),
-		&app,
-	)
 	go func() {
-		if err := udpServer.Start(); err != nil {
+		if err := app.UdpServer.Start(); err != nil {
 			app.ErrorLog.Fatalf("Failed to start UDP server: %v", err)
 		}
 	}()
-	defer udpServer.Stop() // Ensure the UDP server is stopped on exit
+	defer app.UdpServer.Stop() // Ensure the UDP server is stopped on exit
 
-	app.Cron.AddFunc("* * * * *", func() { fmt.Println("Every 1 minute") })
+	app.Cron.AddFunc("* * * * *", func() {
+		app.Service.RedisToPostgresRaw()
+	})
 	app.Cron.Start()
 
 	// Start the web server
@@ -77,10 +76,20 @@ func initializeAppConfig() {
 	}
 
 	// Assign Redis cache instance to the app configuration
-	app.Cache = cache.RedisCache{
+	app.Cache = &cache.RedisCache{
 		Conn:   redisPool,
 		Prefix: os.Getenv("REDIS_PREFIX"), // Use a prefix for cache keys, if provided
 	}
+
+	app.UdpServer = udp.NewServer(
+		fmt.Sprintf(":%s", os.Getenv("UDP_PORT")),
+		app.Cache,
+	)
+
+	app.Service = services.NewService(
+		app.Models,
+		app.Cache,
+	)
 
 	// Initialize and assign a cron scheduler instance to the app
 	app.Cron = cron.New()

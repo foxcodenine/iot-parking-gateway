@@ -44,11 +44,7 @@ func (s *UDPServer) handleUDPMessage(conn *net.UDPConn, data []byte, addr *net.U
 		CreatedAt:       time.Now(),
 	}
 
-	_ = s.app.Cache.RPush("raw-data-logs", rawDataLog)
-
-	aaaa, _ := s.app.Cache.LRangeAndDelete("raw-data-logs")
-
-	fmt.Println(aaaa)
+	_ = s.cache.RPush("raw-data-logs", rawDataLog)
 
 	// timestampHex, rawDataArray := helpers.Splice(rawDataArray, 0, 4, []string{})
 	// eventIDHex, rawDataArray := helpers.Splice(rawDataArray, 0, 1, []string{})
