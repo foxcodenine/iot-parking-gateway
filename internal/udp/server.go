@@ -49,7 +49,7 @@ func (s *UDPServer) listen() {
 			helpers.LogError(err, "Error reading UDP message")
 			continue
 		}
-		go s.handleUDPMessage(s.Connection, buffer[:n], addr)
+		go s.nbMessageHandler(s.Connection, buffer[:n], addr)
 	}
 }
 

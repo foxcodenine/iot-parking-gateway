@@ -4,19 +4,19 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/firmware"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/google/uuid"
 )
 
-// handleUDPMessage processes incoming UDP messages.
-func (s *UDPServer) handleUDPMessage(conn *net.UDPConn, data []byte, addr *net.UDPAddr) {
+// nbMessageHandler processes incoming UDP messages.
+func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.UDPAddr) {
 
 	rawDataString := string(data)
-
-	// helpers.LogInfo("Received message from %s: %s", addr, rawDataString)
 
 	rawDataArray := helpers.SplitIntoPairs(rawDataString)
 
@@ -25,9 +25,6 @@ func (s *UDPServer) handleUDPMessage(conn *net.UDPConn, data []byte, addr *net.U
 
 	firmwareVersion, _ := helpers.HexSliceToBase10(firmwareVersionHex)
 	deviceID, _ := helpers.HexSliceToBase10(deviceIDHex)
-
-	fmt.Println(firmwareVersion, deviceID)
-	//  TODO:  save to redis
 
 	uuid1, err := uuid.NewUUID()
 
@@ -44,7 +41,20 @@ func (s *UDPServer) handleUDPMessage(conn *net.UDPConn, data []byte, addr *net.U
 		CreatedAt:       time.Now(),
 	}
 
-	_ = s.cache.RPush("raw-data-logs", rawDataLog)
+	reply := []string{"0106"}
+	hexTimestamp := helpers.GetCurrentTimestampHex()
+	reply = append(reply, hexTimestamp)
+
+	// Attempt to push the rawDataLog entry to Redis
+	err = s.cache.RPush("raw-data-logs", rawDataLog)
+	if err != nil {
+		helpers.LogError(err, "Failed to push raw data log to Redis")
+		sendResponse(conn, addr, reply)
+		return
+	}
+
+	logDataMap, _ := firmware.NB_53(rawDataString)
+	fmt.Println(logDataMap)
 
 	// timestampHex, rawDataArray := helpers.Splice(rawDataArray, 0, 4, []string{})
 	// eventIDHex, rawDataArray := helpers.Splice(rawDataArray, 0, 1, []string{})
@@ -52,10 +62,13 @@ func (s *UDPServer) handleUDPMessage(conn *net.UDPConn, data []byte, addr *net.U
 	// timestamp, _ := helpers.HexSliceToBase10(timestampHex)
 	// eventID, _ := helpers.HexSliceToBase10(eventIDHex)
 
-	response := []byte("Acknowledged\n")
+	sendResponse(conn, addr, reply)
+}
 
-	_, err = conn.WriteToUDP(response, addr)
+func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, reply []string) {
+	response := []byte(strings.Join(reply, "") + "\n")
+	_, err := conn.WriteToUDP(response, addr)
 	if err != nil {
-		helpers.LogError(err, "Error sending response")
+		helpers.LogError(err, "Failed to send error response to client")
 	}
 }
