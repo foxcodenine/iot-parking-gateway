@@ -4,6 +4,9 @@ pw ?=
 # Define the hashed password 
 HASHED_PASSWORD = ffa48c97146cc361eb188bc5d6d23825f4d3a4cb
 
+# Define the server binary name
+SERVER_BINARY = tmp/IOT_PARKING_GATEWAY_SERVER.tmp
+
 # Define the paths to the scripts
 ENCRYPT_SCRIPT = ./scripts/encrypt.sh
 DECRYPT_SCRIPT = ./scripts/decrypt.sh
@@ -62,7 +65,26 @@ docker-down-vol:
 delete-bind-mounts:
 	rm -fr '/srv/docker/bind-mounts/iot-parking-gateway'
   
+# --------------------------------------------------
+# App
+# --------------------------------------------------
 
+# Start the Go application
+start-app:
+	@$(shell which go) build -o $(SERVER_BINARY) ./cmd/app/main.go
+	@./$(SERVER_BINARY) &
+	@clear
+
+# Stop the Go application by finding and killing the process using the command name
+stop-app:
+	@pkill -f './$(SERVER_BINARY)' && echo "App stopped." || echo "App is not running."
+
+# Restart the Go application
+restart-app:
+	@$(MAKE) stop-app || true
+	@$(MAKE) start-app
+	@clear
+	
 
 # --------------------------------------------------
 # Default target (if needed)

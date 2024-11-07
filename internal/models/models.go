@@ -18,7 +18,7 @@ type Models struct {
 }
 
 // New initializes the Models struct and sets up the Upper ORM session.
-func New(conn *pgxpool.Pool) (*Models, error) {
+func New(conn *pgxpool.Pool) (Models, error) {
 
 	// Assign the pgxpool connection pool to the global db variable.
 	db = conn
@@ -29,12 +29,12 @@ func New(conn *pgxpool.Pool) (*Models, error) {
 	// Initialize Upper ORM with the standard sql.DB connection.
 	upperSession, err := postgresql.New(stdDB)
 	if err != nil {
-		return &Models{}, err
+		return Models{}, err
 	}
 
 	// Assign the Upper ORM session to the global upper variable.
 	dbSession = upperSession
 
 	// Return an initialized Models struct with model references.
-	return &Models{}, nil
+	return Models{}, nil
 }

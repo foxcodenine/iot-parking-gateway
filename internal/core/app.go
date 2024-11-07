@@ -18,7 +18,7 @@ type App struct {
 	InfoLog   *log.Logger
 	ErrorLog  *log.Logger
 	DB        *pgxpool.Pool
-	Models    *models.Models
+	Models    models.Models
 	Cache     *cache.RedisCache
 	Cron      *cron.Cron
 	UdpServer *udp.UDPServer

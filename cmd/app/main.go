@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/handlers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/routes"
@@ -53,6 +54,9 @@ func main() {
 // ---------------------------------------------------------------------
 
 func initializeAppConfig() {
+	time.Sleep(time.Millisecond * 10)
+	fmt.Println("")
+
 	// Load InfoLog and ErrorLog
 	app.InfoLog = helpers.GetInfoLog()
 	app.ErrorLog = helpers.GetErrorLog()
@@ -89,6 +93,8 @@ func initializeAppConfig() {
 	app.Service = services.NewService(
 		app.Models,
 		app.Cache,
+		app.InfoLog,
+		app.ErrorLog,
 	)
 
 	// Initialize and assign a cron scheduler instance to the app
