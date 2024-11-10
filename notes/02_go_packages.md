@@ -32,6 +32,7 @@ https://github.com/jackc/pgx
 
     go get github.com/jackc/pgx/v5
     go get github.com/jackc/pgx/v5/pgxpool
+	go get github.com/jackc/pgx/v5/stdlib
 
 <!-- --------------------------------------------------------------- -->
 
@@ -50,5 +51,21 @@ https://pkg.go.dev/github.com/robfig/cron/v3
 
     $ go get github.com/robfig/cron/v3@v3.0.0
 
+
+<!-- --------------------------------------------------------------- -->
+
+### google/uuid
+
+https://github.com/google/uuid
+
+    $ go get github.com/google/uuid
+
+<!-- --------------------------------------------------------------- -->
+
+### fatih/color
+
+https://github.com/fatih/color
+
+    $ go get github.com/fatih/color
 
 <!-- --------------------------------------------------------------- -->

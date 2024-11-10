@@ -1,27 +1,33 @@
 package helpers
 
-// Splice replaces elements from index `start` to `start + count` in `slice`
-// with the elements in `elementsToAdd`. It returns a new slice with the modifications
-// and the removed elements.
+// Splice function to remove and optionally add elements to a slice.
 func Splice[T any](slice []T, start, count int, elementsToAdd []T) ([]T, []T) {
-	// Check if `start` is within valid bounds; if not, return the original slice and nil.
-	// This prevents negative indexing and ensures `start` is not beyond the slice length.
-	if start < 0 || start >= len(slice) {
-		return slice, nil // Invalid `start` index; no elements removed or modified.
+	// Ensure `start` is within valid bounds; if not, return the original slice and an empty slice.
+	if start < 0 || start > len(slice) {
+		return []T{}, slice
 	}
 
-	// Adjust `count` if the range `start` to `start + count` goes out of slice bounds.
-	// This ensures we don't exceed the slice length when removing elements.
+	// If `count` exceeds the bounds, adjust it to avoid out-of-range issues.
 	if start+count > len(slice) {
-		count = len(slice) - start // Set `count` to remove elements only up to the end of the slice.
+		count = len(slice) - start
 	}
 
-	// Capture the removed part
+	// Capture the removed elements.
 	removed := make([]T, count)
 	copy(removed, slice[start:start+count])
 
-	// Perform the splice operation to create the new slice
+	// Create the new slice with removed elements and added elements, if any.
 	newSlice := append(slice[:start], append(elementsToAdd, slice[start+count:]...)...)
 
 	return removed, newSlice
+}
+
+// contains checks if a slice contains a particular element.
+func Contains(slice []int, item int) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
 }

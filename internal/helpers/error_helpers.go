@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+
+	"github.com/fatih/color"
 )
 
 // RespondWithError logs the error, captures file/line, and sends a detailed error response.
@@ -20,4 +22,18 @@ func RespondWithError(w http.ResponseWriter, err error, message string, statusCo
 	}
 
 	http.Error(w, userError, statusCode)
+}
+
+// Helper function to wrap error with colored file and line context
+func WrapError(err error) error {
+	_, file, line, ok := runtime.Caller(1)
+	if !ok {
+		return fmt.Errorf("%w", err)
+	}
+
+	// Use color to make file and line number red
+	red := color.New(color.FgRed).SprintFunc()
+	fileLineInfo := red(fmt.Sprintf("[%s:%d]", file, line))
+
+	return fmt.Errorf("%s: %w", fileLineInfo, err)
 }
