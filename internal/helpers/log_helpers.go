@@ -2,6 +2,7 @@
 package helpers
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -20,10 +21,15 @@ func LogInfo(format string, args ...interface{}) {
 }
 
 // LogError logs error messages with context including the correct caller location.
-func LogError(err error, msg string) {
+func LogError(err error, msg string, depth ...int) {
+	// Set the default depth to 2 if none is provided
+	callDepth := 2
+	if len(depth) > 0 {
+		callDepth = depth[0]
+	}
 	// The call depth of 2 usually points to the caller of LogError.
 	if err != nil {
-		errorLog.Output(2, fmt.Sprintf("%s:\n%v", msg, err))
+		errorLog.Output(callDepth, fmt.Sprintf("%s:\n%v", msg, err))
 	}
 }
 
@@ -35,4 +41,14 @@ func GetInfoLog() *log.Logger {
 // GetErrorLog returns the shared error log instance.
 func GetErrorLog() *log.Logger {
 	return errorLog
+}
+
+// PrettyPrintJSON takes any data and prints it in an indented JSON format
+func PrettyPrintJSON(data any) {
+	jsonData, err := json.MarshalIndent(data, "", "  ")
+	if err != nil {
+		fmt.Println("Error formatting JSON:", err)
+		return
+	}
+	fmt.Println(string(jsonData))
 }

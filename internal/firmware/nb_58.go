@@ -7,7 +7,7 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 )
 
-func NB_53(hexStr string) (map[string]any, error) {
+func NB_58(hexStr string) (map[string]any, error) {
 
 	myMap := map[string]any{}
 	pkgAmount, parkingAmount, keepAliveAmount, settingsAmount := 0, 0, 0, 0
@@ -27,7 +27,6 @@ func NB_53(hexStr string) (map[string]any, error) {
 	}
 
 	for nextOffset*2 < len(hexStr) {
-		remain := hexStr[nextOffset:]
 
 		timestamp, nextOffset1, err := helpers.ParseHexSubstring(hexStr, nextOffset, 4)
 		if err != nil {
@@ -40,14 +39,14 @@ func NB_53(hexStr string) (map[string]any, error) {
 		}
 
 		if !isValidEventID(eventID) {
-			return nil, helpers.WrapError(fmt.Errorf("invalid event_id: %d, remain: %s", eventID, remain))
+			return nil, fmt.Errorf("invalid event_id: %d", eventID)
 		}
 		pkgAmount++
 
 		switch eventID {
 		case 26:
 			parkingAmount++
-			pkg, err := parseParkingPackage53(hexStr, timestamp, nextOffset1)
+			pkg, err := parseParkingPackage58(hexStr, timestamp, nextOffset1)
 			if err != nil {
 				return nil, err
 			}
@@ -56,7 +55,7 @@ func NB_53(hexStr string) (map[string]any, error) {
 
 		case 6:
 			keepAliveAmount++
-			pkg, err := parseKeepAlivePackage53(hexStr, timestamp, nextOffset1, keepAliveAmount)
+			pkg, err := parseKeepAlivePackage58(hexStr, timestamp, nextOffset1, keepAliveAmount)
 			if err != nil {
 				return nil, err
 			}
@@ -65,7 +64,7 @@ func NB_53(hexStr string) (map[string]any, error) {
 
 		case 10:
 			settingsAmount++
-			pkg, err := parseSettingsPackage53(hexStr, timestamp, nextOffset1)
+			pkg, err := parseSettingsPackage58(hexStr, timestamp, nextOffset1)
 			if err != nil {
 				return nil, err
 			}
@@ -86,7 +85,7 @@ func NB_53(hexStr string) (map[string]any, error) {
 }
 
 // Parses the Parking Package
-func parseParkingPackage53(hexStr string, timestamp, offset int) (map[string]any, error) {
+func parseParkingPackage58(hexStr string, timestamp, offset int) (map[string]any, error) {
 	pkg := map[string]any{"timestamp": timestamp}
 	var err error
 	var nextOffset int
@@ -140,7 +139,7 @@ func parseParkingPackage53(hexStr string, timestamp, offset int) (map[string]any
 }
 
 // Parses the Keep Alive Package
-func parseKeepAlivePackage53(hexStr string, timestamp, offset, keepAliveAmount int) (map[string]any, error) {
+func parseKeepAlivePackage58(hexStr string, timestamp, offset, keepAliveAmount int) (map[string]any, error) {
 	pkg := map[string]any{"timestamp": timestamp}
 	var err error
 	var nextOffset int
@@ -275,7 +274,7 @@ func parseKeepAlivePackage53(hexStr string, timestamp, offset, keepAliveAmount i
 }
 
 // Parses the Settings Package
-func parseSettingsPackage53(hexStr string, timestamp, offset int) (map[string]any, error) {
+func parseSettingsPackage58(hexStr string, timestamp, offset int) (map[string]any, error) {
 	pkg := map[string]any{"timestamp": timestamp}
 	var err error
 	var nextOffset int
