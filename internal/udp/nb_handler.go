@@ -73,7 +73,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	// Debug output for parsed values
 	fmt.Println("Firmware Version:", firmwareVersion, "Device ID:", deviceID)
 
-	parsedData, err := firmware.NB_53(hexStr)
+	parsedData, err := firmware.NB_58(hexStr)
 	if err != nil {
 		handleErrorSendResponse(err, "Failed to parse data from NB_53 firmware", conn, addr, reply)
 		return

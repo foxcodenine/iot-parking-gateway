@@ -2,6 +2,7 @@ package firmware
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
@@ -27,6 +28,7 @@ func NB_58(hexStr string) (map[string]any, error) {
 	}
 
 	for nextOffset*2 < len(hexStr) {
+		remain := hexStr[nextOffset:]
 
 		timestamp, nextOffset1, err := helpers.ParseHexSubstring(hexStr, nextOffset, 4)
 		if err != nil {
@@ -39,7 +41,7 @@ func NB_58(hexStr string) (map[string]any, error) {
 		}
 
 		if !isValidEventID(eventID) {
-			return nil, fmt.Errorf("invalid event_id: %d", eventID)
+			return nil, helpers.WrapError(fmt.Errorf("invalid event_id: %d, remain: %s", eventID, remain))
 		}
 		pkgAmount++
 
@@ -145,20 +147,20 @@ func parseKeepAlivePackage58(hexStr string, timestamp, offset, keepAliveAmount i
 	var nextOffset int
 
 	// Parsing each field
-
 	// Continue parsing additional fields...
-	if pkg["idle_voltage"], nextOffset, err = helpers.ParseHexSubstring(hexStr, offset, 1); err != nil {
+	if pkg["idle_voltage"], nextOffset, err = helpers.ParseHexSubstring(hexStr, offset, 2); err != nil {
 		return nil, helpers.WrapError(err)
 	}
-	pkg["idle_voltage"] = pkg["idle_voltage"].(int) / 16
+	pkg["idle_voltage"] = int(math.Floor(float64(pkg["idle_voltage"].(int)) * 0.2197399744))
 
 	if pkg["battery_percentage"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)
 	}
 
-	if pkg["current"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+	if pkg["current"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
 		return nil, helpers.WrapError(err)
 	}
+	pkg["current"] = int(math.Floor(float64(pkg["current"].(int)) * 0.6104))
 
 	if pkg["reset_count"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)
@@ -257,18 +259,6 @@ func parseKeepAlivePackage58(hexStr string, timestamp, offset, keepAliveAmount i
 		return nil, helpers.WrapError(err)
 	}
 
-	if pkg["time_sync_rand_byte"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
-		return nil, helpers.WrapError(err)
-	}
-
-	if pkg["time_sync_rand_byte"].(int) != 0 || keepAliveAmount == 1 {
-		var nextOffset3 int
-		if pkg["time_sync_rand_byte"], nextOffset3, err = helpers.ParseHexSubstring(hexStr, nextOffset, 4); err != nil {
-			return nil, helpers.WrapError(err)
-		}
-		nextOffset = nextOffset3
-	}
-
 	pkg["nextOffset"] = nextOffset
 	return pkg, nil
 }
@@ -317,26 +307,6 @@ func parseSettingsPackage58(hexStr string, timestamp, offset int) (map[string]an
 	if pkg["mag_car_hi"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
 		return nil, helpers.WrapError(err)
 	}
-
-	if pkg["radar_trail_cal_lo_th"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
-		return nil, helpers.WrapError(err)
-	}
-	pkg["radar_trail_cal_lo_th"] = pkg["radar_trail_cal_lo_th"].(int) * 256
-
-	if pkg["radar_trail_cal_hi_th"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
-		return nil, helpers.WrapError(err)
-	}
-	pkg["radar_trail_cal_hi_th"] = pkg["radar_trail_cal_hi_th"].(int) * 256
-
-	if pkg["radar_trail_uncal_lo_th"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
-		return nil, helpers.WrapError(err)
-	}
-	pkg["radar_trail_uncal_lo_th"] = pkg["radar_trail_uncal_lo_th"].(int) * 256
-
-	if pkg["radar_trail_uncal_hi_th"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
-		return nil, helpers.WrapError(err)
-	}
-	pkg["radar_trail_uncal_hi_th"] = pkg["radar_trail_uncal_hi_th"].(int) * 256
 
 	if pkg["debug_period"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)
