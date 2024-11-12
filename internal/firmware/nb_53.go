@@ -78,6 +78,10 @@ func NB_53(hexStr string) (map[string]any, error) {
 
 	myMap["firmware_version"] = firmwareVersion
 	myMap["device_id"] = deviceID
+	myMap["pkg_amount"] = pkgAmount
+	myMap["parking_amount"] = parkingAmount
+	myMap["keep_alive_amount"] = keepAliveAmount
+	myMap["settings_amount"] = settingsAmount
 	myMap["parking_packages"] = parkingPackages
 	myMap["keep_alive_packages"] = keepAlivePackages
 	myMap["settings_packages"] = settingsPackages

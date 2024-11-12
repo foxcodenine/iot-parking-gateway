@@ -57,7 +57,7 @@ func NB_58(hexStr string) (map[string]any, error) {
 
 		case 6:
 			keepAliveAmount++
-			pkg, err := parseKeepAlivePackage58(hexStr, timestamp, nextOffset1, keepAliveAmount)
+			pkg, err := parseKeepAlivePackage58(hexStr, timestamp, nextOffset1)
 			if err != nil {
 				return nil, err
 			}
@@ -79,6 +79,10 @@ func NB_58(hexStr string) (map[string]any, error) {
 
 	myMap["firmware_version"] = firmwareVersion
 	myMap["device_id"] = deviceID
+	myMap["pkg_amount"] = pkgAmount
+	myMap["parking_amount"] = parkingAmount
+	myMap["keep_alive_amount"] = keepAliveAmount
+	myMap["settings_amount"] = settingsAmount
 	myMap["parking_packages"] = parkingPackages
 	myMap["keep_alive_packages"] = keepAlivePackages
 	myMap["settings_packages"] = settingsPackages
@@ -141,7 +145,7 @@ func parseParkingPackage58(hexStr string, timestamp, offset int) (map[string]any
 }
 
 // Parses the Keep Alive Package
-func parseKeepAlivePackage58(hexStr string, timestamp, offset, keepAliveAmount int) (map[string]any, error) {
+func parseKeepAlivePackage58(hexStr string, timestamp, offset int) (map[string]any, error) {
 	pkg := map[string]any{"timestamp": timestamp}
 	var err error
 	var nextOffset int

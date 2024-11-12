@@ -43,8 +43,8 @@ func (s *Service) RedisToPostgresRaw() {
 			continue
 		}
 
-		// Convert uuid field from string to uuid.UUID
-		uuidStr, ok := itemMap["uuid"].(string)
+		// Convert id field from string to uuid.UUID
+		uuidStr, ok := itemMap["id"].(string)
 		if !ok {
 			s.errorLog.Println("Invalid UUID format: expected string")
 			continue
@@ -95,7 +95,7 @@ func (s *Service) RedisToPostgresRaw() {
 		}
 
 		rawLog := models.RawDataLog{
-			Uuid:            uuidValue,
+			ID:              uuidValue,
 			DeviceID:        deviceID,
 			FirmwareVersion: int(firmwareVersion),
 			NetworkType:     networkType,
