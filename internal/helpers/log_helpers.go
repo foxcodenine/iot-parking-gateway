@@ -1,4 +1,3 @@
-// log_helpers.go
 package helpers
 
 import (
@@ -13,6 +12,7 @@ import (
 var (
 	infoLog  = log.New(os.Stdout, color.New(color.FgBlue).Sprint("INFO\t"), log.Ldate|log.Ltime)
 	errorLog = log.New(os.Stderr, color.New(color.FgRed).Sprint("ERROR\t"), log.Ldate|log.Ltime|log.Lshortfile)
+	fatalLog = log.New(os.Stderr, color.New(color.FgRed, color.Bold).Sprint("FATAL\t"), log.Ldate|log.Ltime|log.Lshortfile)
 )
 
 // LogInfo logs an informational message with formatting options.
@@ -27,10 +27,21 @@ func LogError(err error, msg string, depth ...int) {
 	if len(depth) > 0 {
 		callDepth = depth[0]
 	}
-	// The call depth of 2 usually points to the caller of LogError.
 	if err != nil {
 		errorLog.Output(callDepth, fmt.Sprintf("%s:\n%v", msg, err))
 	}
+}
+
+// LogFatal logs critical errors and terminates the application.
+func LogFatal(err error, msg string, depth ...int) {
+	callDepth := 2 // Default call depth
+	if len(depth) > 0 {
+		callDepth = depth[0]
+	}
+	if err != nil {
+		fatalLog.Output(callDepth, fmt.Sprintf("%s:\n%v", msg, err))
+	}
+	os.Exit(1) // Terminate the application with a non-zero status code
 }
 
 // GetInfoLog returns the shared info log instance.

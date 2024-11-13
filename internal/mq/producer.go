@@ -1,4 +1,4 @@
-package mqproducer
+package mq
 
 import (
 	"log"
@@ -8,20 +8,6 @@ import (
 	"github.com/streadway/amqp"
 )
 
-// Configuration for RabbitMQ connection
-type RabbitConfig struct {
-	URL            string
-	ReconnectDelay time.Duration
-	ExchangeName   string
-	Queues         map[string]QueueConfig // Map of queues by name
-}
-
-type QueueConfig struct {
-	Name       string
-	RoutingKey string
-	Durable    bool
-}
-
 // RabbitMQProducer manages the connection and publishing to RabbitMQ
 type RabbitMQProducer struct {
 	config     RabbitConfig
@@ -29,21 +15,34 @@ type RabbitMQProducer struct {
 	channel    *amqp.Channel
 }
 
+// NewRabbitMQProducer creates a new producer instance
+func NewRabbitMQProducer(config RabbitConfig) *RabbitMQProducer {
+	return &RabbitMQProducer{
+		config: config,
+	}
+}
+
 // ---------------------------------------------------------------------
 
 // Run starts the connection and the publishing process
 func (p *RabbitMQProducer) Run() {
+	attempt := 0
 	for {
 		if err := p.connect(); err != nil {
-			log.Println("Failed to connect to RabbitMQ:", err)
-			time.Sleep(p.config.ReconnectDelay)
+			log.Printf("Failed to connect to RabbitMQ: %v, attempt: %d\n", err, attempt)
+			if attempt > 5 { // Maximum of 5 attempts
+				log.Println("Max reconnect attempts reached, exiting.")
+				return
+			}
+			time.Sleep(p.config.ReconnectDelay * time.Duration(attempt)) // Exponential backoff
+			attempt++
 			continue
 		}
 		break
 	}
 
-	// Simulate message sending
-	p.sendMessage("testQueue", "Hello, RabbitMQ!")
+	// Assume operational status, proceed to send a message
+	p.sendMessage("testExchange", "testQueue", "Hello, RabbitMQ!")
 }
 
 // connect handles the connection and channel setup, including declaring multiple queues
@@ -60,18 +59,20 @@ func (p *RabbitMQProducer) connect() error {
 		return err
 	}
 
-	// Declare the exchange
-	err = p.channel.ExchangeDeclare(
-		p.config.ExchangeName, // exchange
-		"direct",              // type
-		true,                  // durable
-		false,                 // auto-deleted
-		false,                 // internal
-		false,                 // no-wait
-		nil,                   // arguments
-	)
-	if err != nil {
-		return err
+	// Declare all the exchange
+	for _, exchange := range p.config.GetAllExchanges() {
+		err = p.channel.ExchangeDeclare(
+			exchange.Name, // exchange
+			"direct",      // type
+			true,          // durable
+			false,         // auto-deleted
+			false,         // internal
+			false,         // no-wait
+			nil,           // arguments
+		)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Declare and bind all queues
@@ -88,23 +89,26 @@ func (p *RabbitMQProducer) connect() error {
 			return err
 		}
 
-		err = p.channel.QueueBind(
-			queue.Name,            // queue name
-			queue.RoutingKey,      // routing key
-			p.config.ExchangeName, // exchange
-			false,                 // no-wait
-			nil,                   // arguments
-		)
-		if err != nil {
-			return err
+		for _, exchange := range queue.Exchanges {
+			err = p.channel.QueueBind(
+				queue.Name,       // queue name
+				queue.RoutingKey, // routing key
+				exchange.Name,    // exchange
+				false,            // no-wait
+				nil,              // arguments
+			)
+			if err != nil {
+				return err
+			}
 		}
+
 	}
 
 	return nil
 }
 
 // sendMessage sends a message to a specified queue
-func (p *RabbitMQProducer) sendMessage(queueName, message string) {
+func (p *RabbitMQProducer) sendMessage(exchangeName, queueName, message string) {
 	queueConfig, exists := p.config.Queues[queueName]
 	if !exists {
 		log.Printf("Queue configuration not found for %s\n", queueName)
@@ -112,7 +116,7 @@ func (p *RabbitMQProducer) sendMessage(queueName, message string) {
 	}
 
 	if err := p.channel.Publish(
-		p.config.ExchangeName,  // exchange
+		exchangeName,           // exchange
 		queueConfig.RoutingKey, // routing key
 		false,                  // mandatory
 		false,                  // immediate

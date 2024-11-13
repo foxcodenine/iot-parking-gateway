@@ -3,15 +3,18 @@ package main
 import (
 	"encoding/gob"
 	"fmt"
-	"net/http"
+
 	"os"
+
 	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/handlers"
-	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/routes"
+	"github.com/foxcodenine/iot-parking-gateway/internal/mq"
+
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/core"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
+	"github.com/foxcodenine/iot-parking-gateway/internal/httpserver"
 	"github.com/foxcodenine/iot-parking-gateway/internal/services"
 	"github.com/robfig/cron/v3"
 
@@ -35,20 +38,27 @@ func main() {
 	initializeHandlers()
 
 	// Start the UDP server in a goroutine
-	go func() {
-		if err := app.UdpServer.Start(); err != nil {
-			app.ErrorLog.Fatalf("Failed to start UDP server: %v", err)
-		}
-	}()
-	defer app.UdpServer.Stop() // Ensure the UDP server is stopped on exit
+	go app.UdpServer.Start()
+	defer app.UdpServer.Stop()
 
+	// Start cron
 	app.Cron.AddFunc("* * * * *", func() {
 		app.Service.RedisToPostgresRaw()
 	})
 	app.Cron.Start()
 
+	// Setup RabbitMQ Producer
+	rabbitConfig := mq.SetupRabbitMQConfig()
+	rabbitProducer := mq.NewRabbitMQProducer(rabbitConfig)
+	defer rabbitProducer.Close() // Ensure to close the connection on application shutdown
+
+	// Start the message producer routine
+	go rabbitProducer.Run()
+
 	// Start the web server
-	startServer()
+	httpServer := httpserver.NewServer(os.Getenv("HTTP_PORT"))
+	httpServer.Start()
+	defer httpServer.Shutdown()
 }
 
 // ---------------------------------------------------------------------
@@ -140,23 +150,6 @@ func initializeHandlers() {
 	// Initialize and set up the handlers with the application configuration
 	handlersRepo := handlers.Initialize(&app)
 	handlers.SetHandlerRepository(handlersRepo)
-}
-
-// ---------------------------------------------------------------------
-
-func startServer() {
-	// Set up the HTTP server configuration
-	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%s", app.HttpPort), // Bind the server to port
-		Handler: routes.Routes(),                  // Set up the HTTP routes
-	}
-
-	app.InfoLog.Printf("HTTP server start on %s:%s\n", app.AppURL, app.HttpPort)
-
-	// Start the server and handle any startup errors
-	if err := srv.ListenAndServe(); err != nil {
-		app.ErrorLog.Fatalf("Error starting the server: %v", err)
-	}
 }
 
 // ---------------------------------------------------------------------

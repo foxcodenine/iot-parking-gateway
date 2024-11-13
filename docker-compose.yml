@@ -35,6 +35,12 @@ services:
       - REDIS_DB=${REDIS_DB}
       - REDIS_PREFIX=${REDIS_PREFIX}  
 
+      - RABBITMQ_USER=${RABBITMQ_USER}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_HOST=${RABBITMQ_HOST}
+      - RABBITMQ_PORT=${RABBITMQ_PORT}
+
+
     networks:
       - app-network  # Connects app to the shared network for internal communication
 
@@ -85,6 +91,9 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: iot-parking-gateway_rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     ports:
       - "${RABBITMQ_PORT_EX}:${RABBITMQ_PORT}"     # Maps port 45672 on the host to port 5672 in the container for RabbitMQ
       - "${RABBITMQ_PORT_WEB_EX}:${RABBITMQ_PORT_WEB}"   # Maps port 4515672 on the host to RabbitMQ management interface (port 15672 in the container)
