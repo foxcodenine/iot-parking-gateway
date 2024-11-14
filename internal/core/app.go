@@ -17,6 +17,7 @@ type App struct {
 	HttpPort  string
 	InfoLog   *log.Logger
 	ErrorLog  *log.Logger
+	FatalLog  *log.Logger
 	DB        *pgxpool.Pool
 	Models    models.Models
 	Cache     *cache.RedisCache

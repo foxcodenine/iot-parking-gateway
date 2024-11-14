@@ -44,6 +44,7 @@ func main() {
 	// Start cron
 	app.Cron.AddFunc("* * * * *", func() {
 		app.Service.RedisToPostgresRaw()
+		app.Service.RedisToPostgresActivityLags()
 	})
 	app.Cron.Start()
 
@@ -70,6 +71,7 @@ func initializeAppConfig() {
 	// Load InfoLog and ErrorLog
 	app.InfoLog = helpers.GetInfoLog()
 	app.ErrorLog = helpers.GetErrorLog()
+	app.FatalLog = helpers.GetFatalLog()
 
 	// Load environment and configuration
 	if err := loadEnv(); err != nil {

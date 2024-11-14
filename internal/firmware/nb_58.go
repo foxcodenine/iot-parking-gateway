@@ -123,7 +123,7 @@ func parseParkingPackage58(hexStr string, timestamp, offset int) (map[string]any
 
 	for i := 1; i <= beaconsAmount; i++ {
 		var nextOffset1 int
-		beacon := map[string]any{"no": i}
+		beacon := map[string]any{"beacon_number": i}
 
 		if beacon["major"], nextOffset1, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
 			return nil, helpers.WrapError(err)

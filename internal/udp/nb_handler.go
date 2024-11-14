@@ -47,7 +47,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	}
 
 	// Generate a new UUID for the RawDataLog entry
-	uuid1, err := uuid.NewUUID()
+	rawUUID, err := uuid.NewUUID()
 	if err != nil {
 		handleErrorSendResponse(err, "Failed to generate UUID for RawDataLog entry", conn, addr, reply)
 		return
@@ -55,7 +55,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 
 	// Construct a new raw data log entry
 	rawDataLog := models.RawDataLog{
-		ID:              uuid1,
+		ID:              rawUUID,
 		DeviceID:        strconv.Itoa(deviceID),
 		FirmwareVersion: firmwareVersion,
 		NetworkType:     "nb",
@@ -71,7 +71,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	}
 
 	// Debug output for parsed values
-	fmt.Println("Firmware Version:", firmwareVersion, "Device ID:", deviceID)
+	helpers.LogInfo("Firmware Version: %d Device ID: %d", firmwareVersion, deviceID)
 
 	var parsedData map[string]any
 	switch firmwareVersion {
@@ -84,8 +84,20 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	if err != nil {
 		handleErrorSendResponse(err, "Failed to parse data from NB_53 firmware", conn, addr, reply)
 		return
-	} else {
-		helpers.PrettyPrintJSON(parsedData)
+	}
+
+	for _, i := range parsedData["parking_packages"].([]map[string]any) {
+		i["firmware_version"] = fmt.Sprintf("%d", parsedData["firmware_version"])
+		i["device_id"] = fmt.Sprintf("%d", parsedData["device_id"])
+		i["raw_id"] = rawUUID
+		i["event_id"] = 26
+		i["network_type"] = "nb"
+		helpers.PrettyPrintJSON(i)
+
+		err := s.cache.RPush("activity-logs-nb", i)
+		if err != nil {
+			helpers.LogError(err, "Failed to push raw data log to Redis")
+		}
 	}
 
 	// Send response back to the client

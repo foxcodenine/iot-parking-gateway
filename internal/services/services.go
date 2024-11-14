@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
+	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/google/uuid"
 )
@@ -114,5 +115,44 @@ func (s *Service) RedisToPostgresRaw() {
 	}
 
 	s.infoLog.Printf("Successfully inserted %d raw data logs into PostgreSQL", len(rawDataLogs))
+
+}
+
+func (s *Service) RedisToPostgresActivityLags() {
+
+	items, err := s.cache.LRangeAndDelete("activity-logs-nb")
+	if err != nil {
+		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
+		return
+	}
+
+	var activityLogs []models.ActivityLog
+	var beaconLogs []models.BeaconLog
+
+	for _, item := range items {
+		itemMap, ok := item.(map[string]any)
+
+		if !ok {
+			s.errorLog.Println("Invalid item type: expected map[string]any")
+			continue
+		}
+
+		activityLog, err := models.NewActivityLog(itemMap)
+		if err != nil {
+			helpers.LogError(err, "")
+		}
+
+		activityLogs = append(activityLogs, *activityLog)
+		beaconLogs = append(beaconLogs, activityLog.Beacons...)
+
+	}
+
+	err = s.models.ActivityLog.BulkInsert(activityLogs)
+	if err != nil {
+		s.errorLog.Printf("Failed to insert activity logs to PostgreSQL: %v", err)
+		return // Log the error and exit if bulk insert fails
+	}
+
+	s.infoLog.Printf("Successfully inserted %d activity logs into PostgreSQL", len(activityLogs))
 
 }

@@ -54,6 +54,11 @@ func GetErrorLog() *log.Logger {
 	return errorLog
 }
 
+// GetErrorLog returns the shared error log instance.
+func GetFatalLog() *log.Logger {
+	return fatalLog
+}
+
 // PrettyPrintJSON takes any data and prints it in an indented JSON format
 func PrettyPrintJSON(data any) {
 	jsonData, err := json.MarshalIndent(data, "", "  ")

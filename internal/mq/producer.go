@@ -1,9 +1,12 @@
 package mq
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"time"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/google/uuid"
 	"github.com/streadway/amqp"
 )
@@ -29,15 +32,17 @@ func (p *RabbitMQProducer) Run() {
 	attempt := 0
 	for {
 		if err := p.connect(); err != nil {
-			log.Printf("Failed to connect to RabbitMQ: %v, attempt: %d\n", err, attempt)
-			if attempt > 5 { // Maximum of 5 attempts
-				log.Println("Max reconnect attempts reached, exiting.")
+			helpers.LogError(err, fmt.Sprintf("Failed to connect to RabbitMQ, attempt: %d", attempt))
+			if attempt > 10 { // Maximum of 5 attempts
+				helpers.LogFatal(err, "Max reconnect attempts reached, exiting.")
 				return
 			}
 			time.Sleep(p.config.ReconnectDelay * time.Duration(attempt)) // Exponential backoff
 			attempt++
 			continue
 		}
+		// Successful connection, log message
+		helpers.LogInfo("Successfully connected to RabbitMQ on :" + os.Getenv("RABBITMQ_PORT"))
 		break
 	}
 
