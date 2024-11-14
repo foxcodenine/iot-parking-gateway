@@ -154,5 +154,5 @@ func (s *Service) RedisToPostgresActivityLags() {
 	}
 
 	s.infoLog.Printf("Successfully inserted %d activity logs into PostgreSQL", len(activityLogs))
-
+	// TODO:  insert becons
 }
