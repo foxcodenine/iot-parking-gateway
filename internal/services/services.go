@@ -1,6 +1,7 @@
 package services
 
 import (
+	// "fmt"
 	"log"
 	"time"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/google/uuid"
+	// "github.com/lib/pq"
 )
 
 type Service struct {
@@ -127,7 +129,6 @@ func (s *Service) RedisToPostgresActivityLags() {
 	}
 
 	var activityLogs []models.ActivityLog
-	var beaconLogs []models.BeaconLog
 
 	for _, item := range items {
 		itemMap, ok := item.(map[string]any)
@@ -143,7 +144,6 @@ func (s *Service) RedisToPostgresActivityLags() {
 		}
 
 		activityLogs = append(activityLogs, *activityLog)
-		beaconLogs = append(beaconLogs, activityLog.Beacons...)
 
 	}
 
@@ -152,7 +152,23 @@ func (s *Service) RedisToPostgresActivityLags() {
 		s.errorLog.Printf("Failed to insert activity logs to PostgreSQL: %v", err)
 		return // Log the error and exit if bulk insert fails
 	}
-
 	s.infoLog.Printf("Successfully inserted %d activity logs into PostgreSQL", len(activityLogs))
+	time.Sleep(time.Second * 5)
+
+	helpers.PrettyPrintJSON(activityLogs)
+
+	// err = s.models.BeaconLog.BulkInsert(beaconLogs)
+	// if err != nil {
+	// 	if pgErr, ok := err.(*pq.Error); ok {
+	// 		log.Printf("PG Error Code: %s", pgErr.Code)
+	// 		log.Printf("PG Error Message: %s", pgErr.Message)
+	// 		log.Printf("PG Error Details: %s", pgErr.Detail)
+	// 		log.Printf("PG Error Hint: %s", pgErr.Hint)
+	// 	} else {
+	// 		log.Printf("Non-PG Error: %v", err)
+	// 	}
+	// 	fmt.Println("failed to execute bulk insert for beacons: %w", err)
+	// }
+
 	// TODO:  insert becons
 }

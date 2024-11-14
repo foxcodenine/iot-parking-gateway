@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	up "github.com/upper/db/v4"
+	// up "github.com/upper/db/v4"
 )
 
 // Beacon represents a beacon entry associated with an activity log.
@@ -27,6 +27,11 @@ func (b *BeaconLog) TableName() string {
 
 // BulkInsert inserts multiple Beacon records in a single operation.
 func (b *BeaconLog) BulkInsert(beacons []BeaconLog) error {
+
+	for _, i := range beacons {
+		fmt.Println(i.ActivityID, i.BeaconNumber, i.HappenedAt)
+	}
+
 	// If there are no records to insert, exit early
 	if len(beacons) == 0 {
 		return nil
@@ -41,12 +46,14 @@ func (b *BeaconLog) BulkInsert(beacons []BeaconLog) error {
 		values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d)", i*6+1, i*6+2, i*6+3, i*6+4, i*6+5, i*6+6))
 
 		// Append the actual values for each placeholder in the same order as the columns
-		args = append(args, beacon.ActivityID, beacon.HappenedAt, beacon.BeaconNumber, beacon.Major, beacon.Minor, beacon.RSSI)
+		args = append(args, beacon.ActivityID, beacon.HappenedAt.Format("2006-01-02 15:04:05"), beacon.BeaconNumber, beacon.Major, beacon.Minor, beacon.RSSI)
 	}
 
 	// Construct the SQL statement by joining the placeholders for each record
 	query := fmt.Sprintf("INSERT INTO %s (activity_id, happened_at, beacon_number, major, minor, rssi) VALUES %s",
 		b.TableName(), strings.Join(values, ", "))
+
+	fmt.Println(args)
 
 	// Execute the constructed query with the arguments
 	_, err := dbSession.SQL().Exec(query, args...)
@@ -57,19 +64,20 @@ func (b *BeaconLog) BulkInsert(beacons []BeaconLog) error {
 	return nil
 }
 
-// GetByID retrieves a single device by its ID.
-func (d *Device) GetByIDs(id string) ([]BeaconLog, error) {
-	collection := dbSession.Collection(d.TableName())
+func (b *BeaconLog) Create(beacon BeaconLog) error {
+	collection := dbSession.Collection(b.TableName())
 
-	var beacons []BeaconLog
-
-	err := collection.Find(up.Cond{"activity_id": id}).All(&beacons)
+	err := collection.InsertReturning(&beacon)
 	if err != nil {
-		if errors.Is(err, up.ErrNoMoreRows) {
-			return nil, errors.New("device not found")
+		// Check if the error is a duplicate key violation (PostgreSQL SQL state 23505)
+		if strings.Contains(err.Error(), "SQLSTATE 23505") {
+			// Define a custom error for duplicate device entries
+			var ErrDuplicateDevice = errors.New("beacon with this ID already exists")
+			return ErrDuplicateDevice
 		}
-		return nil, err
+		// Return any other errors with additional context
+		return fmt.Errorf("failed to create device: %w", err)
 	}
 
-	return beacons, nil
+	return nil
 }

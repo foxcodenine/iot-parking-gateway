@@ -47,7 +47,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	}
 
 	// Generate a new UUID for the RawDataLog entry
-	rawUUID, err := uuid.NewUUID()
+	rawUUID, err := uuid.NewV7()
 	if err != nil {
 		handleErrorSendResponse(err, "Failed to generate UUID for RawDataLog entry", conn, addr, reply)
 		return
@@ -77,8 +77,12 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	switch firmwareVersion {
 	case 53:
 		parsedData, err = firmware.NB_53(hexStr)
-	case 58:
+	case 58, 59:
 		parsedData, err = firmware.NB_58(hexStr)
+
+	default:
+		sendResponse(conn, addr, reply)
+		return
 	}
 
 	if err != nil {

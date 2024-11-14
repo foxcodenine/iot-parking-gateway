@@ -16,7 +16,6 @@ type Models struct {
 	Device      Device
 	RawDataLog  RawDataLog
 	ActivityLog ActivityLog
-	BeaconLog   BeaconLog
 }
 
 // New initializes the Models struct and sets up the Upper ORM session.

@@ -11,22 +11,28 @@ import (
 )
 
 type ActivityLog struct {
-	ID              uuid.UUID `db:"id" json:"id"`                             // Unique identifier for the activity log
-	RawID           uuid.UUID `db:"raw_id" json:"raw_id"`                     // ID linking to raw data source
-	DeviceID        string    `db:"device_id" json:"device_id"`               // Device identifier, can be IMEI or UUID
-	FirmwareVersion string    `db:"firmware_version" json:"firmware_version"` // Firmware version of the device
-	NetworkType     string    `db:"network_type" json:"network_type"`         // Network type (e.g., NB-IoT, LoRa, Sigfox)
-	HappenedAt      time.Time `db:"happened_at" json:"happened_at"`           // Time when the activity event occurred
-	CreatedAt       time.Time `db:"created_at" json:"created_at"`             // Time when the record was created
-	Timestamp       int64     `db:"timestamp" json:"timestamp"`               // Epoch time for additional timing information
-	BeaconsAmount   int       `db:"beacons_amount" json:"beacons_amount"`     // Number of beacons involved
-	MagnetAbsTotal  int       `db:"magnet_abs_total" json:"magnet_abs_total"` // Total magnetic reading value
+	ID               int       `db:"id" json:"id"`                               // Auto-incrementing primary key
+	RawID            uuid.UUID `db:"raw_id" json:"raw_id"`                       // ID linking to raw data source
+	DeviceID         string    `db:"device_id" json:"device_id"`                 // Device identifier, can be IMEI or UUID
+	FirmwareVersion  string    `db:"firmware_version" json:"firmware_version"`   // Firmware version of the device
+	NetworkType      string    `db:"network_type" json:"network_type"`           // Network type (e.g., NB-IoT, LoRa, Sigfox)
+	HappenedAt       time.Time `db:"happened_at" json:"happened_at"`             // Time when the activity event occurred
+	CreatedAt        time.Time `db:"created_at" json:"created_at"`               // Time when the record was created
+	Timestamp        int64     `db:"timestamp" json:"timestamp"`                 // Epoch time for additional timing information
+	BeaconsAmount    int       `db:"beacons_amount" json:"beacons_amount"`       // Number of beacons involved
+	MagnetAbsTotal   int       `db:"magnet_abs_total" json:"magnet_abs_total"`   // Total magnetic reading value
+	PeakDistanceCm   int       `db:"peak_distance_cm" json:"peak_distance_cm"`   // Peak distance in centimeters
+	RadarCumulative  int       `db:"radar_cumulative" json:"radar_cumulative"`   // Cumulative radar reading
+	VehicleOccupancy bool      `db:"vehicle_occupancy" json:"vehicle_occupancy"` // Whether a vehicle is detected
+	Beacons          []Beacon  `db:"beacons" json:"beacons"`                     // JSONB column to store an array of beacon data
+}
 
-	PeakDistanceCm   int  `db:"peak_distance_cm" json:"peak_distance_cm"`   // Peak distance in centimeters
-	RadarCumulative  int  `db:"radar_cumulative" json:"radar_cumulative"`   // Cumulative radar reading
-	VehicleOccupancy bool `db:"vehicle_occupancy" json:"vehicle_occupancy"` // Whether a vehicle is detected
-
-	Beacons []BeaconLog `json:"beacons"` // Associated beacons, if any
+// Beacon struct represents the JSON structure within the beacons JSONB column.
+type Beacon struct {
+	BeaconNumber int `json:"beacon_number"` // Unique number for each beacon within an activity
+	Major        int `json:"major"`         // Major identifier of the beacon
+	Minor        int `json:"minor"`         // Minor identifier of the beacon
+	RSSI         int `json:"rssi"`          // Received Signal Strength Indicator (RSSI) value
 }
 
 // TableName returns the table name for the ActivityLog model.
@@ -37,11 +43,6 @@ func (a *ActivityLog) TableName() string {
 // NewActivityLog constructs an ActivityLog object from a provided map of data.
 // It handles data type conversions and populates the fields accordingly.
 func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
-	// Generate a new UUID for the ActivityLog entry.
-	idUUID, err := uuid.NewUUID()
-	if err != nil {
-		helpers.LogError(err, "Failed to generate UUID for ActivityLog")
-	}
 
 	// Convert the raw UUID field from a string to uuid.UUID.
 	rawUUIDStr, ok := pktData["raw_id"].(string)
@@ -64,10 +65,12 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 
 	// Convert float64 timestamp to int64 and then to time.Time.
 	timestampInt := int64(timestampFloat)
-	happenedAt := time.Unix(timestampInt, 0)
+	happenedAt := time.Unix(timestampInt, 0).UTC()
+
+	fmt.Println(happenedAt)
 
 	// Initialize a slice to hold beacon entries.
-	var beacons []BeaconLog
+	var beacons []Beacon
 
 	// Retrieve and process the "beacons" data, expected as an array of maps.
 	beaconData, ok := pktData["beacons"].([]interface{})
@@ -105,9 +108,7 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 		}
 
 		// Append the beacon to the Beacons slice after converting values to int.
-		beacon := BeaconLog{
-			ActivityID:   idUUID,
-			HappenedAt:   happenedAt,
+		beacon := Beacon{
 			BeaconNumber: int(beaconNumber),
 			Major:        int(major),
 			Minor:        int(minor),
@@ -118,7 +119,6 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 
 	// Construct and return the ActivityLog object with the parsed and converted data.
 	return &ActivityLog{
-		ID:               idUUID,
 		RawID:            rawUUID,
 		DeviceID:         pktData["device_id"].(string),
 		FirmwareVersion:  pktData["firmware_version"].(string),
