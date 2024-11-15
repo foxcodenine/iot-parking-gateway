@@ -16,10 +16,12 @@ func NB_58(hexStr string) (map[string]any, error) {
 	var parkingPackages, keepAlivePackages, settingsPackages []map[string]any
 
 	// Parse initial firmware version and device ID
-	firmwareVersion, nextOffset, err := helpers.ParseHexSubstring(hexStr, 0, 1)
+	firmwareVersionTmp, nextOffset, err := helpers.ParseHexSubstring(hexStr, 0, 1)
 	if err != nil {
 		return nil, helpers.WrapError(err)
 	}
+	// Divide by 10 to convert to float64 and shift decimal place
+	firmwareVersion := float64(firmwareVersionTmp) / 10.0
 
 	// Parse device ID
 	deviceID, nextOffset, err := helpers.ParseHexSubstring(hexStr, nextOffset, 7)

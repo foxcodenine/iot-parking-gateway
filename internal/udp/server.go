@@ -5,6 +5,7 @@ import (
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
+	"github.com/foxcodenine/iot-parking-gateway/internal/services"
 )
 
 // UDPServer represents a UDP server.
@@ -12,16 +13,18 @@ type UDPServer struct {
 	Addr           string
 	Connection     *net.UDPConn
 	cache          *cache.RedisCache
+	services       *services.Service
 	shutdownCh     chan struct{} // Shutdown channel to signal the listening loop to stop
 	isShuttingDown bool          // Flag to indicate the server is intentionally shutting down
 
 }
 
 // NewServer initializes a new UDP server.
-func NewServer(addr string, c *cache.RedisCache) *UDPServer {
+func NewServer(addr string, c *cache.RedisCache, s *services.Service) *UDPServer {
 	return &UDPServer{
 		Addr:           addr,
 		cache:          c,
+		services:       s,
 		shutdownCh:     make(chan struct{}),
 		isShuttingDown: false,
 	}

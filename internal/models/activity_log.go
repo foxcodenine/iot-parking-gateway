@@ -10,11 +10,12 @@ import (
 	"github.com/google/uuid"
 )
 
+// ActivityLog
 type ActivityLog struct {
 	ID               int       `db:"id" json:"id"`                               // Auto-incrementing primary key
 	RawID            uuid.UUID `db:"raw_id" json:"raw_id"`                       // ID linking to raw data source
 	DeviceID         string    `db:"device_id" json:"device_id"`                 // Device identifier, can be IMEI or UUID
-	FirmwareVersion  string    `db:"firmware_version" json:"firmware_version"`   // Firmware version of the device
+	FirmwareVersion  float64   `db:"firmware_version" json:"firmware_version"`   // Firmware version of the device
 	NetworkType      string    `db:"network_type" json:"network_type"`           // Network type (e.g., NB-IoT, LoRa, Sigfox)
 	HappenedAt       time.Time `db:"happened_at" json:"happened_at"`             // Time when the activity event occurred
 	CreatedAt        time.Time `db:"created_at" json:"created_at"`               // Time when the record was created
@@ -66,8 +67,6 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 	// Convert float64 timestamp to int64 and then to time.Time.
 	timestampInt := int64(timestampFloat)
 	happenedAt := time.Unix(timestampInt, 0).UTC()
-
-	fmt.Println(happenedAt)
 
 	// Initialize a slice to hold beacon entries.
 	var beacons []Beacon
@@ -121,7 +120,7 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 	return &ActivityLog{
 		RawID:            rawUUID,
 		DeviceID:         pktData["device_id"].(string),
-		FirmwareVersion:  pktData["firmware_version"].(string),
+		FirmwareVersion:  pktData["firmware_version"].(float64),
 		NetworkType:      pktData["network_type"].(string),
 		HappenedAt:       happenedAt,
 		CreatedAt:        time.Now(),   // Sets CreatedAt to the current time.
@@ -153,12 +152,12 @@ func (a *ActivityLog) BulkInsert(activityLogs []ActivityLog) error {
 			i*13+1, i*13+2, i*13+3, i*13+4, i*13+5, i*13+6, i*13+7, i*13+8, i*13+9, i*13+10, i*13+11, i*13+12, i*13+13))
 
 		// Append the actual values for each placeholder in the same order as the columns
-		args = append(args, log.ID, log.RawID, log.DeviceID, log.FirmwareVersion, log.NetworkType, log.HappenedAt, log.CreatedAt, log.Timestamp,
-			log.BeaconsAmount, log.MagnetAbsTotal, log.PeakDistanceCm, log.RadarCumulative, log.VehicleOccupancy)
+		args = append(args, log.RawID, log.DeviceID, log.FirmwareVersion, log.NetworkType, log.HappenedAt, log.CreatedAt, log.Timestamp,
+			log.BeaconsAmount, log.MagnetAbsTotal, log.PeakDistanceCm, log.RadarCumulative, log.VehicleOccupancy, log.Beacons)
 	}
 
 	// Construct the SQL statement by joining the placeholders for each record
-	query := fmt.Sprintf("INSERT INTO %s (id, raw_id, device_id, firmware_version, network_type, happened_at, created_at, timestamp, beacons_amount, magnet_abs_total, peak_distance_cm, radar_cumulative, vehicle_occupancy) VALUES %s",
+	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, created_at, timestamp, beacons_amount, magnet_abs_total, peak_distance_cm, radar_cumulative, vehicle_occupancy, beacons) VALUES %s",
 		a.TableName(), strings.Join(values, ", "))
 
 	// Execute the constructed query with the arguments

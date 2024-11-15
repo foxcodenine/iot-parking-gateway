@@ -43,8 +43,8 @@ func main() {
 
 	// Start cron
 	app.Cron.AddFunc("* * * * *", func() {
-		app.Service.RedisToPostgresRaw()
-		app.Service.RedisToPostgresActivityLags()
+		app.Service.TransferRawLogsFromRedisToPostgres()
+		app.Service.TransferActivityLogsFromRedisToPostgres()
 	})
 	app.Cron.Start()
 
@@ -97,16 +97,17 @@ func initializeAppConfig() {
 		Prefix: os.Getenv("REDIS_PREFIX"), // Use a prefix for cache keys, if provided
 	}
 
-	app.UdpServer = udp.NewServer(
-		fmt.Sprintf(":%s", os.Getenv("UDP_PORT")),
-		app.Cache,
-	)
-
 	app.Service = services.NewService(
 		app.Models,
 		app.Cache,
 		app.InfoLog,
 		app.ErrorLog,
+	)
+
+	app.UdpServer = udp.NewServer(
+		fmt.Sprintf(":%s", os.Getenv("UDP_PORT")),
+		app.Cache,
+		app.Service,
 	)
 
 	// Initialize and assign a cron scheduler instance to the app

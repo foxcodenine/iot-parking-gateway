@@ -15,7 +15,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// nbMessageHandler processes incoming UDP messages.
+// nbMessageHandler processes incoming UDP messages and logs data to Redis.
 func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.UDPAddr) {
 
 	// Prepare initial reply with message type and timestamp
@@ -33,11 +33,14 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	}
 
 	// Parse firmware version
-	firmwareVersion, nextOffset, err := helpers.ParseHexSubstring(hexStr, 0, 1)
+	firmwareVersionTmp, nextOffset, err := helpers.ParseHexSubstring(hexStr, 0, 1)
 	if err != nil {
 		handleErrorSendResponse(err, "Failed to parse firmware version", conn, addr, reply)
 		return
 	}
+	// Divide by 10 to convert to float64 and shift decimal place
+	firmwareVersion := float64(firmwareVersionTmp) / 10.0
+	fmt.Println(firmwareVersion)
 
 	// Parse device ID
 	deviceID, _, err := helpers.ParseHexSubstring(hexStr, nextOffset, 7)
@@ -53,7 +56,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		return
 	}
 
-	// Construct a new raw data log entry
+	// Create a new RawDataLog object to store in Redis.
 	rawDataLog := models.RawDataLog{
 		ID:              rawUUID,
 		DeviceID:        strconv.Itoa(deviceID),
@@ -71,16 +74,18 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	}
 
 	// Debug output for parsed values
-	helpers.LogInfo("Firmware Version: %d Device ID: %d", firmwareVersion, deviceID)
+	helpers.LogInfo("Firmware Version: %f Device ID: %d", firmwareVersion, deviceID)
 
+	// Process firmware-specific data parsing based on the firmware version.
 	var parsedData map[string]any
 	switch firmwareVersion {
-	case 53:
+	case 5.3:
 		parsedData, err = firmware.NB_53(hexStr)
-	case 58, 59:
+	case 5.8, 5.9:
 		parsedData, err = firmware.NB_58(hexStr)
 
 	default:
+		// Send a default response if the firmware version is not handled.
 		sendResponse(conn, addr, reply)
 		return
 	}
@@ -90,13 +95,13 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		return
 	}
 
+	// Push parsed parking data packages to Redis
 	for _, i := range parsedData["parking_packages"].([]map[string]any) {
-		i["firmware_version"] = fmt.Sprintf("%d", parsedData["firmware_version"])
+		i["firmware_version"] = parsedData["firmware_version"]
 		i["device_id"] = fmt.Sprintf("%d", parsedData["device_id"])
 		i["raw_id"] = rawUUID
 		i["event_id"] = 26
 		i["network_type"] = "nb"
-		helpers.PrettyPrintJSON(i)
 
 		err := s.cache.RPush("activity-logs-nb", i)
 		if err != nil {
@@ -104,7 +109,10 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		}
 	}
 
-	// Send response back to the client
+	// time.Sleep(1 * time.Second)
+	// s.services.TransferActivityLogsFromRedisToPostgres()
+
+	/// Send a final response back to the UDP client confirming the transaction.
 	sendResponse(conn, addr, reply)
 }
 

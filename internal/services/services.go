@@ -2,6 +2,7 @@ package services
 
 import (
 	// "fmt"
+
 	"log"
 	"time"
 
@@ -29,7 +30,7 @@ func NewService(m models.Models, rc *cache.RedisCache, il, el *log.Logger) *Serv
 }
 
 // RedisToPostgresRaw retrieves raw data from Redis, saves it to PostgreSQL, and clears the Redis list.
-func (s *Service) RedisToPostgresRaw() {
+func (s *Service) TransferRawLogsFromRedisToPostgres() {
 
 	items, err := s.cache.LRangeAndDelete("raw-data-logs")
 	if err != nil {
@@ -100,7 +101,7 @@ func (s *Service) RedisToPostgresRaw() {
 		rawLog := models.RawDataLog{
 			ID:              uuidValue,
 			DeviceID:        deviceID,
-			FirmwareVersion: int(firmwareVersion),
+			FirmwareVersion: firmwareVersion,
 			NetworkType:     networkType,
 			RawData:         rawData,
 			CreatedAt:       createdAt,
@@ -120,55 +121,46 @@ func (s *Service) RedisToPostgresRaw() {
 
 }
 
-func (s *Service) RedisToPostgresActivityLags() {
+func (s *Service) TransferActivityLogsFromRedisToPostgres() {
 
+	// Retrieve activity log data from Redis and delete the key.
 	items, err := s.cache.LRangeAndDelete("activity-logs-nb")
 	if err != nil {
+		// Log error if Redis operations fail.
 		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
 		return
 	}
 
-	var activityLogs []models.ActivityLog
+	// Prepare a slice to hold the converted activity log entries.
+	activityLogs := make([]models.ActivityLog, 0, len(items))
 
+	// Iterate through each item retrieved from Redis.
 	for _, item := range items {
-		itemMap, ok := item.(map[string]any)
 
+		// Attempt to assert the type to a map[string]any (JSON-like structure).
+		itemMap, ok := item.(map[string]any)
 		if !ok {
 			s.errorLog.Println("Invalid item type: expected map[string]any")
 			continue
 		}
 
+		// Convert the map to an ActivityLog struct.
 		activityLog, err := models.NewActivityLog(itemMap)
 		if err != nil {
 			helpers.LogError(err, "")
 		}
 
+		// Append the successfully created activity log to the slice.
 		activityLogs = append(activityLogs, *activityLog)
 
 	}
 
+	// Attempt to bulk insert all activity logs into PostgreSQL.
 	err = s.models.ActivityLog.BulkInsert(activityLogs)
 	if err != nil {
 		s.errorLog.Printf("Failed to insert activity logs to PostgreSQL: %v", err)
-		return // Log the error and exit if bulk insert fails
+		return
 	}
+	// Log the successful insertion of activity logs.
 	s.infoLog.Printf("Successfully inserted %d activity logs into PostgreSQL", len(activityLogs))
-	time.Sleep(time.Second * 5)
-
-	helpers.PrettyPrintJSON(activityLogs)
-
-	// err = s.models.BeaconLog.BulkInsert(beaconLogs)
-	// if err != nil {
-	// 	if pgErr, ok := err.(*pq.Error); ok {
-	// 		log.Printf("PG Error Code: %s", pgErr.Code)
-	// 		log.Printf("PG Error Message: %s", pgErr.Message)
-	// 		log.Printf("PG Error Details: %s", pgErr.Detail)
-	// 		log.Printf("PG Error Hint: %s", pgErr.Hint)
-	// 	} else {
-	// 		log.Printf("Non-PG Error: %v", err)
-	// 	}
-	// 	fmt.Println("failed to execute bulk insert for beacons: %w", err)
-	// }
-
-	// TODO:  insert becons
 }
