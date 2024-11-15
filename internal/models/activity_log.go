@@ -123,7 +123,6 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 		FirmwareVersion:  pktData["firmware_version"].(float64),
 		NetworkType:      pktData["network_type"].(string),
 		HappenedAt:       happenedAt,
-		CreatedAt:        time.Now(),   // Sets CreatedAt to the current time.
 		Timestamp:        timestampInt, // Store parsed timestamp as int64.
 		BeaconsAmount:    int(pktData["beacons_amount"].(float64)),
 		MagnetAbsTotal:   int(pktData["magnet_abs_total"].(float64)),
@@ -143,21 +142,21 @@ func (a *ActivityLog) BulkInsert(activityLogs []ActivityLog) error {
 
 	// Prepare slices for SQL values and arguments.
 	values := make([]string, 0, len(activityLogs))       // Holds the placeholder for each row
-	args := make([]interface{}, 0, len(activityLogs)*13) // Updated argument count to include firmware_version
+	args := make([]interface{}, 0, len(activityLogs)*12) // Updated argument count to include firmware_version
 
 	for i, log := range activityLogs {
 
-		// Create a placeholder for each record with indexed arguments, e.g., ($1, $2, ..., $13)
-		values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
-			i*13+1, i*13+2, i*13+3, i*13+4, i*13+5, i*13+6, i*13+7, i*13+8, i*13+9, i*13+10, i*13+11, i*13+12, i*13+13))
+		// Create a placeholder for each record with indexed arguments, e.g., ($1, $2, ..., $12)
+		values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)",
+			i*12+1, i*12+2, i*12+3, i*12+4, i*12+5, i*12+6, i*12+7, i*12+8, i*12+9, i*12+10, i*12+11, i*12+12))
 
 		// Append the actual values for each placeholder in the same order as the columns
-		args = append(args, log.RawID, log.DeviceID, log.FirmwareVersion, log.NetworkType, log.HappenedAt, log.CreatedAt, log.Timestamp,
+		args = append(args, log.RawID, log.DeviceID, log.FirmwareVersion, log.NetworkType, log.HappenedAt, log.Timestamp,
 			log.BeaconsAmount, log.MagnetAbsTotal, log.PeakDistanceCm, log.RadarCumulative, log.VehicleOccupancy, log.Beacons)
 	}
 
 	// Construct the SQL statement by joining the placeholders for each record
-	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, created_at, timestamp, beacons_amount, magnet_abs_total, peak_distance_cm, radar_cumulative, vehicle_occupancy, beacons) VALUES %s",
+	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, timestamp, beacons_amount, magnet_abs_total, peak_distance_cm, radar_cumulative, vehicle_occupancy, beacons) VALUES %s",
 		a.TableName(), strings.Join(values, ", "))
 
 	// Execute the constructed query with the arguments

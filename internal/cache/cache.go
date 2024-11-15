@@ -152,3 +152,125 @@ func (rc *RedisCache) LRangeAndDelete(key string) ([]any, error) {
 
 	return results, nil
 }
+
+// CreateBloomFilter creates a new Bloom Filter in Redis with the specified error rate and capacity.
+func (rc *RedisCache) CreateBloomFilter(filterName string, errorRate float64, capacity int) error {
+	conn := rc.Conn.Get()
+	defer conn.Close()
+
+	_, err := conn.Do("BF.RESERVE", rc.Prefix+filterName, errorRate, capacity)
+	if err != nil {
+		return fmt.Errorf("failed to create Bloom filter: %v", err)
+	}
+
+	return nil
+}
+
+// CheckItemInBloomFilter checks if an item exists in the specified Bloom Filter.
+func (rc *RedisCache) CheckItemInBloomFilter(filterName string, item string) (bool, error) {
+	conn := rc.Conn.Get()
+	defer conn.Close()
+
+	// Execute the BF.EXISTS command to check the existence of the item in the Bloom Filter
+	exists, err := redis.Int(conn.Do("BF.EXISTS", rc.Prefix+filterName, item))
+	if err != nil {
+		return false, fmt.Errorf("failed to check item in Bloom filter: %v", err)
+	}
+
+	// The BF.EXISTS command returns 1 if the item is possibly in the set, 0 if it is definitely not in the set
+	return exists == 1, nil
+}
+
+// AddItemToBloomFilter adds an item to the specified Bloom Filter.
+func (rc *RedisCache) AddItemToBloomFilter(filterName string, item string) (bool, error) {
+	conn := rc.Conn.Get()
+	defer conn.Close()
+
+	// Execute the BF.ADD command to add the item to the Bloom Filter
+	added, err := redis.Int(conn.Do("BF.ADD", rc.Prefix+filterName, item))
+	if err != nil {
+		return false, fmt.Errorf("failed to add item to Bloom filter: %v", err)
+	}
+
+	// The BF.ADD command returns 1 if the item is a new addition to the filter, 0 if it was already present
+	return added == 1, nil
+}
+
+func (rc *RedisCache) SAdd(key string, values ...any) error {
+	conn := rc.Conn.Get()
+	defer conn.Close()
+
+	args := make([]any, len(values)+1)
+	args[0] = rc.Prefix + key
+
+	for i, v := range values {
+		jsonData, err := json.Marshal(v)
+		if err != nil {
+			return fmt.Errorf("failed to marshal value: %v", err)
+		}
+		args[i+1] = jsonData
+	}
+
+	_, err := conn.Do("SADD", args...)
+	if err != nil {
+		return fmt.Errorf("failed to SADD to Redis set: %w", err)
+	}
+
+	return nil
+}
+
+func (rc *RedisCache) SMembers(key string) ([]any, error) {
+	conn := rc.Conn.Get()
+	defer conn.Close()
+
+	memberStrings, err := redis.Strings(conn.Do("SMEMBERS", rc.Prefix+key))
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve SMEMBERS from Redis set: %w", err)
+	}
+
+	members := make([]any, len(memberStrings))
+	for i, memberStr := range memberStrings {
+		var member any
+		if err := json.Unmarshal([]byte(memberStr), &member); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal member: %w", err)
+		}
+		members[i] = member
+	}
+
+	return members, nil
+}
+
+func (rc *RedisCache) SMembersDel(key string) ([]any, error) {
+	rc.mu.Lock()         // Lock before accessing the set
+	defer rc.mu.Unlock() // Ensure it's unlocked after operation
+
+	conn := rc.Conn.Get()
+	defer conn.Close()
+
+	// Get the prefixed key
+	prefixedKey := rc.Prefix + key
+
+	// Retrieve all items in the set as strings
+	memberStrings, err := redis.Strings(conn.Do("SMEMBERS", prefixedKey))
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve SMEMBERS from Redis set: %w", err)
+	}
+
+	// Delete the set from Redis
+	_, err = conn.Do("DEL", prefixedKey)
+	if err != nil {
+		return nil, fmt.Errorf("failed to delete Redis set after retrieving members: %w", err)
+	}
+
+	// Convert the string data into the desired 'any' type using json.Unmarshal
+	members := make([]any, len(memberStrings))
+	for i, memberStr := range memberStrings {
+		var member any
+		if err := json.Unmarshal([]byte(memberStr), &member); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal member: %w", err)
+		}
+		members[i] = member
+	}
+
+	return members, nil
+}

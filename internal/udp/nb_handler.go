@@ -40,13 +40,33 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	}
 	// Divide by 10 to convert to float64 and shift decimal place
 	firmwareVersion := float64(firmwareVersionTmp) / 10.0
-	fmt.Println(firmwareVersion)
 
 	// Parse device ID
 	deviceID, _, err := helpers.ParseHexSubstring(hexStr, nextOffset, 7)
 	if err != nil {
 		handleErrorSendResponse(err, "Failed to parse device ID", conn, addr, reply)
 		return
+	}
+
+	// TODO:  Check device ID against a black or white list
+
+	// Check if the device ID is already in the Bloom Filter
+	isDeviceRegistered, err := s.cache.CheckItemInBloomFilter("device-id", fmt.Sprintf("%d", deviceID))
+	if err != nil {
+		helpers.LogError(err, "Failed to check Bloom Filter for device ID")
+	}
+
+	// If the device ID is not registered, add it to the set and Bloom Filter
+	if !isDeviceRegistered {
+		// Add the device ID to a Redis set for later processing
+		if err := s.cache.SAdd("device-to-create", fmt.Sprintf("%d", deviceID)); err != nil {
+			helpers.LogError(err, "Failed to add device ID to the set")
+		}
+
+		// Add the device ID to the Bloom Filter to register it
+		if _, err := s.cache.AddItemToBloomFilter("device-id", fmt.Sprintf("%d", deviceID)); err != nil {
+			helpers.LogError(err, "Failed to add device ID to the Bloom Filter")
+		}
 	}
 
 	// Generate a new UUID for the RawDataLog entry
@@ -74,7 +94,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	}
 
 	// Debug output for parsed values
-	helpers.LogInfo("Firmware Version: %f Device ID: %d", firmwareVersion, deviceID)
+	helpers.LogInfo("Firmware Version: %.2f Device ID: %d", firmwareVersion, deviceID)
 
 	// Process firmware-specific data parsing based on the firmware version.
 	var parsedData map[string]any

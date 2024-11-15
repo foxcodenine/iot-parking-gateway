@@ -97,6 +97,8 @@ func initializeAppConfig() {
 		Prefix: os.Getenv("REDIS_PREFIX"), // Use a prefix for cache keys, if provided
 	}
 
+	app.Cache.CreateBloomFilter("device-id", 0.00001, 100000)
+
 	app.Service = services.NewService(
 		app.Models,
 		app.Cache,

@@ -28,19 +28,19 @@ func (r *RawDataLog) BulkInsert(rawDataLogs []RawDataLog) error {
 
 	// Prepare slices for SQL values and arguments.
 	values := make([]string, 0, len(rawDataLogs))      // Holds each row as a set of placeholders
-	args := make([]interface{}, 0, len(rawDataLogs)*6) // Holds each actual value to be inserted
+	args := make([]interface{}, 0, len(rawDataLogs)*5) // Holds each actual value to be inserted
 
 	for i, log := range rawDataLogs {
 		// Create a placeholder for each record, referencing argument indices for this row.
-		// The format "($1, $2, ..., $6)" is modified per row to match the argument position.
-		values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d)", i*6+1, i*6+2, i*6+3, i*6+4, i*6+5, i*6+6))
+		// The format "($1, $2, ..., $5)" is modified per row to match the argument position.
+		values = append(values, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d)", i*5+1, i*5+2, i*5+3, i*5+4, i*5+5))
 
 		// Add each field value to the args slice in the same order as the placeholders.
-		args = append(args, log.ID, log.DeviceID, log.FirmwareVersion, log.NetworkType, log.RawData, log.CreatedAt)
+		args = append(args, log.ID, log.DeviceID, log.FirmwareVersion, log.NetworkType, log.RawData)
 	}
 
 	// Construct the full SQL query string for bulk insertion.
-	query := fmt.Sprintf("INSERT INTO %s (id, device_id, firmware_version, network_type, raw_data, created_at) VALUES %s",
+	query := fmt.Sprintf("INSERT INTO %s (id, device_id, firmware_version, network_type, raw_data) VALUES %s",
 		r.TableName(), strings.Join(values, ", "))
 
 	// Execute the bulk insert query
