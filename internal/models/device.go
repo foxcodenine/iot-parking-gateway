@@ -1,11 +1,14 @@
 package models
 
 import (
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	up "github.com/upper/db/v4"
 )
 
@@ -13,9 +16,18 @@ import (
 
 // Device represents a parking device in the database with ID and timestamps.
 type Device struct {
-	DeviceID  string    `db:"device_id" json:"device_id"`
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+	DeviceID        string         `db:"device_id" json:"device_id"`
+	Name            string         `db:"name" json:"name"`
+	NetworkType     string         `db:"network_type,omitempty" json:"network_type"`
+	FirmwareVersion float64        `db:"firmware_version" json:"firmware_version"`
+	Latitude        float64        `db:"latitude" json:"latitude"`
+	Longitude       float64        `db:"longitude" json:"longitude"`
+	BeaconsJSON     sql.NullString `db:"beacons,omitempty" json:"beacons_json"`
+	Beacons         []Beacon       `json:"beacons"`
+	HappenedAt      time.Time      `db:"happened_at" json:"happened_at"`
+	Occupied        bool           `db:"occupied" json:"occupied"`
+	CreatedAt       time.Time      `db:"created_at" json:"created_at"`
+	UpdatedAt       time.Time      `db:"updated_at" json:"updated_at"`
 }
 
 // -----------------------------------------------------------------------------
@@ -27,6 +39,28 @@ func (d *Device) TableName() string {
 
 // -----------------------------------------------------------------------------
 
+// ParseBeaconsJSON parses the BeaconsJSON field into the Beacons field.
+func (d *Device) ParseBeaconsJSON() error {
+	fmt.Println(d.BeaconsJSON)
+	fmt.Printf("%T", d.BeaconsJSON)
+
+	if !d.BeaconsJSON.Valid {
+		// If BeaconsJSON is NULL, skip parsing
+		d.Beacons = nil
+		return nil
+	}
+
+	var decodedBeacons []Beacon
+	err := json.Unmarshal([]byte(d.BeaconsJSON.String), &decodedBeacons)
+	if err != nil {
+		helpers.LogError(err, "Error unmarshalling JSON:")
+		return err
+	}
+	d.Beacons = decodedBeacons
+
+	return nil
+}
+
 // GetAll retrieves all devices from the database.
 func (d *Device) GetAll() ([]Device, error) {
 	collection := dbSession.Collection(d.TableName())
@@ -36,6 +70,15 @@ func (d *Device) GetAll() ([]Device, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	for i := range devices {
+		err := devices[i].ParseBeaconsJSON()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing BeaconsJSON for device ID %s: %w", devices[i].DeviceID, err)
+		}
+	}
+
+	helpers.PrettyPrintJSON(devices)
 
 	return devices, nil
 }
@@ -62,20 +105,15 @@ func (d *Device) GetByID(id string) (*Device, error) {
 // -----------------------------------------------------------------------------
 
 // Create inserts a new Device record in the database and returns the created device.
-func (d *Device) Create(id string) (*Device, error) {
+func (d *Device) Create(newDevice *Device) (*Device, error) {
 	collection := dbSession.Collection(d.TableName())
 
 	// Set current time for CreatedAt and UpdatedAt
 	now := time.Now().UTC()
+	newDevice.CreatedAt = now
+	newDevice.UpdatedAt = now
 
-	// Prepare the new device record
-	newDevice := Device{
-		DeviceID:  id,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
-
-	err := collection.InsertReturning(&newDevice)
+	_, err := collection.Insert(newDevice)
 	if err != nil {
 		// Check if the error is a duplicate key violation (PostgreSQL SQL state 23505)
 		if strings.Contains(err.Error(), "SQLSTATE 23505") {
@@ -87,7 +125,7 @@ func (d *Device) Create(id string) (*Device, error) {
 		return nil, fmt.Errorf("failed to create device: %w", err)
 	}
 
-	return &newDevice, nil
+	return newDevice, nil
 }
 
 // -----------------------------------------------------------------------------
@@ -149,3 +187,43 @@ func (d *Device) DeleteByID(id string) error {
 }
 
 // -----------------------------------------------------------------------------
+
+// BulkUpdateDevices updates multiple device records based on their device IDs.
+func (d *Device) BulkUpdateDevices(deviceData []ActivityLog) error {
+
+	if len(deviceData) == 0 {
+		return nil // No data to update
+	}
+
+	var args []interface{}
+	valuesList := make([]string, len(deviceData))
+	for i, data := range deviceData {
+		// Prepare a position offset for SQL placeholders based on number of fields per device
+		pos := i*5 + 1
+		valuesList[i] = fmt.Sprintf("($%d, $%d::numeric, $%d::jsonb, $%d::timestamp, $%d::boolean)", pos, pos+1, pos+2, pos+3, pos+4)
+		args = append(args, data.DeviceID, data.FirmwareVersion, data.Beacons, data.HappenedAt, data.Occupied)
+	}
+
+	// Construct the SQL statement with explicit type casts to ensure proper data handling
+	query := fmt.Sprintf(`
+		UPDATE parking.devices AS d
+		SET
+			firmware_version = v.firmware_version,
+			beacons = v.beacons,
+			happened_at = v.happened_at,
+			occupied = v.occupied,
+			updated_at = NOW()
+		FROM (VALUES
+			%s
+		) AS v(device_id, firmware_version, beacons, happened_at, occupied)
+		WHERE d.device_id = v.device_id
+	`, strings.Join(valuesList, ", "))
+
+	// Execute the constructed query with the arguments
+	_, err := dbSession.SQL().Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to execute bulk update for devices: %w", err)
+	}
+
+	return nil
+}

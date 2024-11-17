@@ -44,6 +44,7 @@ func main() {
 	// Start cron
 	app.Cron.AddFunc("* * * * *", func() {
 		app.Service.TransferRawLogsFromRedisToPostgres()
+		app.Service.CreateNewDevices()
 		app.Service.TransferActivityLogsFromRedisToPostgres()
 	})
 	app.Cron.Start()

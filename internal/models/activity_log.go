@@ -12,28 +12,20 @@ import (
 
 // ActivityLog
 type ActivityLog struct {
-	ID               int       `db:"id" json:"id"`                               // Auto-incrementing primary key
-	RawID            uuid.UUID `db:"raw_id" json:"raw_id"`                       // ID linking to raw data source
-	DeviceID         string    `db:"device_id" json:"device_id"`                 // Device identifier, can be IMEI or UUID
-	FirmwareVersion  float64   `db:"firmware_version" json:"firmware_version"`   // Firmware version of the device
-	NetworkType      string    `db:"network_type" json:"network_type"`           // Network type (e.g., NB-IoT, LoRa, Sigfox)
-	HappenedAt       time.Time `db:"happened_at" json:"happened_at"`             // Time when the activity event occurred
-	CreatedAt        time.Time `db:"created_at" json:"created_at"`               // Time when the record was created
-	Timestamp        int64     `db:"timestamp" json:"timestamp"`                 // Epoch time for additional timing information
-	BeaconsAmount    int       `db:"beacons_amount" json:"beacons_amount"`       // Number of beacons involved
-	MagnetAbsTotal   int       `db:"magnet_abs_total" json:"magnet_abs_total"`   // Total magnetic reading value
-	PeakDistanceCm   int       `db:"peak_distance_cm" json:"peak_distance_cm"`   // Peak distance in centimeters
-	RadarCumulative  int       `db:"radar_cumulative" json:"radar_cumulative"`   // Cumulative radar reading
-	VehicleOccupancy bool      `db:"vehicle_occupancy" json:"vehicle_occupancy"` // Whether a vehicle is detected
-	Beacons          []Beacon  `db:"beacons" json:"beacons"`                     // JSONB column to store an array of beacon data
-}
-
-// Beacon struct represents the JSON structure within the beacons JSONB column.
-type Beacon struct {
-	BeaconNumber int `json:"beacon_number"` // Unique number for each beacon within an activity
-	Major        int `json:"major"`         // Major identifier of the beacon
-	Minor        int `json:"minor"`         // Minor identifier of the beacon
-	RSSI         int `json:"rssi"`          // Received Signal Strength Indicator (RSSI) value
+	ID              int       `db:"id" json:"id"`                             // Auto-incrementing primary key
+	RawID           uuid.UUID `db:"raw_id" json:"raw_id"`                     // ID linking to raw data source
+	DeviceID        string    `db:"device_id" json:"device_id"`               // Device identifier, can be IMEI or UUID
+	FirmwareVersion float64   `db:"firmware_version" json:"firmware_version"` // Firmware version of the device
+	NetworkType     string    `db:"network_type" json:"network_type"`         // Network type (e.g., NB-IoT, LoRa, Sigfox)
+	HappenedAt      time.Time `db:"happened_at" json:"happened_at"`           // Time when the activity event occurred
+	CreatedAt       time.Time `db:"created_at" json:"created_at"`             // Time when the record was created
+	Timestamp       int64     `db:"timestamp" json:"timestamp"`               // Epoch time for additional timing information
+	BeaconsAmount   int       `db:"beacons_amount" json:"beacons_amount"`     // Number of beacons involved
+	MagnetAbsTotal  int       `db:"magnet_abs_total" json:"magnet_abs_total"` // Total magnetic reading value
+	PeakDistanceCm  int       `db:"peak_distance_cm" json:"peak_distance_cm"` // Peak distance in centimeters
+	RadarCumulative int       `db:"radar_cumulative" json:"radar_cumulative"` // Cumulative radar reading
+	Occupied        bool      `db:"occupied" json:"occupied"`                 // Whether a vehicle is detected
+	Beacons         []Beacon  `db:"beacons" json:"beacons"`                   // JSONB column to store an array of beacon data
 }
 
 // TableName returns the table name for the ActivityLog model.
@@ -118,18 +110,18 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 
 	// Construct and return the ActivityLog object with the parsed and converted data.
 	return &ActivityLog{
-		RawID:            rawUUID,
-		DeviceID:         pktData["device_id"].(string),
-		FirmwareVersion:  pktData["firmware_version"].(float64),
-		NetworkType:      pktData["network_type"].(string),
-		HappenedAt:       happenedAt,
-		Timestamp:        timestampInt, // Store parsed timestamp as int64.
-		BeaconsAmount:    int(pktData["beacons_amount"].(float64)),
-		MagnetAbsTotal:   int(pktData["magnet_abs_total"].(float64)),
-		PeakDistanceCm:   int(pktData["peak_distance_cm"].(float64)),
-		RadarCumulative:  int(pktData["radar_cumulative"].(float64)),
-		VehicleOccupancy: pktData["vehicle_occupancy"].(float64) != 0, // Convert to boolean.
-		Beacons:          beacons,                                     // Attach the processed beacons.
+		RawID:           rawUUID,
+		DeviceID:        pktData["device_id"].(string),
+		FirmwareVersion: pktData["firmware_version"].(float64),
+		NetworkType:     pktData["network_type"].(string),
+		HappenedAt:      happenedAt,
+		Timestamp:       timestampInt, // Store parsed timestamp as int64.
+		BeaconsAmount:   int(pktData["beacons_amount"].(float64)),
+		MagnetAbsTotal:  int(pktData["magnet_abs_total"].(float64)),
+		PeakDistanceCm:  int(pktData["peak_distance_cm"].(float64)),
+		RadarCumulative: int(pktData["radar_cumulative"].(float64)),
+		Occupied:        pktData["occupied"].(float64) != 0, // Convert to boolean.
+		Beacons:         beacons,                            // Attach the processed beacons.
 	}, nil
 }
 
@@ -152,11 +144,11 @@ func (a *ActivityLog) BulkInsert(activityLogs []ActivityLog) error {
 
 		// Append the actual values for each placeholder in the same order as the columns
 		args = append(args, log.RawID, log.DeviceID, log.FirmwareVersion, log.NetworkType, log.HappenedAt, log.Timestamp,
-			log.BeaconsAmount, log.MagnetAbsTotal, log.PeakDistanceCm, log.RadarCumulative, log.VehicleOccupancy, log.Beacons)
+			log.BeaconsAmount, log.MagnetAbsTotal, log.PeakDistanceCm, log.RadarCumulative, log.Occupied, log.Beacons)
 	}
 
 	// Construct the SQL statement by joining the placeholders for each record
-	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, timestamp, beacons_amount, magnet_abs_total, peak_distance_cm, radar_cumulative, vehicle_occupancy, beacons) VALUES %s",
+	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, timestamp, beacons_amount, magnet_abs_total, peak_distance_cm, radar_cumulative, occupied, beacons) VALUES %s",
 		a.TableName(), strings.Join(values, ", "))
 
 	// Execute the constructed query with the arguments

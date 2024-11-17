@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
+	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -26,10 +27,13 @@ func (h *DeviceHandler) ListDevices(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Encode the devices slice to JSON and write it to the response
+
+	helpers.PrettyPrintJSON(devices)
 	err = json.NewEncoder(w).Encode(devices)
 
 	if err != nil {
 		helpers.RespondWithError(w, err, "Failed to encode response", http.StatusInternalServerError)
+		helpers.LogError(err, "Failed to encode response")
 		return
 	}
 }
@@ -37,7 +41,8 @@ func (h *DeviceHandler) ListDevices(w http.ResponseWriter, r *http.Request) {
 func (h *DeviceHandler) CreateDevice(w http.ResponseWriter, r *http.Request) {
 
 	var payload struct {
-		DeviceID string `json:"device_id"`
+		DeviceID    string `json:"device_id"`
+		NetworkType string `json:"network_type"`
 	}
 
 	// Decode the JSON body into the payload struct
@@ -48,8 +53,13 @@ func (h *DeviceHandler) CreateDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	newDevice := models.Device{
+		DeviceID:    payload.DeviceID,
+		NetworkType: payload.NetworkType,
+	}
+
 	// Call the Create method on the Device model (example uses hardcoded device ID)
-	device, err := app.Models.Device.Create(payload.DeviceID)
+	device, err := app.Models.Device.Create(&newDevice)
 	if err != nil {
 		app.ErrorLog.Printf("Failed to create device: %v", err)
 		helpers.RespondWithError(w, err, "Failed to create device", http.StatusInternalServerError)

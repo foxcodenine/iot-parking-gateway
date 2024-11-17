@@ -1,16 +1,15 @@
 package services
 
 import (
-	// "fmt"
-
 	"log"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/google/uuid"
-	// "github.com/lib/pq"
 )
 
 type Service struct {
@@ -155,12 +154,75 @@ func (s *Service) TransferActivityLogsFromRedisToPostgres() {
 
 	}
 
+	// Sort activity logs by the HappenedAt field.
+	sort.Slice(activityLogs, func(i, j int) bool {
+		return activityLogs[i].HappenedAt.Before(activityLogs[j].HappenedAt)
+	})
+
 	// Attempt to bulk insert all activity logs into PostgreSQL.
-	err = s.models.ActivityLog.BulkInsert(activityLogs)
-	if err != nil {
+	if err = s.models.ActivityLog.BulkInsert(activityLogs); err != nil {
 		s.errorLog.Printf("Failed to insert activity logs to PostgreSQL: %v", err)
 		return
 	}
-	// Log the successful insertion of activity logs.
+
+	// Log successful insertion of activity logs.
 	s.infoLog.Printf("Successfully inserted %d activity logs into PostgreSQL", len(activityLogs))
+
+	// If activity logs are successfully inserted, proceed to update devices.
+	if err = s.models.Device.BulkUpdateDevices(activityLogs); err != nil {
+		s.errorLog.Printf("Failed to update device records: %v", err)
+		return
+	}
+
+	// Log successful update of devices.
+	s.infoLog.Printf("Successfully updated device records based on activity logs")
+}
+
+func (s *Service) CreateNewDevices() {
+	// Retrieve device IDs from Redis and delete the set afterwards.
+	deviceEntries, err := s.cache.SMembersDel("device-to-create")
+	if err != nil {
+		s.errorLog.Printf("Failed to retrieve device IDs from Redis: %v", err)
+		return
+	}
+
+	// Process each device entry to create new device records.
+	for _, entry := range deviceEntries {
+		// Convert interface to string, ensuring it represents a device ID correctly.
+		deviceInfo, ok := entry.(string)
+		if !ok {
+			s.errorLog.Printf("Invalid device ID format: expected string but got %T", entry)
+			continue
+		}
+
+		// Extract firmware version and device ID from the string.
+		spaceIndex := strings.Index(deviceInfo, " ")
+		if spaceIndex == -1 {
+			s.errorLog.Printf("Device information string does not contain a space: %s", deviceInfo)
+			continue
+		}
+
+		networkType := deviceInfo[:spaceIndex]
+		deviceID := deviceInfo[spaceIndex+1:]
+
+		// Define a new device model instance.
+		newDevice := models.Device{
+			DeviceID:    deviceID,
+			Name:        "new " + deviceID,
+			NetworkType: networkType,
+		}
+
+		// Attempt to create a new device record in the database.
+		_, err = s.models.Device.Create(&newDevice)
+		if err != nil {
+			s.errorLog.Printf("Failed to create a new device record for ID %s: %v", deviceID, err)
+			continue // Proceed to the next ID instead of stopping.
+		}
+
+	}
+	if len(deviceEntries) == 1 {
+		s.infoLog.Println("Successfully added 1 device to PostgreSQL")
+	} else {
+		s.infoLog.Printf("Successfully added %d devices to PostgreSQL", len(deviceEntries))
+	}
 }
