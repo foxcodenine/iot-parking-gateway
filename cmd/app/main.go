@@ -37,18 +37,6 @@ func main() {
 	// Initialize and set up handlers with app configuration
 	initializeHandlers()
 
-	// Start the UDP server in a goroutine
-	go app.UdpServer.Start()
-	defer app.UdpServer.Stop()
-
-	// Start cron
-	app.Cron.AddFunc("* * * * *", func() {
-		app.Service.TransferRawLogsFromRedisToPostgres()
-		app.Service.CreateNewDevices()
-		app.Service.TransferActivityLogsFromRedisToPostgres()
-	})
-	app.Cron.Start()
-
 	// Setup RabbitMQ Producer
 	rabbitConfig := mq.SetupRabbitMQConfig()
 	rabbitProducer := mq.NewRabbitMQProducer(rabbitConfig)
@@ -56,6 +44,22 @@ func main() {
 
 	// Start the message producer routine
 	go rabbitProducer.Run()
+
+	// Start the UDP server in a goroutine
+	go app.UdpServer.Start()
+	defer app.UdpServer.Stop()
+
+	// // Initialize and Populate a Bloom Filter in Redis to efficiently check the existence of device IDs.
+	app.Cache.CreateBloomFilter("device-id", 0.00001, 100000)
+	app.Service.PopulateDeviceBloomFilter()
+
+	// Start cron
+	app.Cron.AddFunc("* * * * *", func() {
+		app.Service.SyncRawLogs()
+		app.Service.RegisterNewDevices()
+		app.Service.SyncActivityLogsAndDevices()
+	})
+	app.Cron.Start()
 
 	// Start the web server
 	httpServer := httpserver.NewServer(os.Getenv("HTTP_PORT"))
@@ -98,8 +102,7 @@ func initializeAppConfig() {
 		Prefix: os.Getenv("REDIS_PREFIX"), // Use a prefix for cache keys, if provided
 	}
 
-	app.Cache.CreateBloomFilter("device-id", 0.00001, 100000)
-
+	// Initialize the service layer that handles business logic.
 	app.Service = services.NewService(
 		app.Models,
 		app.Cache,
@@ -107,6 +110,7 @@ func initializeAppConfig() {
 		app.ErrorLog,
 	)
 
+	// Set up the UDP server
 	app.UdpServer = udp.NewServer(
 		fmt.Sprintf(":%s", os.Getenv("UDP_PORT")),
 		app.Cache,

@@ -41,8 +41,6 @@ func (d *Device) TableName() string {
 
 // ParseBeaconsJSON parses the BeaconsJSON field into the Beacons field.
 func (d *Device) ParseBeaconsJSON() error {
-	fmt.Println(d.BeaconsJSON)
-	fmt.Printf("%T", d.BeaconsJSON)
 
 	if !d.BeaconsJSON.Valid {
 		// If BeaconsJSON is NULL, skip parsing
@@ -77,8 +75,6 @@ func (d *Device) GetAll() ([]Device, error) {
 			return nil, fmt.Errorf("error parsing BeaconsJSON for device ID %s: %w", devices[i].DeviceID, err)
 		}
 	}
-
-	helpers.PrettyPrintJSON(devices)
 
 	return devices, nil
 }

@@ -124,15 +124,29 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		i["event_id"] = 26
 		i["network_type"] = "nb"
 
-		err := s.cache.RPush("activity-logs-nb", i)
+		err := s.cache.RPush("nb-activity-logs", i)
 		if err != nil {
-			helpers.LogError(err, "Failed to push raw data log to Redis")
+			helpers.LogError(err, "Failed to push parking package data log to Redis")
+		}
+	}
+
+	for _, i := range parsedData["keep_alive_packages"].([]map[string]any) {
+		i["firmware_version"] = parsedData["firmware_version"]
+		i["device_id"] = fmt.Sprintf("%d", parsedData["device_id"])
+		i["raw_id"] = rawUUID
+		i["event_id"] = 6
+		i["network_type"] = "nb"
+
+		err := s.cache.RPush("nb-keepalive-logs", i)
+		if err != nil {
+			helpers.LogError(err, "Failed to push keepalive package data log to Redis")
 		}
 	}
 
 	time.Sleep(1 * time.Second)
-	s.services.CreateNewDevices()
-	s.services.TransferActivityLogsFromRedisToPostgres()
+	// s.services.RegisterNewDevices()
+	// s.services.SyncActivityLogsAndDevices()
+	s.services.SyncNBIoTKeepaliveLogs()
 
 	/// Send a final response back to the UDP client confirming the transaction.
 	sendResponse(conn, addr, reply)

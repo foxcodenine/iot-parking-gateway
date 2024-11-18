@@ -13,9 +13,10 @@ var dbSession up.Session
 
 // Models struct will hold references to all database models, e.g., Device.
 type Models struct {
-	Device      Device
-	RawDataLog  RawDataLog
-	ActivityLog ActivityLog
+	Device            Device
+	RawDataLog        RawDataLog
+	ActivityLog       ActivityLog
+	NbiotKeepaliveLog NbiotKeepaliveLog
 }
 
 // New initializes the Models struct and sets up the Upper ORM session.

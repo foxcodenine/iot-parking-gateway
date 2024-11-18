@@ -48,3 +48,36 @@ func (rc *RedisCache) AddItemToBloomFilter(filterName string, item string) (bool
 	// The BF.ADD command returns 1 if the item is a new addition to the filter, 0 if it was already present
 	return added == 1, nil
 }
+
+// AddItemsToBloomFilter adds multiple items to the specified Bloom Filter.
+func (rc *RedisCache) AddItemsToBloomFilter(filterName string, items []string) ([]bool, error) {
+	conn := rc.Conn.Get()
+	defer conn.Close()
+
+	// Use Send to queue BF.ADD commands for each item
+	for _, item := range items {
+		err := conn.Send("BF.ADD", rc.Prefix+filterName, item)
+		if err != nil {
+			return nil, fmt.Errorf("failed to queue addition of item to Bloom filter: %v", err)
+		}
+	}
+
+	// Flush the commands to the server
+	err := conn.Flush()
+	if err != nil {
+		return nil, fmt.Errorf("failed to flush Bloom filter additions: %v", err)
+	}
+
+	results := make([]bool, len(items))
+
+	// Receive responses for each command
+	for i := range items {
+		added, err := redis.Int(conn.Receive()) // Receive the response
+		if err != nil {
+			return nil, fmt.Errorf("failed to receive response for Bloom filter addition: %v", err)
+		}
+		results[i] = (added == 1)
+	}
+
+	return results, nil
+}

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"log"
 	"sort"
 	"strings"
@@ -28,8 +29,8 @@ func NewService(m models.Models, rc *cache.RedisCache, il, el *log.Logger) *Serv
 	}
 }
 
-// RedisToPostgresRaw retrieves raw data from Redis, saves it to PostgreSQL, and clears the Redis list.
-func (s *Service) TransferRawLogsFromRedisToPostgres() {
+// SyncRawLogs processes and synchronizes raw logs from Redis to PostgreSQL.
+func (s *Service) SyncRawLogs() {
 
 	items, err := s.cache.LRangeAndDelete("raw-data-logs")
 	if err != nil {
@@ -120,10 +121,11 @@ func (s *Service) TransferRawLogsFromRedisToPostgres() {
 
 }
 
-func (s *Service) TransferActivityLogsFromRedisToPostgres() {
+// SyncActivityLogsAndDevices processes and synchronizes activity logs and device updates from Redis to PostgreSQL.
+func (s *Service) SyncActivityLogsAndDevices() {
 
 	// Retrieve activity log data from Redis and delete the key.
-	items, err := s.cache.LRangeAndDelete("activity-logs-nb")
+	items, err := s.cache.LRangeAndDelete("nb-activity-logs")
 	if err != nil {
 		// Log error if Redis operations fail.
 		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
@@ -178,7 +180,44 @@ func (s *Service) TransferActivityLogsFromRedisToPostgres() {
 	s.infoLog.Printf("Successfully updated device records based on activity logs")
 }
 
-func (s *Service) CreateNewDevices() {
+func (s *Service) SyncNBIoTKeepaliveLogs() {
+	// Retrieve keepalive log data from Redis and delete the key.
+	items, err := s.cache.LRangeAndDelete("nb-keepalive-logs")
+	if err != nil {
+		// Log error if Redis operations fail.
+		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
+		return
+	}
+
+	// Prepare a slice to hold the converted activity log entries.
+	nbIotKeepaliveLogs := make([]models.NbiotKeepaliveLog, 0, len(items))
+
+	// Iterate through each item retrieved from Redis.
+	for _, item := range items {
+
+		// Attempt to assert the type to a map[string]any (JSON-like structure).
+		itemMap, ok := item.(map[string]any)
+		if !ok {
+			s.errorLog.Println("Invalid item type: expected map[string]any")
+			continue
+		}
+
+		// Convert the map to an KeepaliveLog struct.
+		keepaliveLog, err := models.NewNbiotKeepaliveLog(itemMap)
+		if err != nil {
+			helpers.LogError(err, "")
+		}
+
+		// Append the successfully created activity log to the slice.
+		nbIotKeepaliveLogs = append(nbIotKeepaliveLogs, *keepaliveLog)
+
+	}
+
+	s.models.NbiotKeepaliveLog.BulkInsert(nbIotKeepaliveLogs)
+}
+
+// RegisterNewDevices retrieves device IDs from Redis, creates new device records in the database, and logs the outcome.
+func (s *Service) RegisterNewDevices() {
 	// Retrieve device IDs from Redis and delete the set afterwards.
 	deviceEntries, err := s.cache.SMembersDel("device-to-create")
 	if err != nil {
@@ -195,7 +234,7 @@ func (s *Service) CreateNewDevices() {
 			continue
 		}
 
-		// Extract firmware version and device ID from the string.
+		// Extract network type and device ID from the string.
 		spaceIndex := strings.Index(deviceInfo, " ")
 		if spaceIndex == -1 {
 			s.errorLog.Printf("Device information string does not contain a space: %s", deviceInfo)
@@ -225,4 +264,28 @@ func (s *Service) CreateNewDevices() {
 	} else {
 		s.infoLog.Printf("Successfully added %d devices to PostgreSQL", len(deviceEntries))
 	}
+}
+
+// PopulateDeviceBloomFilter retrieves all devices from the database and populates a Bloom Filter with their network type and device IDs.
+func (s *Service) PopulateDeviceBloomFilter() {
+	// Fetch all devices from the database.
+
+	tmp := models.Device{}
+	devices, err := tmp.GetAll()
+	if err != nil {
+		s.errorLog.Printf("Error retrieving devices from Postgres: %v", err)
+		return
+	}
+
+	// Initialize a slice to store composite keys for the Bloom Filter.
+	var keyStrings []string
+
+	// Iterate over each device to create a composite key of network type and device ID.
+	for _, d := range devices {
+		key := fmt.Sprintf("%s %s", d.NetworkType, d.DeviceID)
+		keyStrings = append(keyStrings, key)
+	}
+
+	// Add all composite keys to the Bloom Filter named "device-id".
+	s.cache.AddItemsToBloomFilter("device-id", keyStrings)
 }

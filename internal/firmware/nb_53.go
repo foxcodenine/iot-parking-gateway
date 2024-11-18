@@ -270,7 +270,7 @@ func parseKeepAlivePackage53(hexStr string, timestamp, offset, keepAliveAmount i
 
 	if pkg["time_sync_rand_byte"].(int) != 0 || keepAliveAmount == 1 {
 		var nextOffset3 int
-		if pkg["time_sync_rand_byte"], nextOffset3, err = helpers.ParseHexSubstring(hexStr, nextOffset, 4); err != nil {
+		if pkg["time_sync_current_unix_time"], nextOffset3, err = helpers.ParseHexSubstring(hexStr, nextOffset, 4); err != nil {
 			return nil, helpers.WrapError(err)
 		}
 		nextOffset = nextOffset3

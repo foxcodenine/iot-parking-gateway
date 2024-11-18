@@ -28,7 +28,6 @@ func (h *DeviceHandler) ListDevices(w http.ResponseWriter, r *http.Request) {
 
 	// Encode the devices slice to JSON and write it to the response
 
-	helpers.PrettyPrintJSON(devices)
 	err = json.NewEncoder(w).Encode(devices)
 
 	if err != nil {
