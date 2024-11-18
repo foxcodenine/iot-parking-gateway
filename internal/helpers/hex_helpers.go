@@ -58,3 +58,36 @@ func ParseHexSubstringBigInt(hexStr string, byteOffset, byteLength int) (*big.In
 
 	return value, nextOffset, nil
 }
+
+// ParseHexToASCIIString converts a segment of a hex string starting at byteOffset
+// for byteLength bytes into its ASCII string representation.
+func ParseHexToASCIIString(hexStr string, byteOffset int, byteLength int) (string, int, error) {
+	// Converting byteOffset to character index and byteLength to number of characters in the hex string.
+	hexOffset := byteOffset * 2
+	hexLength := byteLength * 2
+
+	// Calculate the end index of the substring in the hex string.
+	endIndex := hexOffset + hexLength
+
+	// Ensure the calculated end index does not exceed the length of the hex string.
+	if endIndex > len(hexStr) {
+		return "", byteOffset, fmt.Errorf("hex string out of range: endIndex %d exceeds string length %d", endIndex, len(hexStr))
+	}
+
+	// Initialize the result string.
+	result := ""
+
+	// Iterate through the hex string two characters at a time to convert each byte.
+	for i := 0; i < hexLength; i += 2 {
+		hexByte := hexStr[hexOffset+i : hexOffset+i+2]
+		byteVal, err := strconv.ParseUint(hexByte, 16, 8)
+		if err != nil {
+			return "", byteOffset, fmt.Errorf("parse error at index %d: %v", hexOffset+i, err)
+		}
+		result += string(byteVal)
+	}
+
+	// Calculate the next byte offset, which is the current byteOffset plus the number of bytes processed.
+	nextByteOffset := byteOffset + byteLength
+	return result, nextByteOffset, nil
+}

@@ -118,10 +118,13 @@ func NewNbiotKeepaliveLog(pktData map[string]any) (*NbiotKeepaliveLog, error) {
 		SocketError:            int(pktData["socket_error"].(float64)),
 		T3324:                  int(pktData["t3324"].(float64)),
 		T3412:                  int(pktData["t3412"].(float64)),
-		TimeSyncRandByte:       int(pktData["time_sync_rand_byte"].(float64)),
-		// TimeSyncCurrentUnixTime: int64(pktData["time_sync_current_unix_time"].(float64)), // New field.
+		// TimeSyncRandByte:       int(pktData["time_sync_rand_byte"].(float64)),
+		// 	// TimeSyncCurrentUnixTime: int64(pktData["time_sync_current_unix_time"].(float64)), // New field.
 	}
 
+	if pktData["time_sync_rand_byte"] != nil {
+		nbiotKeepaliveLog.TimeSyncRandByte = int(pktData["time_sync_rand_byte"].(float64))
+	}
 	if pktData["time_sync_current_unix_time"] != nil {
 		nbiotKeepaliveLog.TimeSyncCurrentUnixTime = int64(pktData["time_sync_current_unix_time"].(float64))
 	}

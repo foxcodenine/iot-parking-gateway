@@ -116,6 +116,8 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		return
 	}
 
+	helpers.PrettyPrintJSON(parsedData)
+
 	// Push parsed parking data packages to Redis
 	for _, i := range parsedData["parking_packages"].([]map[string]any) {
 		i["firmware_version"] = parsedData["firmware_version"]
@@ -143,10 +145,26 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		}
 	}
 
+	for _, i := range parsedData["settings_packages"].([]map[string]any) {
+		// Add common fields to each individual package
+		i["firmware_version"] = parsedData["firmware_version"]
+		i["device_id"] = fmt.Sprintf("%d", parsedData["device_id"])
+		i["raw_id"] = rawUUID
+		i["event_id"] = 25 // Assuming 25 is the event ID for setting logs
+		i["network_type"] = "nb"
+
+		// Push the package to Redis
+		err := s.cache.RPush("nb-setting-logs", i)
+		if err != nil {
+			helpers.LogError(err, "Failed to push setting package data log to Redis")
+		}
+	}
+
 	time.Sleep(1 * time.Second)
 	// s.services.RegisterNewDevices()
 	// s.services.SyncActivityLogsAndDevices()
-	s.services.SyncNBIoTKeepaliveLogs()
+	// s.services.SyncNBIoTKeepaliveLogs()
+	s.services.SyncNBIoTSettingLogs()
 
 	/// Send a final response back to the UDP client confirming the transaction.
 	sendResponse(conn, addr, reply)

@@ -388,23 +388,42 @@ func parseSettingsPackage53(hexStr string, timestamp, offset int) (map[string]an
 		return nil, helpers.WrapError(err)
 	}
 
-	if pkg["nb_iot_udp_ip"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 4); err != nil {
+	if pkg["nb_iot_udp_ip_1"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)
 	}
+	if pkg["nb_iot_udp_ip_2"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	if pkg["nb_iot_udp_ip_3"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	if pkg["nb_iot_udp_ip_4"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	// Combine the IP parts into a single string
+	pkg["nb_iot_udp_ip"] = fmt.Sprintf("%d.%d.%d.%d",
+		pkg["nb_iot_udp_ip_1"].(int),
+		pkg["nb_iot_udp_ip_2"].(int),
+		pkg["nb_iot_udp_ip_3"].(int),
+		pkg["nb_iot_udp_ip_4"].(int))
 
 	if pkg["nb_iot_udp_port"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
 		return nil, helpers.WrapError(err)
 	}
 
-	if pkg["nb_iot_apn_length"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+	// Parse the APN length
+	var apnLength int
+	if apnLength, nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	pkg["nb_iot_apn_length"] = apnLength
+
+	if pkg["nb_iot_apn"], nextOffset, err = helpers.ParseHexToASCIIString(hexStr, nextOffset, pkg["nb_iot_apn_length"].(int)); err != nil {
 		return nil, helpers.WrapError(err)
 	}
 
-	if pkg["nb_iot_apn"], nextOffset, err = helpers.ParseHexSubstringBigInt(hexStr, nextOffset, pkg["nb_iot_apn_length"].(int)); err != nil {
-		return nil, helpers.WrapError(err)
-	}
-
-	if pkg["nb_iot_imsi"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 7); err != nil {
+	if pkg["nb_iot_imsi"], nextOffset, err = helpers.ParseHexSubstringBigInt(hexStr, nextOffset, 7); err != nil {
 		return nil, helpers.WrapError(err)
 	}
 
