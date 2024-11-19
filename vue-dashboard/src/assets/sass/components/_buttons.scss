@@ -1,0 +1,345 @@
+@use '../abstracts/' as *;
+@use 'sass:color';
+
+.bbtn {
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 0.4rem 1rem;
+    color: $col-white;
+    font-weight: 500;
+    font-family: $font-action;
+    border: 1px solid currentColor;
+    border-radius: $border-radius;
+    transition: all 0.2s ease-in;
+    background: linear-gradient(
+        145deg,
+        color.adjust($col-slate-500, $lightness: 10%),
+        color.adjust($col-slate-500, $lightness: -10%)
+    );
+
+    &:hover {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-slate-600, $lightness: 10%),
+            color.adjust($col-slate-600, $lightness: -10%)
+        );
+    }
+
+    &--gray {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-gray-500, $lightness: 10%),
+            color.adjust($col-gray-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-gray-600, $lightness: 10%),
+                color.adjust($col-gray-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--zinc {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-zinc-500, $lightness: 10%),
+            color.adjust($col-zinc-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-zinc-600, $lightness: 10%),
+                color.adjust($col-zinc-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--neutral {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-neutral-500, $lightness: 10%),
+            color.adjust($col-neutral-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-neutral-600, $lightness: 10%),
+                color.adjust($col-neutral-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--stone {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-stone-500, $lightness: 10%),
+            color.adjust($col-stone-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-stone-600, $lightness: 10%),
+                color.adjust($col-stone-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--red {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-red-500, $lightness: 10%),
+            color.adjust($col-red-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-red-600, $lightness: 10%),
+                color.adjust($col-red-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--orange {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-orange-500, $lightness: 10%),
+            color.adjust($col-orange-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-orange-600, $lightness: 10%),
+                color.adjust($col-orange-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--amber {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-amber-500, $lightness: 10%),
+            color.adjust($col-amber-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-amber-600, $lightness: 10%),
+                color.adjust($col-amber-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--yellow {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-yellow-500, $lightness: 10%),
+            color.adjust($col-yellow-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-yellow-600, $lightness: 10%),
+                color.adjust($col-yellow-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--lime {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-lime-500, $lightness: 10%),
+            color.adjust($col-lime-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-lime-600, $lightness: 10%),
+                color.adjust($col-lime-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--green {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-green-500, $lightness: 10%),
+            color.adjust($col-green-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-green-600, $lightness: 10%),
+                color.adjust($col-green-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--emerald {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-emerald-500, $lightness: 10%),
+            color.adjust($col-emerald-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-emerald-600, $lightness: 10%),
+                color.adjust($col-emerald-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--teal {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-teal-500, $lightness: 10%),
+            color.adjust($col-teal-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-teal-600, $lightness: 10%),
+                color.adjust($col-teal-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--cyan {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-cyan-500, $lightness: 10%),
+            color.adjust($col-cyan-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-cyan-600, $lightness: 10%),
+                color.adjust($col-cyan-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--sky {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-sky-500, $lightness: 10%),
+            color.adjust($col-sky-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-sky-600, $lightness: 10%),
+                color.adjust($col-sky-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--blue {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-blue-500, $lightness: 10%),
+            color.adjust($col-blue-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-blue-600, $lightness: 10%),
+                color.adjust($col-blue-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--indigo {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-indigo-500, $lightness: 10%),
+            color.adjust($col-indigo-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-indigo-600, $lightness: 10%),
+                color.adjust($col-indigo-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--violet {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-violet-500, $lightness: 10%),
+            color.adjust($col-violet-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-violet-600, $lightness: 10%),
+                color.adjust($col-violet-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--purple {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-purple-500, $lightness: 10%),
+            color.adjust($col-purple-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-purple-600, $lightness: 10%),
+                color.adjust($col-purple-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--fuchsia {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-fuchsia-500, $lightness: 10%),
+            color.adjust($col-fuchsia-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-fuchsia-600, $lightness: 10%),
+                color.adjust($col-fuchsia-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--pink {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-pink-500, $lightness: 10%),
+            color.adjust($col-pink-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-pink-600, $lightness: 10%),
+                color.adjust($col-pink-600, $lightness: -10%)
+            );
+        }
+    }
+
+    &--rose {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-rose-500, $lightness: 10%),
+            color.adjust($col-rose-500, $lightness: -10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-rose-600, $lightness: 10%),
+                color.adjust($col-rose-600, $lightness: -10%)
+            );
+        }
+    }
+}

@@ -1,0 +1,157 @@
+@use '../abstracts/' as *;
+
+.ttable {
+    width: 100%;
+    margin-bottom: 1rem;
+    border-collapse: collapse;
+    text-align: left;
+    
+    &__container {
+        @extend %custom-scrollbar;
+    }
+
+    &__search {
+        padding: 0.3rem 0.5rem;
+        border: 1px solid $col-slate-300;
+        border-radius: $border-radius;
+        font-size: 0.9rem;
+        width: 100%; 
+
+        &:focus {
+            border: 1px solid $col-blue-500;
+        }
+    }
+
+    th,
+    td {
+        padding: 0 0.5rem;
+        height: 2.5rem;
+        border-bottom: 1px solid $col-gray-200;
+        font-size: .9rem;
+        color: $col-text-2;
+        font-family: $font-primary;
+        text-wrap: nowrap;
+        overflow: visible;
+    }
+
+    th {
+        color: $col-gray-900;
+        font-weight: 600;
+        user-select: none;
+        position: sticky;
+        top: 0;
+        font-family: $font-action;
+        border-bottom: 1px solid $col-gray-900;
+    }
+
+    // Striped Table Style
+    tbody tr:nth-of-type(odd) {
+        background-color: $col-gray-100;
+    }
+
+    tbody tr:hover {
+        background-color: $col-rose-100;
+    }
+
+    input,
+    select {
+        border: 1px solid $col-slate-300;
+        padding: 2px 5px;
+        color: $col-text-1;
+        line-height: 1;
+        border-radius: 3px;
+        background-color: $col-white;
+    }
+}
+
+.t-btns {
+    display: flex;
+    // justify-content: flex-end;
+    gap: .5rem;
+    position: relative;
+    overflow: visible;
+
+    &__btn {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .4rem;
+        width: 2rem;
+        height: 2rem;
+        border-radius: $border-radius;
+        font-weight: 400;
+        border: 1px solid $col-text-2;
+        // transition: all .2s ease;
+
+
+        &:hover {
+            background-color: $col-text-2;
+            color: $col-white;
+        }
+
+        &--yes {
+            border: 1px solid $col-green-600;
+            color: $col-green-600;
+
+            &:hover {
+                background-color: $col-green-600;
+                color: $col-white;
+            }
+        }
+
+        &--no {
+            border: 1px solid $col-red-600;
+            color: $col-red-600;
+
+            &:hover {
+                background-color: $col-red-600;
+                color: $col-white;
+            }
+        }
+    }
+
+    &__icon {
+        fill: currentColor;
+        width: 1rem;
+        height: 1rem;
+        // transition: all .2s ease;
+    }
+
+    &__cite {
+        position: absolute;
+        z-index: 10;
+        right: 0;
+        top: -30px;
+        padding: 1px 5px;
+        background-color: rgba($col-white, .8);
+        font-weight: 400;
+        color: $col-text-1;
+        font-style: normal;
+        border: 1px solid $col-text-2;
+        border-radius: $border-radius;
+        font-family: $font-action;
+        font-weight: 500;
+        font-size: .8rem;
+        box-shadow: 0px 0px 0px 2px $col-white,
+            0px -2px 4px $col-white,
+            0px -4px 8px $col-white,
+            0px -8px 16px $col-white;
+    }
+}
+
+.t-sort-arrow {
+    width: .45rem;
+    height: .45rem;
+    margin: 0 0 .1rem -.1rem;
+    fill: currentColor;
+    opacity: 0;
+
+    &--active {
+        opacity: 1;
+    }
+
+    &--desc {
+        transform: rotate(180deg);
+    }
+}

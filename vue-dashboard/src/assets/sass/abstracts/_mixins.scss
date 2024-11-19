@@ -1,0 +1,23 @@
+@use './variables' as *;
+
+
+// ----- Media Query ---------------------------------------------------
+
+$bp-largest:    1200;
+$bp-large:      1000;
+$bp-medium:     800;
+$bp-small:      600;
+$bp-smaller:    500;
+$bp-smallest:   400;
+
+// 16px is the default font-size of a browser
+
+@mixin respondDesktop($i) {
+    @media only screen and (max-width: calc(#{$i} / 16 * 1em)) { @content };
+}
+
+@mixin respondMobile($i) {
+    @media only screen and (min-width: calc(#{$i} / 16 * 1em)) { @content };
+}
+
+// ---------------------------------------------------------------------

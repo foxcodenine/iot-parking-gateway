@@ -1,0 +1,45 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  outline: none ;
+}
+
+
+html {
+  -ms-overflow-style: none; /* for Internet Explorer and Edge */
+  scrollbar-width: none; /* for Firefox */
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+
+  /* Set the base font-size to 100% (16px default in most browsers so 1rem = 16px) */
+  font-size: 100%; 
+
+  /* Adjust font-size for screens less than or equal to 800px */
+  @media only screen and (max-width: 800px) { 
+    font-size: 90%; /* 90% of 16px = 14.4px so 1rem = 14.4px */
+  }
+
+  /* Adjust font-size and background color for screens less than or equal to 600px */
+  @media only screen and (max-width: 600px) { 
+    font-size: 85%; /* Example: 80% of 16px = 12.8px so 1rem = 12.8px */
+
+  }
+}
+
+html::-webkit-scrollbar {
+  display: none ; /* for Chrome, Safari, and Opera */
+}
+
+body {
+  min-height: 100vh;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-width: 310px !important;
+}
+
+

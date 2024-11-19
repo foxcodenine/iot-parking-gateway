@@ -1,0 +1,45 @@
+// ---------------------------------------------------------------------
+
+// Align Items
+.items-start { align-items: flex-start !important; }
+.items-center { align-items: center !important; }
+.items-end { align-items: flex-end !important; }
+.items-baseline { align-items: baseline !important; }
+.items-stretch { align-items: stretch !important; }
+
+// Align Self
+.self-auto { align-self: auto !important; }
+.self-start { align-self: flex-start !important; }
+.self-center { align-self: center !important; }
+.self-end { align-self: flex-end !important; }
+.self-baseline { align-self: baseline !important; }
+.self-stretch { align-self: stretch !important; }
+
+// Align Content (for multi-line flexbox containers)
+.content-start { align-content: flex-start !important; }
+.content-center { align-content: center !important; }
+.content-end { align-content: flex-end !important; }
+.content-between { align-content: space-between !important; }
+.content-around { align-content: space-around !important; }
+.content-evenly { align-content: space-evenly !important; }
+.content-stretch { align-content: stretch !important; }
+
+// Justify Content
+.justify-start { justify-content: flex-start !important; }
+.justify-center { justify-content: center !important; }
+.justify-end { justify-content: flex-end !important; }
+.justify-between { justify-content: space-between !important; }
+.justify-around { justify-content: space-around !important; }
+.justify-evenly { justify-content: space-evenly !important; }
+
+
+// text align
+.text-left { text-align: left !important; }
+.text-center { text-align: center !important; }
+.text-right { text-align: right !important; }
+.text-justify { text-align: justify !important; }
+.text-start { text-align: start !important; }
+.text-end { text-align: end !important; }
+
+
+// ---------------------------------------------------------------------

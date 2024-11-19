@@ -1,0 +1,14 @@
+@use './variables' as *;
+@use './tailwind' as *;
+
+%custom-scrollbar {
+    overflow: overlay;
+    scrollbar-width: thin;
+    scrollbar-color: $col-blue-500 $col-blue-200;
+
+    &::-webkit-scrollbar {
+        background-color: $col-slate-100;
+        border-left: 1px solid $col-slate-300;
+        width: 10px;
+    }
+}
