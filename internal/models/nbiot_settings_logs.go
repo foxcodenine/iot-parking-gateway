@@ -79,7 +79,7 @@ func NewNbiotSettingLog(pktData map[string]any) (*NbiotSettingLog, error) {
 	happenedAt := time.Unix(timestamp, 0).UTC()
 
 	// Construct and return the NbiotSettingLog object with the parsed and converted data.
-	return &NbiotSettingLog{
+	nbiotSettingLog := NbiotSettingLog{
 		RawID:             rawUUID,
 		DeviceID:          pktData["device_id"].(string),
 		HappenedAt:        happenedAt,
@@ -94,10 +94,12 @@ func NewNbiotSettingLog(pktData map[string]any) (*NbiotSettingLog, error) {
 		RadarCarDeltaTh:   int(pktData["radar_car_delta_th"].(float64)),
 		MagCarLo:          int(pktData["mag_car_lo"].(float64)),
 		MagCarHi:          int(pktData["mag_car_hi"].(float64)),
-		// RadarTrailCalLoTh: int(pktData["radar_trail_cal_lo_th"].(float64)), // TODO:
+
+		// RadarTrailCalLoTh: int(pktData["radar_trail_cal_lo_th"].(float64)),
 		// RadarTrailCalHiTh: int(pktData["radar_trail_cal_hi_th"].(float64)),
 		// RadarTrailUncalLoTh: int(pktData["radar_trail_uncal_lo_th"].(float64)),
 		// RadarTrailUncalHiTh: int(pktData["radar_trail_uncal_hi_th"].(float64)),
+
 		DebugPeriod:                 int(pktData["debug_period"].(float64)),
 		DebugMode:                   int(pktData["debug_mode"].(float64)),
 		LogsMode:                    int(pktData["logs_mode"].(float64)),
@@ -113,5 +115,20 @@ func NewNbiotSettingLog(pktData map[string]any) (*NbiotSettingLog, error) {
 		NBIoTAPNLength:              int(pktData["nb_iot_apn_length"].(float64)),
 		NBIoTAPN:                    pktData["nb_iot_apn"].(string),
 		NBIoTIMSI:                   int64(pktData["nb_iot_imsi"].(float64)),
-	}, nil
+	}
+
+	if pktData["radar_trail_cal_lo_th"] != nil {
+		nbiotSettingLog.RadarTrailCalLoTh = int(pktData["radar_trail_cal_lo_th"].(float64))
+	}
+	if pktData["radar_trail_cal_hi_th"] != nil {
+		nbiotSettingLog.RadarTrailCalHiTh = int(pktData["radar_trail_cal_hi_th"].(float64))
+	}
+	if pktData["radar_trail_uncal_lo_th"] != nil {
+		nbiotSettingLog.RadarTrailUncalLoTh = int(pktData["radar_trail_uncal_lo_th"].(float64))
+	}
+	if pktData["radar_trail_uncal_hi_th"] != nil {
+		nbiotSettingLog.RadarTrailUncalHiTh = int(pktData["radar_trail_uncal_hi_th"].(float64))
+	}
+
+	return &nbiotSettingLog, nil
 }
