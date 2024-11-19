@@ -2,12 +2,14 @@ package routes
 
 import (
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/handlers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 // Routes sets up all HTTP routes and returns a router
@@ -17,14 +19,29 @@ func Routes() http.Handler {
 	// Middleware
 	mux.Use(middleware.Recoverer)
 
+	// Basic CORS
+	// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
+	mux.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins: []string{"https://*", "http://*"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
+
 	// Initialize specific handlers using the repository
 	testHandler := &handlers.TestHandler{}
+	envHandler := &handlers.EnvHandler{SecretKey: os.Getenv("SECRET_KEY")}
 
 	// Define routes for each handler
 	mux.Get("/test", testHandler.Index)
 
 	// Serve static index.html at route /app
 	mux.Get("/", func(w http.ResponseWriter, r *http.Request) {
+
 		filePath := filepath.Join("dist", "index.html")
 		http.ServeFile(w, r, filePath)
 	})
@@ -34,9 +51,11 @@ func Routes() http.Handler {
 	filesDir := filepath.Join(workDir, "dist")
 	FileServer(mux, "/", http.Dir(filesDir))
 
+	mux.Get("/env", envHandler.Index)
 	// Mount device routes
 	mux.Route("/api", func(r chi.Router) {
 		r.Mount("/device", DeviceRoutes())
+
 	})
 
 	return mux

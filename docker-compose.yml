@@ -40,6 +40,8 @@ services:
       - RABBITMQ_HOST=${RABBITMQ_HOST}
       - RABBITMQ_PORT=${RABBITMQ_PORT}
 
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+
 
     networks:
       - app-network  # Connects app to the shared network for internal communication

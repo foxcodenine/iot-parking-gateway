@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"encoding/gob"
 	"fmt"
+	"strings"
 
 	"os"
 
@@ -126,16 +128,40 @@ func initializeAppConfig() {
 
 func loadEnv() error {
 	env := os.Getenv("GO_ENV")
+	keyFilePath := ""
 
 	app.InfoLog.Printf("App running in environment: %s\n", os.Getenv("GO_ENV"))
 
 	switch env {
 	case "production":
+		keyFilePath = "config/.key"
 		// return godotenv.Load("/app/.env") // Load production environment
-		return nil
+
 	default:
-		return godotenv.Load(".env.development") // Load development environment
+		keyFilePath = "config/.key.development"
+		godotenv.Load(".env.development") // Load development environment
 	}
+
+	// Read the .key file
+	file, err := os.Open(keyFilePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Read the first line of the .key file
+	scanner := bufio.NewScanner(file)
+	if scanner.Scan() {
+		secretKey := strings.TrimSpace(scanner.Text())
+		os.Setenv("SECRET_KEY", secretKey) // Set it as an environment variable
+	}
+
+	// Check for errors while reading the file
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // ---------------------------------------------------------------------

@@ -11,6 +11,10 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  build: {
+    outDir: '../dist', // Path relative to the current directory
+    emptyOutDir: true, // Ensures the output directory is cleared before build
+  },
   css: {
     preprocessorOptions: {
       scss: {

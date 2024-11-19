@@ -5,8 +5,14 @@ FROM golang:1.23-alpine AS builder
 WORKDIR /app
 
 # Copy the Go mod and sum files and download dependencies
-COPY go.mod go.sum .env ./
+COPY go.mod go.sum .env ./ 
 RUN go mod download
+
+# Copy the .key file into the container
+COPY config/.key ./config/.key
+
+# Copy the built `dist` directory from the host machine
+COPY ./dist ./dist
 
 # Copy the rest of the source code
 COPY . .
@@ -26,6 +32,10 @@ ENV GO_ENV=production
 # Copy the compiled binary from the builder container
 COPY --from=builder /app/server .
 COPY --from=builder /app/scripts/wait-for.sh ./wait-for.sh
+COPY --from=builder /app/config/.key ./config/.key 
+COPY --from=builder /app/dist ./dist
+
+
 
 # Copy config files if needed
 # COPY config/config.yaml ./config/config.yaml

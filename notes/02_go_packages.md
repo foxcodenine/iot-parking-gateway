@@ -5,6 +5,10 @@ https://github.com/go-chi/chi
     go get -u github.com/go-chi/chi/v5
     go get -u github.com/go-chi/chi/v5/middleware
 
+https://github.com/go-chi/cors
+
+    go get github.com/go-chi/cors
+
 <!-- --------------------------------------------------------------- -->
 
 ### godotenv
@@ -69,3 +73,4 @@ https://github.com/fatih/color
     $ go get github.com/fatih/color
 
 <!-- --------------------------------------------------------------- -->
+
