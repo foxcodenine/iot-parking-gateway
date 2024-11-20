@@ -21,8 +21,8 @@ files_to_encrypt=(
   .env.development
   notes/04_commands.md
   notes/05_database.sql
-  config/.key
-  config/.key.development
+  vue-dashboard/.env
+
 #   dockerfiles/track.iotsolutions.shared/docker-compose.yml
 )
 

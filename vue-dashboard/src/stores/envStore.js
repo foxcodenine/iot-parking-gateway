@@ -32,7 +32,8 @@ export const useEnvStore = defineStore("envStore", () => {
         }
 
         // Fetch environment variables from the server
-        const response = await fetch(import.meta.env.VITE_APP_URL + '/api/env'); 
+   
+        const response = await fetch('http://localhost:9090/env');
         // `import.meta.env.VITE_APP_URL` is used as the base URL for the request
         // This allows the app to fetch environment variables from a backend API
 
@@ -40,9 +41,8 @@ export const useEnvStore = defineStore("envStore", () => {
         // Parse the response as JSON to get the environment variables object
 
         // Loop through each key-value pair in the fetched data
-        for (let key in data) {
-            const decryptedValue = decryptEnv(data[key]); // Decrypt the value
-            env.value[key] = decryptedValue; // Save to the Pinia store or reactive state
+        for (let key in data) {         
+            env.value[key] = data[key]
         }
 
         return env.value;

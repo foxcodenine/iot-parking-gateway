@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "dev": "VITE_VUE_ENV=development vite",
-    "dev_build": "VITE_VUE_ENV=development vite build",
     "build": "VITE_VUE_ENV=production vite build",
     "preview": "VITE_VUE_ENV=production vite preview"
   },

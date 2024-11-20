@@ -87,6 +87,7 @@ This approach:
 1. Build and Tag Your Docker Image:
 
     $ docker build -t foxcodenine/iot-parking-gateway_app:latest -f config/app/Dockerfile .
+    
 
 2. Log in to Docker Hub:
 

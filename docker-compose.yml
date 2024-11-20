@@ -40,9 +40,6 @@ services:
       - RABBITMQ_HOST=${RABBITMQ_HOST}
       - RABBITMQ_PORT=${RABBITMQ_PORT}
 
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-
-
     networks:
       - app-network  # Connects app to the shared network for internal communication
 
@@ -105,6 +102,22 @@ services:
       - "${RABBITMQ_PORT_WEB_EX}:${RABBITMQ_PORT_WEB}"   # Maps port 4515672 on the host to RabbitMQ management interface (port 15672 in the container)
     networks:
       - app-network  # Connects RabbitMQ to the shared network for internal communication
+
+
+# ----------------------------------------------------------------------
+
+  env-app:
+    build:
+      context: .
+      dockerfile: config/env-app/Dockerfile
+    container_name: iot-parking-gateway_env-app
+    environment:
+      - NODE_ENV=production
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    ports:
+      - "9090:9090"  # Expose port 9090 on the container to port 9090 on the host
+    networks:
+      - app-network  # Ensures it can communicate with other services
 
 
 # ----------------------------------------------------------------------

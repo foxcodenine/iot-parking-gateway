@@ -52,8 +52,6 @@ func Routes() http.Handler {
 	// Mount api routes
 	mux.Route("/api", func(r chi.Router) {
 		r.Mount("/device", DeviceRoutes())
-		r.Mount("/env", EnvRoutes())
-
 	})
 
 	return mux
