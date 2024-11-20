@@ -63,6 +63,7 @@ vendor/
 
 # Security keys
 .key
+.key.development
 
 # WordPress configuration
 wp-config.php
