@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
@@ -11,12 +12,14 @@ import (
 
 // NbiotSettingLog represents a single NB-IoT setting log entry.
 type NbiotSettingLog struct {
-	ID         int       `db:"id" json:"id"`                   // Auto-incrementing primary key
-	RawID      uuid.UUID `db:"raw_id" json:"raw_id"`           // ID linking to raw data source
-	DeviceID   string    `db:"device_id" json:"device_id"`     // Device identifier, can be IMEI or UUID
-	HappenedAt time.Time `db:"happened_at" json:"happened_at"` // Time when the setting event occurred
-	CreatedAt  time.Time `db:"created_at" json:"created_at"`   // Time when the record was created
-	Timestamp  int64     `db:"timestamp" json:"timestamp"`     // Event timestamp in UNIX format
+	ID              int       `db:"id" json:"id"`                             // Auto-incrementing primary key
+	RawID           uuid.UUID `db:"raw_id" json:"raw_id"`                     // ID linking to raw data source
+	DeviceID        string    `db:"device_id" json:"device_id"`               // Device identifier, can be IMEI or UUID
+	FirmwareVersion float64   `db:"firmware_version" json:"firmware_version"` // Firmware version of the device
+	NetworkType     string    `db:"network_type" json:"network_type"`         // Network type (e.g., NB-IoT)
+	HappenedAt      time.Time `db:"happened_at" json:"happened_at"`           // Time when the setting event occurred
+	CreatedAt       time.Time `db:"created_at" json:"created_at"`             // Time when the record was created
+	Timestamp       int64     `db:"timestamp" json:"timestamp"`               // Event timestamp in UNIX format
 
 	DeviceMode                  int    `db:"device_mode" json:"device_mode"`
 	DeviceEnable                int    `db:"device_enable" json:"device_enable"`
@@ -45,7 +48,7 @@ type NbiotSettingLog struct {
 	NBIoTUDPPort                int    `db:"nb_iot_udp_port" json:"nb_iot_udp_port"`
 	NBIoTAPNLength              int    `db:"nb_iot_apn_length" json:"nb_iot_apn_length"`
 	NBIoTAPN                    string `db:"nb_iot_apn" json:"nb_iot_apn"`
-	NBIoTIMSI                   int64  `db:"nb_iot_imsi" json:"nb_iot_imsi"`
+	NBIoTIMSI                   string `db:"nb_iot_imsi" json:"nb_iot_imsi"`
 }
 
 // TableName returns the table name for the NbiotSettingLog model.
@@ -82,6 +85,8 @@ func NewNbiotSettingLog(pktData map[string]any) (*NbiotSettingLog, error) {
 	nbiotSettingLog := NbiotSettingLog{
 		RawID:             rawUUID,
 		DeviceID:          pktData["device_id"].(string),
+		FirmwareVersion:   pktData["firmware_version"].(float64),
+		NetworkType:       pktData["network_type"].(string),
 		HappenedAt:        happenedAt,
 		CreatedAt:         time.Now().UTC(), // Default to the current time in UTC.
 		Timestamp:         timestamp,
@@ -114,7 +119,7 @@ func NewNbiotSettingLog(pktData map[string]any) (*NbiotSettingLog, error) {
 		NBIoTUDPPort:                int(pktData["nb_iot_udp_port"].(float64)),
 		NBIoTAPNLength:              int(pktData["nb_iot_apn_length"].(float64)),
 		NBIoTAPN:                    pktData["nb_iot_apn"].(string),
-		NBIoTIMSI:                   int64(pktData["nb_iot_imsi"].(float64)),
+		NBIoTIMSI:                   fmt.Sprintf("%d", int64(pktData["nb_iot_imsi"].(float64))),
 	}
 
 	if pktData["radar_trail_cal_lo_th"] != nil {
@@ -131,4 +136,52 @@ func NewNbiotSettingLog(pktData map[string]any) (*NbiotSettingLog, error) {
 	}
 
 	return &nbiotSettingLog, nil
+}
+
+// BulkInsert inserts multiple NbiotSettingLog records in a single operation.
+func (n *NbiotSettingLog) BulkInsert(settingLogs []NbiotSettingLog) error {
+	// Exit early if there are no records to insert
+	if len(settingLogs) == 0 {
+		return nil
+	}
+
+	// Determine the number of fields to be inserted for each log
+	numFields := 35 // Adjust this based on the actual number of columns you have in your table
+
+	// Prepare slices for SQL values and arguments.
+	values := make([]string, 0, len(settingLogs))
+	args := make([]interface{}, 0, len(settingLogs)*numFields) // Adjust the argument count based on the number of columns
+
+	for i, log := range settingLogs {
+		// Create a placeholder for each record with indexed arguments
+		placeholders := make([]string, numFields)
+		for j := range placeholders {
+			placeholders[j] = fmt.Sprintf("$%d", i*numFields+j+1)
+		}
+		values = append(values, fmt.Sprintf("(%s)", strings.Join(placeholders, ", ")))
+
+		// Append the actual values for each placeholder in the same order as the columns
+		args = append(args,
+			log.RawID, log.DeviceID, log.FirmwareVersion, log.NetworkType, log.HappenedAt, log.CreatedAt, log.Timestamp,
+			log.DeviceMode, log.DeviceEnable, log.RadarCarCalLoTh, log.RadarCarCalHiTh,
+			log.RadarCarUncalLoTh, log.RadarCarUncalHiTh, log.RadarCarDeltaTh, log.MagCarLo,
+			log.MagCarHi, log.RadarTrailCalLoTh, log.RadarTrailCalHiTh, log.RadarTrailUncalLoTh,
+			log.RadarTrailUncalHiTh, log.DebugPeriod, log.DebugMode, log.LogsMode, log.LogsAmount,
+			log.MaximumRegistrationTime, log.MaximumRegistrationAttempts, log.MaximumDeepSleepTime,
+			log.TenXDeepSleepTime, log.TenXActionBefore, log.TenXActionAfter, log.NBIoTUDPIP,
+			log.NBIoTUDPPort, log.NBIoTAPNLength, log.NBIoTAPN, log.NBIoTIMSI,
+		)
+	}
+
+	// Construct the SQL statement by joining the placeholders for each record
+	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, created_at, timestamp, device_mode, device_enable, radar_car_cal_lo_th, radar_car_cal_hi_th, radar_car_uncal_lo_th, radar_car_uncal_hi_th, radar_car_delta_th, mag_car_lo, mag_car_hi, radar_trail_cal_lo_th, radar_trail_cal_hi_th, radar_trail_uncal_lo_th, radar_trail_uncal_hi_th, debug_period, debug_mode, logs_mode, logs_amount, maximum_registration_time, maximum_registration_attempts, maximum_deep_sleep_time, ten_x_deep_sleep_time, ten_x_action_before, ten_x_action_after, nb_iot_udp_ip, nb_iot_udp_port, nb_iot_apn_length, nb_iot_apn, nb_iot_imsi) VALUES %s",
+		n.TableName(), strings.Join(values, ", "))
+
+	// Execute the constructed query with the arguments
+	_, err := dbSession.SQL().Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to execute bulk insert for setting logs: %w", err)
+	}
+
+	return nil
 }

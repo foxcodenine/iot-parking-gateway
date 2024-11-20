@@ -61,6 +61,7 @@ func main() {
 		app.Service.RegisterNewDevices()
 		app.Service.SyncNBIoTKeepaliveLogs()
 		app.Service.SyncActivityLogsAndDevices()
+		app.Service.SyncNBIoTSettingLogs()
 	})
 	app.Cron.Start()
 

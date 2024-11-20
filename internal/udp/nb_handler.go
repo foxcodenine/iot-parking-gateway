@@ -116,8 +116,6 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		return
 	}
 
-	helpers.PrettyPrintJSON(parsedData)
-
 	// Push parsed parking data packages to Redis
 	for _, i := range parsedData["parking_packages"].([]map[string]any) {
 		i["firmware_version"] = parsedData["firmware_version"]
@@ -160,11 +158,11 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		}
 	}
 
-	time.Sleep(1 * time.Second)
+	// time.Sleep(1 * time.Second)
 	// s.services.RegisterNewDevices()
 	// s.services.SyncActivityLogsAndDevices()
 	// s.services.SyncNBIoTKeepaliveLogs()
-	s.services.SyncNBIoTSettingLogs()
+	// s.services.SyncNBIoTSettingLogs()
 
 	/// Send a final response back to the UDP client confirming the transaction.
 	sendResponse(conn, addr, reply)
