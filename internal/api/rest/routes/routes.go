@@ -2,7 +2,6 @@ package routes
 
 import (
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -34,7 +33,6 @@ func Routes() http.Handler {
 
 	// Initialize specific handlers using the repository
 	testHandler := &handlers.TestHandler{}
-	envHandler := &handlers.EnvHandler{SecretKey: os.Getenv("SECRET_KEY")}
 
 	// Define routes for each handler
 	mux.Get("/test", testHandler.Index)
@@ -51,10 +49,10 @@ func Routes() http.Handler {
 	filesDir := filepath.Join(workDir, "dist")
 	FileServer(mux, "/", http.Dir(filesDir))
 
-	mux.Get("/env", envHandler.Index)
-	// Mount device routes
+	// Mount api routes
 	mux.Route("/api", func(r chi.Router) {
 		r.Mount("/device", DeviceRoutes())
+		r.Mount("/env", EnvRoutes())
 
 	})
 

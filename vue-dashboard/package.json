@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "VITE_VUE_ENV=development vite",
+    "dev_build": "VITE_VUE_ENV=development vite build",
+    "build": "VITE_VUE_ENV=production vite build",
+    "preview": "VITE_VUE_ENV=production vite preview"
   },
   "dependencies": {
     "crypto-js": "^4.2.0",

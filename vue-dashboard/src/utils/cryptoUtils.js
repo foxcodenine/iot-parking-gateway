@@ -1,7 +1,12 @@
 import CryptoJS from "crypto-js";
 
 function decryptEnv(encryptedText) {
-    const secretKey = import.meta.env.VITE_APP_SECRET_KEY;
+
+    let secretKey = import.meta.env.VITE_APP_SECRET_KEY_DEVELOPMENT;
+    
+    if (import.meta.env.VITE_VUE_ENV === "production") {
+        secretKey = import.meta.env.VITE_APP_SECRET_KEY;
+    }
     const decodedData = CryptoJS.enc.Base64.parse(encryptedText).toString(CryptoJS.enc.Hex);
     const iv = CryptoJS.enc.Hex.parse(decodedData.slice(0, 32));
     const ciphertext = CryptoJS.enc.Hex.parse(decodedData.slice(32));

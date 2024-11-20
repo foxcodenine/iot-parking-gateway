@@ -12,7 +12,7 @@ export const useEnvStore = defineStore("envStore", () => {
     const env = ref({})
 
     // - Getters -------------------------------------------------------
-    const getEnv = computed(()=>{
+    const getEnv = computed(() => {
         return env.value;
     })
 
@@ -22,18 +22,31 @@ export const useEnvStore = defineStore("envStore", () => {
     }
 
     async function loadEnvironmentVariables() {
-        //   ${window.location.origin}
-        const response = await fetch(`${window.location.origin}` + '/env');
-  
-        const data = await response.json();
-    
-        for (let key in data) {
-            env.value[key] = decryptEnv(data[key]);
-        }
-    
-        return env.value;
-    }   
 
+        window.runtimeConfig = window.runtimeConfig || {}; // Initialize if not already set
+
+        // Check if the app is running in a production environment
+        if (import.meta.env.VITE_VUE_ENV === "production") {
+            // Dynamically set runtime configuration for the production environment
+            window.runtimeConfig.VITE_APP_URL = '${window.location.origin}'; // Set the app URL
+        }
+
+        // Fetch environment variables from the server
+        const response = await fetch(import.meta.env.VITE_APP_URL + '/api/env'); 
+        // `import.meta.env.VITE_APP_URL` is used as the base URL for the request
+        // This allows the app to fetch environment variables from a backend API
+
+        const data = await response.json(); 
+        // Parse the response as JSON to get the environment variables object
+
+        // Loop through each key-value pair in the fetched data
+        for (let key in data) {
+            const decryptedValue = decryptEnv(data[key]); // Decrypt the value
+            env.value[key] = decryptedValue; // Save to the Pinia store or reactive state
+        }
+
+        return env.value;
+    }
 
     // - Expose --------------------------------------------------------
 
