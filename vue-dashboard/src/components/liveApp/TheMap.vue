@@ -1,8 +1,7 @@
 <template>
     <div class="the-map" >
-        <GoogleMap 
-            v-if="loadMap"
-            :api-key="getAptKey.GOOGLE_API_KEY" 
+        <GoogleMap        
+            :api-key="googleAptKey" 
             style="width: 100%; height: 100vh" 
             :center="center" 
             :zoom="15">
@@ -13,25 +12,20 @@
 
 <!-- --------------------------------------------------------------- -->
 <script setup>
-import { useEnvStore } from '@/stores/envStore';
-import { computed, onMounted, ref } from 'vue';
+
+import { ref } from 'vue';
 import { GoogleMap, Marker } from 'vue3-google-map';
 
+const googleAptKey = ref(GO_GOOGLE_API_KEY);
 
+if (import.meta.env.VITE_VUE_ENV == 'development') {
+    googleAptKey.value = import.meta.env.VITE_GOOGLE_API_KEY
+} else {
+    googleAptKey.value = GO_GOOGLE_API_KEY;
+    GO_GOOGLE_API_KEY = "";
+}
 
-const loadMap = ref(false);
 const center = { lat: 40.689247, lng: -74.044502 };
-
-const getAptKey = computed(()=>{
-    return useEnvStore().getEnv
-});
-
-
-
-(async()=>{
-	await useEnvStore().loadEnvironmentVariables();
-	loadMap.value = true;
-})()
 
 </script>
 

@@ -5,7 +5,7 @@ FROM golang:1.23-alpine AS builder
 WORKDIR /app
 
 # Copy the Go mod and sum files and download dependencies
-COPY go.mod go.sum .env ./ 
+COPY go.mod go.sum ./ 
 RUN go mod download
 
 # Copy the built `dist` directory from the host machine

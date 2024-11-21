@@ -33,21 +33,22 @@ func Routes() http.Handler {
 
 	// Initialize specific handlers using the repository
 	testHandler := &handlers.TestHandler{}
+	vueHandler := &handlers.VueHandler{}
 
 	// Define routes for each handler
 	mux.Get("/test", testHandler.Index)
 
-	// Serve static index.html at route /app
-	mux.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	// -----------------------------------------------------------------
 
-		filePath := filepath.Join("dist", "index.html")
-		http.ServeFile(w, r, filePath)
-	})
+	// Serve static index.html at route /app
+	mux.Get("/", vueHandler.ServeIndexWithVariables)
 
 	// Serve all static files under the dist directory
 	workDir, _ := filepath.Abs(".")
 	filesDir := filepath.Join(workDir, "dist")
 	FileServer(mux, "/", http.Dir(filesDir))
+
+	// -----------------------------------------------------------------
 
 	// Mount api routes
 	mux.Route("/api", func(r chi.Router) {

@@ -21,7 +21,6 @@
 import { RouterLink, RouterView } from 'vue-router'
 import TheSidebar from './components/dashboard/TheSidebar.vue';
 
-
 </script>
 
 <!-- --------------------------------------------------------------- -->
