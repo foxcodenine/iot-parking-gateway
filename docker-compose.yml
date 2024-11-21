@@ -116,8 +116,8 @@ services:
       - "8081:8081"  # Exposes pgweb on localhost:8081
     links:
       - postgres:postgres
-    environment:
-      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:${DB_PORT}/${DB_NAME}?sslmode=disable&search_path=parking
+    # environment:
+      # - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:${DB_PORT}/${DB_NAME}?sslmode=disable&search_path=parking
     depends_on:
       - postgres
     networks:
