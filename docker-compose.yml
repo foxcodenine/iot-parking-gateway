@@ -1,9 +1,9 @@
 services:
   app:
-    # build:
-      # context: .
-      # dockerfile: config/app/Dockerfile
-    image: foxcodenine/iot-parking-gateway_app:latest
+    build:
+      context: .
+      dockerfile: config/app/Dockerfile
+    # image: foxcodenine/iot-parking-gateway_app:latest
     container_name: iot-parking-gateway_app
     ports:
       - "${HTTP_PORT_EX}:${HTTP_PORT}"  # Maps HTTP_PORT from the .env file to the container
@@ -104,6 +104,26 @@ services:
       - "${RABBITMQ_PORT_WEB_EX}:${RABBITMQ_PORT_WEB}"   # Maps port 4515672 on the host to RabbitMQ management interface (port 15672 in the container)
     networks:
       - app-network  # Connects RabbitMQ to the shared network for internal communication
+
+
+# ----------------------------------------------------------------------
+
+  pgweb:
+    container_name: iot-parking-gateway_pgweb
+    # restart: always
+    image: sosedoff/pgweb
+    ports:
+      - "8081:8081"  # Exposes pgweb on localhost:8081
+    links:
+      - postgres:postgres
+    environment:
+      - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:${DB_PORT}/${DB_NAME}?sslmode=disable&search_path=parking
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+
 
 
 # ----------------------------------------------------------------------

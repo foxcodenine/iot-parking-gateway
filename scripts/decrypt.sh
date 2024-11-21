@@ -22,9 +22,6 @@ files_to_decrypt=(
   .env.development.gpg
   notes/04_commands.md.gpg
   notes/05_database.sql.gpg
-  config/.key.gpg
-  config/.key.development.gpg
-#   dockerfiles/track.iotsolutions.shared/docker-compose.yml.gpg
 )
 
 # Find and decrypt the files

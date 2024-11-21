@@ -58,12 +58,20 @@ func SetupRabbitMQConfig() RabbitConfig {
 		URL:            urlStr,
 		ReconnectDelay: 10 * time.Second,
 		Queues: map[string]QueueConfig{
-			"testQueue": {
-				Name:       "testQueueName",
-				RoutingKey: "testRoutingKey",
+			"test_queue": {
+				Name:       "test_queue",
+				RoutingKey: "test_queue",
 				Durable:    true,
 				Exchanges: []Exchange{
-					{Name: "testExchange"},
+					{Name: "test_exchange"},
+				},
+			},
+			"nb_iot_event_logs_queue": {
+				Name:       "nb_iot_event_logs_queue",
+				RoutingKey: "nb_iot_event_logs_queue",
+				Durable:    true,
+				Exchanges: []Exchange{
+					{Name: "nb_iot_event_logs_exchange"},
 				},
 			},
 		},

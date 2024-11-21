@@ -53,7 +53,7 @@ decrypt:
 
 # Target to bring up docker services
 docker-up:
-	docker-compose -f $(DOCKER_COMPOSE_FILE) up -d postgres rabbitmq redis
+	docker-compose -f $(DOCKER_COMPOSE_FILE) up -d postgres rabbitmq redis pgweb
 
 # Target to bring down docker services
 docker-down:

@@ -35,13 +35,9 @@ func main() {
 	// Initialize and set up handlers with app configuration
 	initializeHandlers()
 
-	// Setup RabbitMQ Producer
-	rabbitConfig := mq.SetupRabbitMQConfig()
-	rabbitProducer := mq.NewRabbitMQProducer(rabbitConfig)
-	defer rabbitProducer.Close() // Ensure to close the connection on application shutdown
-
 	// Start the message producer routine
-	go rabbitProducer.Run()
+	go app.MQProducer.Run()
+	defer app.MQProducer.Close() // Ensure to close the connection on application shutdown
 
 	// Start the UDP server in a goroutine
 	go app.UdpServer.Start()
@@ -55,8 +51,8 @@ func main() {
 	app.Cron.AddFunc("* * * * *", func() {
 		app.Service.SyncRawLogs()
 		app.Service.RegisterNewDevices()
-		app.Service.SyncNBIoTKeepaliveLogs()
 		app.Service.SyncActivityLogsAndDevices()
+		app.Service.SyncNBIoTKeepaliveLogs()
 		app.Service.SyncNBIoTSettingLogs()
 	})
 	app.Cron.Start()
@@ -110,9 +106,14 @@ func initializeAppConfig() {
 		app.ErrorLog,
 	)
 
+	// Setup RabbitMQ Producer
+	rabbitConfig := mq.SetupRabbitMQConfig()
+	app.MQProducer = mq.NewRabbitMQProducer(rabbitConfig)
+
 	// Set up the UDP server
 	app.UdpServer = udp.NewServer(
 		fmt.Sprintf(":%s", os.Getenv("UDP_PORT")),
+		app.MQProducer,
 		app.Cache,
 		app.Service,
 	)

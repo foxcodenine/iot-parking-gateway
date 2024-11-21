@@ -2,6 +2,7 @@ package udp
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -48,7 +49,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		return
 	}
 
-	// TODO:  Check device ID against a black or white list
+	// TODO:  Implement checks against a blacklist or whitelist for the device ID.
 
 	// Check if the device ID is already in the Bloom Filter
 	networkTypeAndDeviceID := fmt.Sprintf("nb %d", deviceID)
@@ -116,7 +117,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		return
 	}
 
-	// Push parsed parking data packages to Redis
+	// Push parsed parking data packages to Redis.
 	for _, i := range parsedData["parking_packages"].([]map[string]any) {
 		i["firmware_version"] = parsedData["firmware_version"]
 		i["device_id"] = fmt.Sprintf("%d", parsedData["device_id"])
@@ -128,8 +129,16 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		if err != nil {
 			helpers.LogError(err, "Failed to push parking package data log to Redis")
 		}
+
+		messageData, err := json.Marshal(i)
+		if err != nil {
+			helpers.LogError(err, "Failed to serialize parsedData to JSON")
+			continue
+		}
+		s.mqProducer.SendMessage("nb_iot_event_logs_exchange", "nb_iot_event_logs_queue", string(messageData))
 	}
 
+	// Push parsed keepalive data to Redis.
 	for _, i := range parsedData["keep_alive_packages"].([]map[string]any) {
 		i["firmware_version"] = parsedData["firmware_version"]
 		i["device_id"] = fmt.Sprintf("%d", parsedData["device_id"])
@@ -141,8 +150,16 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		if err != nil {
 			helpers.LogError(err, "Failed to push keepalive package data log to Redis")
 		}
+
+		messageData, err := json.Marshal(i)
+		if err != nil {
+			helpers.LogError(err, "Failed to serialize parsedData to JSON")
+			continue
+		}
+		s.mqProducer.SendMessage("nb_iot_event_logs_exchange", "nb_iot_event_logs_queue", string(messageData))
 	}
 
+	// Push parsed settings data to Redis.
 	for _, i := range parsedData["settings_packages"].([]map[string]any) {
 		// Add common fields to each individual package
 		i["firmware_version"] = parsedData["firmware_version"]
@@ -156,6 +173,13 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		if err != nil {
 			helpers.LogError(err, "Failed to push setting package data log to Redis")
 		}
+
+		messageData, err := json.Marshal(i)
+		if err != nil {
+			helpers.LogError(err, "Failed to serialize parsedData to JSON")
+			continue
+		}
+		s.mqProducer.SendMessage("nb_iot_event_logs_exchange", "nb_iot_event_logs_queue", string(messageData))
 	}
 
 	// time.Sleep(1 * time.Second)
@@ -164,11 +188,11 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	// s.services.SyncNBIoTKeepaliveLogs()
 	// s.services.SyncNBIoTSettingLogs()
 
-	/// Send a final response back to the UDP client confirming the transaction.
+	// Send the final response back to the UDP client to confirm processing.
 	sendResponse(conn, addr, reply)
 }
 
-// sendResponse sends a reply to the client over UDP.
+// sendResponse sends a structured reply back to the UDP client.
 func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, reply []string) {
 	response := []byte(strings.Join(reply, "") + "\n")
 	_, err := conn.WriteToUDP(response, addr)
@@ -177,7 +201,7 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, reply []string) {
 	}
 }
 
-// handleErrorSendResponse logs the error, sends a response, and returns to exit the function.
+// handleErrorSendResponse logs an error, sends a response to the client, and exits the handler.
 func handleErrorSendResponse(err error, message string, conn *net.UDPConn, addr *net.UDPAddr, reply []string) {
 	helpers.LogError(err, message, 3)
 	sendResponse(conn, addr, reply)

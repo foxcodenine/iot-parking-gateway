@@ -47,7 +47,7 @@ func (p *RabbitMQProducer) Run() {
 	}
 
 	// Assume operational status, proceed to send a message
-	p.sendMessage("testExchange", "testQueue", "Hello, RabbitMQ!")
+	p.SendMessage("test_exchange", "test_queue", "Hello, RabbitMQ!")
 }
 
 // connect handles the connection and channel setup, including declaring multiple queues
@@ -113,7 +113,7 @@ func (p *RabbitMQProducer) connect() error {
 }
 
 // sendMessage sends a message to a specified queue
-func (p *RabbitMQProducer) sendMessage(exchangeName, queueName, message string) {
+func (p *RabbitMQProducer) SendMessage(exchangeName, queueName, message string) {
 	queueConfig, exists := p.config.Queues[queueName]
 	if !exists {
 		log.Printf("Queue configuration not found for %s\n", queueName)

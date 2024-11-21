@@ -5,6 +5,7 @@ import (
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
+	"github.com/foxcodenine/iot-parking-gateway/internal/mq"
 	"github.com/foxcodenine/iot-parking-gateway/internal/services"
 	"github.com/foxcodenine/iot-parking-gateway/internal/udp"
 
@@ -13,15 +14,16 @@ import (
 )
 
 type App struct {
-	AppURL    string
-	HttpPort  string
-	InfoLog   *log.Logger
-	ErrorLog  *log.Logger
-	FatalLog  *log.Logger
-	DB        *pgxpool.Pool
-	Models    models.Models
-	Cache     *cache.RedisCache
-	Cron      *cron.Cron
-	UdpServer *udp.UDPServer
-	Service   *services.Service
+	AppURL     string
+	HttpPort   string
+	InfoLog    *log.Logger
+	ErrorLog   *log.Logger
+	FatalLog   *log.Logger
+	DB         *pgxpool.Pool
+	Models     models.Models
+	MQProducer *mq.RabbitMQProducer
+	Cache      *cache.RedisCache
+	Cron       *cron.Cron
+	UdpServer  *udp.UDPServer
+	Service    *services.Service
 }
