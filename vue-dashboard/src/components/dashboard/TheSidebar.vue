@@ -85,6 +85,7 @@
         display: flex;
         flex-direction: column;
         gap: 1px;
+        padding-top: .5rem;
     }
 
     &__item {
@@ -96,7 +97,7 @@
         align-items: center;
         justify-content: center;
         color: $col-zinc-100;
-        height: 5rem;
+        height: 4.2rem;
         padding-top: 5px;
         // border: 1px solid crimson;
         transition: all .1s ease;

@@ -62,6 +62,7 @@ func (s *UDPServer) listen() {
 			return // Properly handle the shutdown signal by exiting the loop.
 		default:
 			n, addr, err := s.Connection.ReadFromUDP(buffer)
+
 			if err != nil {
 				if err == net.ErrClosed {
 					helpers.LogError(err, "UDP connection unexpectedly closed!")

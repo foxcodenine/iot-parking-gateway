@@ -48,7 +48,7 @@ func main() {
 	app.Service.PopulateDeviceBloomFilter()
 
 	// Start cron
-	app.Cron.AddFunc("* * * * *", func() {
+	app.Cron.AddFunc("0,20,40 * * * * *", func() {
 		app.Service.SyncRawLogs()
 		app.Service.RegisterNewDevices()
 		app.Service.SyncActivityLogsAndDevices()
@@ -119,7 +119,7 @@ func initializeAppConfig() {
 	)
 
 	// Initialize and assign a cron scheduler instance to the app
-	app.Cron = cron.New()
+	app.Cron = cron.New(cron.WithSeconds())
 }
 
 // ---------------------------------------------------------------------
