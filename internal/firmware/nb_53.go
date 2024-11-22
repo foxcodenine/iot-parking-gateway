@@ -101,7 +101,7 @@ func parseParkingPackage53(hexStr string, timestamp, offset int) (map[string]any
 		return nil, helpers.WrapError(err)
 	}
 
-	if pkg["occupied"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+	if pkg["is_occupied"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)
 	}
 

@@ -8,19 +8,14 @@ CREATE TABLE parking.devices (
     longitude DECIMAL(9, 6) DEFAULT 0,   -- Longitude for geographic location.
     beacons JSONB,                       -- JSONB data type for beacon information.
     happened_at TIMESTAMP NULL,          -- Timestamp of the device data capture.
-    occupied BOOLEAN DEFAULT FALSE,      -- Whether the space is occupied.
+    is_occupied BOOLEAN NULL,      -- Whether the space is occupied.
+    is_allowed BOOLEAN DEFAULT FALSE,      -- Indicates if the device is allowed.
+    is_blocked BOOLEAN DEFAULT FALSE,      -- Indicates if the device is blocked.
+    is_hidden BOOLEAN DEFAULT FALSE,       -- Indicates if the device is hidden from view.
     created_at TIMESTAMP DEFAULT NOW(),  -- Set at record creation.
     updated_at TIMESTAMP DEFAULT NOW()   -- Updated automatically via trigger.
 );
 
--- Create a function to automatically update the 'updated_at' timestamp.
-CREATE OR REPLACE FUNCTION update_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
 
 -- Attach a trigger to update the 'updated_at' field before any update operation on 'devices'.
 CREATE TRIGGER set_updated_at

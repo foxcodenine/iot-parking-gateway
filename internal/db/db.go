@@ -31,6 +31,7 @@ func OpenDB() (*pgxpool.Pool, error) {
 	)
 
 	// Parse the DSN into a configuration for the pgx connection pool.
+
 	poolConfig, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return nil, err

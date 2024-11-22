@@ -13,16 +13,21 @@ var dbSession up.Session
 
 // Models struct will hold references to all database models, e.g., Device.
 type Models struct {
-	Device              Device
-	RawDataLog          RawDataLog
 	ActivityLog         ActivityLog
+	Device              Device
+	NbiotDeviceSettings NbiotDeviceSettings
 	NbiotKeepaliveLog   NbiotKeepaliveLog
 	NbiotSettingLog     NbiotSettingLog
-	NbiotDeviceSettings NbiotDeviceSettings
+	RawDataLog          RawDataLog
+	User                User
 }
 
 // New initializes the Models struct and sets up the Upper ORM session.
 func New(conn *pgxpool.Pool) (Models, error) {
+
+	// Set upper/db logging level to log only errors. Available levels:
+	// Trace, Debug, Info, Warn (default), Error, Fatal, Panic.
+	up.LC().SetLevel(up.LogLevelError)
 
 	// Assign the pgxpool connection pool to the global db variable.
 	db = conn

@@ -2,8 +2,7 @@ package mq
 
 import (
 	"fmt"
-	"log"
-	"os"
+
 	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
@@ -29,94 +28,90 @@ func NewRabbitMQProducer(config RabbitConfig) *RabbitMQProducer {
 
 // Run starts the connection and the publishing process
 func (p *RabbitMQProducer) Run() {
-	attempt := 0
 	for {
-		if err := p.connect(); err != nil {
-			helpers.LogError(err, fmt.Sprintf("Failed to connect to RabbitMQ, attempt: %d", attempt))
-			if attempt > 10 { // Maximum of 5 attempts
-				helpers.LogFatal(err, "Max reconnect attempts reached, exiting.")
-				return
-			}
-			time.Sleep(p.config.ReconnectDelay * time.Duration(attempt)) // Exponential backoff
-			attempt++
-			continue
+		if p.connect() {
+			helpers.LogInfo("Successfully connected to RabbitMQ")
+			p.monitorConnection() // Start monitoring the connection for closures
+			break                 // Exit the loop after a successful connection
 		}
-		// Successful connection, log message
-		helpers.LogInfo("Successfully connected to RabbitMQ on :" + os.Getenv("RABBITMQ_PORT"))
-		break
-	}
 
-	// Assume operational status, proceed to send a message
-	p.SendMessage("test_exchange", "test_queue", "Hello, RabbitMQ!")
+		// Wait before retrying the connection
+		helpers.LogInfo(fmt.Sprintf("Retrying connection to RabbitMQ in %s...", p.config.ReconnectDelay))
+		time.Sleep(p.config.ReconnectDelay)
+	}
 }
 
 // connect handles the connection and channel setup, including declaring multiple queues
-func (p *RabbitMQProducer) connect() error {
+func (p *RabbitMQProducer) connect() bool {
 	var err error
 	p.connection, err = amqp.Dial(p.config.URL)
 	if err != nil {
-		return err
+		helpers.LogError(err, "Failed to connect to RabbitMQ")
+		return false
 	}
 
 	p.channel, err = p.connection.Channel()
 	if err != nil {
-		p.connection.Close()
-		return err
+		if p.connection != nil {
+			p.connection.Close()
+		}
+		helpers.LogError(err, "Failed to open a channel")
+		return false
 	}
 
-	// Declare all the exchange
+	if err := p.setupExchangesAndQueues(); err != nil {
+		return false
+	}
+
+	return true
+}
+
+func (p *RabbitMQProducer) setupExchangesAndQueues() error {
 	for _, exchange := range p.config.GetAllExchanges() {
-		err = p.channel.ExchangeDeclare(
-			exchange.Name, // exchange
-			"direct",      // type
-			true,          // durable
-			false,         // auto-deleted
-			false,         // internal
-			false,         // no-wait
-			nil,           // arguments
-		)
-		if err != nil {
+		if err := p.channel.ExchangeDeclare(
+			exchange.Name, "direct", true, false, false, false, nil); err != nil {
 			return err
 		}
 	}
 
-	// Declare and bind all queues
 	for _, queue := range p.config.Queues {
-		_, err = p.channel.QueueDeclare(
-			queue.Name,    // queue name
-			queue.Durable, // durable
-			false,         // delete when unused
-			false,         // exclusive
-			false,         // no-wait
-			nil,           // arguments
-		)
-		if err != nil {
+		if _, err := p.channel.QueueDeclare(queue.Name, queue.Durable, false, false, false, nil); err != nil {
 			return err
 		}
-
 		for _, exchange := range queue.Exchanges {
-			err = p.channel.QueueBind(
-				queue.Name,       // queue name
-				queue.RoutingKey, // routing key
-				exchange.Name,    // exchange
-				false,            // no-wait
-				nil,              // arguments
-			)
-			if err != nil {
+			if err := p.channel.QueueBind(queue.Name, queue.RoutingKey, exchange.Name, false, nil); err != nil {
 				return err
 			}
 		}
-
 	}
-
 	return nil
+}
+
+func (p *RabbitMQProducer) monitorConnection() {
+	go func() {
+		for {
+			reason, ok := <-p.connection.NotifyClose(make(chan *amqp.Error))
+			if !ok {
+				helpers.LogInfo("Channel and connection closed")
+				break
+			}
+			helpers.LogError(fmt.Errorf("connection closed: %s", reason), "Trying to reconnect...")
+			for {
+				if p.connect() {
+					helpers.LogInfo("Reconnection successful")
+					return
+				}
+				time.Sleep(p.config.ReconnectDelay)
+			}
+		}
+	}()
 }
 
 // sendMessage sends a message to a specified queue
 func (p *RabbitMQProducer) SendMessage(exchangeName, queueName, message string) {
 	queueConfig, exists := p.config.Queues[queueName]
 	if !exists {
-		log.Printf("Queue configuration not found for %s\n", queueName)
+		helpers.LogInfo("Queue configuration not found for %s", queueName)
 		return
 	}
 
@@ -131,7 +126,7 @@ func (p *RabbitMQProducer) SendMessage(exchangeName, queueName, message string) 
 			MessageId:   uuid.NewString(),
 		},
 	); err != nil {
-		log.Printf("Failed to publish a message to queue %s: %s\n", queueName, err)
+		helpers.LogError(err, "Failed to publish a message to queue "+queueName)
 	}
 }
 

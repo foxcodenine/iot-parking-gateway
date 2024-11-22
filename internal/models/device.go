@@ -25,7 +25,10 @@ type Device struct {
 	BeaconsJSON     sql.NullString `db:"beacons,omitempty" json:"beacons_json"`
 	Beacons         []Beacon       `json:"beacons"`
 	HappenedAt      time.Time      `db:"happened_at" json:"happened_at"`
-	Occupied        bool           `db:"occupied" json:"occupied"`
+	IsOccupied      bool           `db:"is_occupied" json:"is_occupied"`
+	IsAllowed       bool           `db:"is_allowed" json:"is_allowed"` // Indicates if the device is allowed
+	IsBlocked       bool           `db:"is_blocked" json:"is_blocked"` // Indicates if the device is blocked
+	IsHidden        bool           `db:"is_hidden" json:"is_hidden"`   // Indicates if the device is hidden
 	CreatedAt       time.Time      `db:"created_at" json:"created_at"`
 	UpdatedAt       time.Time      `db:"updated_at" json:"updated_at"`
 }
@@ -197,7 +200,7 @@ func (d *Device) BulkUpdateDevices(deviceData []ActivityLog) error {
 		// Prepare a position offset for SQL placeholders based on number of fields per device
 		pos := i*5 + 1
 		valuesList[i] = fmt.Sprintf("($%d, $%d::numeric, $%d::jsonb, $%d::timestamp, $%d::boolean)", pos, pos+1, pos+2, pos+3, pos+4)
-		args = append(args, data.DeviceID, data.FirmwareVersion, data.Beacons, data.HappenedAt, data.Occupied)
+		args = append(args, data.DeviceID, data.FirmwareVersion, data.Beacons, data.HappenedAt, data.IsOccupied)
 	}
 
 	// Construct the SQL statement with explicit type casts to ensure proper data handling
@@ -207,11 +210,11 @@ func (d *Device) BulkUpdateDevices(deviceData []ActivityLog) error {
 			firmware_version = v.firmware_version,
 			beacons = v.beacons,
 			happened_at = v.happened_at,
-			occupied = v.occupied,
+			is_occupied = v.is_occupied,
 			updated_at = NOW()
 		FROM (VALUES
 			%s
-		) AS v(device_id, firmware_version, beacons, happened_at, occupied)
+		) AS v(device_id, firmware_version, beacons, happened_at, is_occupied)
 		WHERE d.device_id = v.device_id
 	`, strings.Join(valuesList, ", "))
 

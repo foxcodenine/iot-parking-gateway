@@ -50,7 +50,7 @@
                         </svg>
                     </th>
                     <th class="cursor-pointer">
-                        Occupied
+                        Is Occupied
                         <svg class="t-sort-arrow">
                             <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
                         </svg>

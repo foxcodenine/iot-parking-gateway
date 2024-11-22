@@ -6,8 +6,8 @@ services:
     # image: foxcodenine/iot-parking-gateway_app:latest
     container_name: iot-parking-gateway_app
     ports:
-      - "${HTTP_PORT_EX}:${HTTP_PORT}"  # Maps HTTP_PORT from the .env file to the container
-      - "${UDP_PORT_EX}:${UDP_PORT}/udp"  # Maps UDP_PORT from the .env file to the container for UDP traffic
+      - "${HTTP_PORT_EX}:${HTTP_PORT}"  
+      - "${UDP_PORT_EX}:${UDP_PORT}/udp"  
     volumes:
       - .:/app  # (development only) - Mounts the current directory into /app inside the container for live code updates 
     depends_on:
@@ -43,7 +43,7 @@ services:
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
 
     networks:
-      - app-network  # Connects app to the shared network for internal communication
+      - app-network  
 
 # ----------------------------------------------------------------------
 
@@ -55,14 +55,19 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: ${DB_NAME}
     ports:
-      - "${DB_PORT_EX}:${DB_PORT}"  # Maps DB_PORT from the .env file to the container
+      - "${DB_PORT_EX}:${DB_PORT}"  
     volumes:
       # Mount initialization scripts for setting up schema and tables
       - ./initdb-scripts:/docker-entrypoint-initdb.d
       # - postgres-data:/var/lib/postgresql/data  # (production) - Persistent data storage for production 
       - /srv/docker/bind-mounts/iot-parking-gateway/postgres-data/:/var/lib/postgresql/data/  # (development only) - Bind mount for dev, enables direct file access on host
     networks:
-      - app-network  # Connects PostgreSQL to the shared network for internal communication
+      - app-network  
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -h localhost -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 # ----------------------------------------------------------------------
 
@@ -71,7 +76,7 @@ services:
     container_name: iot-parking-gateway_redis
 
     ports:
-      - "${REDIS_PORT_EX}:${REDIS_PORT}"  # Maps Maps REDIS_PORT from the .env file to the container
+      - "${REDIS_PORT_EX}:${REDIS_PORT}"  
     command: >
       sh -c "redis-server 
       --loadmodule /usr/lib/redis/modules/redisbloom.so
@@ -89,7 +94,8 @@ services:
       # - redis-data:/data  # (production) Persistent Redis storage for production
       - /srv/docker/bind-mounts/iot-parking-gateway/redis-data/:/data  # (development only) - Bind mount for dev, enables direct file access on host
     networks:
-      - app-network  # Connects Redis to the shared network for internal communication
+      - app-network  
+
 
 # ----------------------------------------------------------------------
 
@@ -100,8 +106,8 @@ services:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     ports:
-      - "${RABBITMQ_PORT_EX}:${RABBITMQ_PORT}"     # Maps port 45672 on the host to port 5672 in the container for RabbitMQ
-      - "${RABBITMQ_PORT_WEB_EX}:${RABBITMQ_PORT_WEB}"   # Maps port 4515672 on the host to RabbitMQ management interface (port 15672 in the container)
+      - "${RABBITMQ_PORT_EX}:${RABBITMQ_PORT}"     
+      - "${RABBITMQ_PORT_WEB_EX}:${RABBITMQ_PORT_WEB}"   
     networks:
       - app-network  # Connects RabbitMQ to the shared network for internal communication
 
@@ -113,13 +119,14 @@ services:
     # restart: always
     image: sosedoff/pgweb
     ports:
-      - "8081:8081"  # Exposes pgweb on localhost:8081
+      - "${PGWEB_PORT_EX}:${PGWEB_PORT}"  
     links:
       - postgres:postgres
     # environment:
       # - DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@postgres:${DB_PORT}/${DB_NAME}?sslmode=disable&search_path=parking
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - app-network
 

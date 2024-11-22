@@ -24,7 +24,7 @@ type ActivityLog struct {
 	MagnetAbsTotal  int       `db:"magnet_abs_total" json:"magnet_abs_total"` // Total magnetic reading value
 	PeakDistanceCm  int       `db:"peak_distance_cm" json:"peak_distance_cm"` // Peak distance in centimeters
 	RadarCumulative int       `db:"radar_cumulative" json:"radar_cumulative"` // Cumulative radar reading
-	Occupied        bool      `db:"occupied" json:"occupied"`                 // Whether a vehicle is detected
+	IsOccupied      bool      `db:"is_occupied" json:"is_occupied"`           // Whether a vehicle is detected
 	Beacons         []Beacon  `db:"beacons" json:"beacons"`                   // JSONB column to store an array of beacon data
 }
 
@@ -120,8 +120,8 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 		MagnetAbsTotal:  int(pktData["magnet_abs_total"].(float64)),
 		PeakDistanceCm:  int(pktData["peak_distance_cm"].(float64)),
 		RadarCumulative: int(pktData["radar_cumulative"].(float64)),
-		Occupied:        pktData["occupied"].(float64) != 0, // Convert to boolean.
-		Beacons:         beacons,                            // Attach the processed beacons.
+		IsOccupied:      pktData["is_occupied"].(float64) != 0, // Convert to boolean.
+		Beacons:         beacons,                               // Attach the processed beacons.
 	}, nil
 }
 
@@ -144,11 +144,11 @@ func (a *ActivityLog) BulkInsert(activityLogs []ActivityLog) error {
 
 		// Append the actual values for each placeholder in the same order as the columns
 		args = append(args, log.RawID, log.DeviceID, log.FirmwareVersion, log.NetworkType, log.HappenedAt, log.Timestamp,
-			log.BeaconsAmount, log.MagnetAbsTotal, log.PeakDistanceCm, log.RadarCumulative, log.Occupied, log.Beacons)
+			log.BeaconsAmount, log.MagnetAbsTotal, log.PeakDistanceCm, log.RadarCumulative, log.IsOccupied, log.Beacons)
 	}
 
 	// Construct the SQL statement by joining the placeholders for each record
-	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, timestamp, beacons_amount, magnet_abs_total, peak_distance_cm, radar_cumulative, occupied, beacons) VALUES %s",
+	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, timestamp, beacons_amount, magnet_abs_total, peak_distance_cm, radar_cumulative, is_occupied, beacons) VALUES %s",
 		a.TableName(), strings.Join(values, ", "))
 
 	// Execute the constructed query with the arguments

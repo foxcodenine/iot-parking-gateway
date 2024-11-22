@@ -36,6 +36,7 @@ func (s *Service) RegisterNewDevices() {
 
 	// Process each device entry to create new device records.
 	for _, entry := range deviceEntries {
+
 		// Convert interface to string, ensuring it represents a device ID correctly.
 		deviceInfo, ok := entry.(string)
 		if !ok {

@@ -42,7 +42,7 @@ for hex_string in hex_strings:
     # Send the plain-text message via UDP
     sock.sendto(message, (UDP_IP, UDP_PORT))
     # Wait for a specific time between 5 and 10 seconds
-    time.sleep(random.uniform(5, 10))
+    time.sleep(random.uniform(1, 2))
 
 # Optionally, loop continuously through the list
 while True:

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS parking.activity_logs (
     magnet_abs_total INTEGER,
     peak_distance_cm INTEGER,
     radar_cumulative INTEGER,
-    occupied BOOLEAN,
+    is_occupied BOOLEAN,
     beacons JSONB,                         -- JSONB column for beacon data.
     PRIMARY KEY (id, happened_at)
 );
