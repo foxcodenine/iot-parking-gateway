@@ -226,3 +226,23 @@ func (d *Device) BulkUpdateDevices(deviceData []ActivityLog) error {
 
 	return nil
 }
+
+// GetUserByUsername retrieves a user by their username. Returns nil if the user is not found.
+func (u *User) GetUserByUsername(username string) (*User, error) {
+	if strings.TrimSpace(username) == "" {
+		return nil, errors.New("username cannot be empty")
+	}
+
+	collection := dbSession.Collection(u.TableName())
+	var user User
+	err := collection.Find(up.Cond{"username": username}).One(&user)
+	if err != nil {
+		if err == up.ErrNoMoreRows {
+			// No user found with the given username
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to retrieve user: %w", err)
+	}
+
+	return &user, nil
+}

@@ -31,6 +31,7 @@ func main() {
 	// Initialize database connection
 	initializeDatabase()
 	defer app.DB.Close()
+	initializeRootUser()
 
 	// Initialize and set up handlers with app configuration
 	initializeHandlers()
@@ -163,3 +164,41 @@ func initializeHandlers() {
 }
 
 // ---------------------------------------------------------------------
+
+func initializeRootUser() {
+	// Construct the cache key for the root user
+	rootUserCacheKey := "initialized-root-user:" + os.Getenv("APP_ROOT_USER")
+
+	// Check if the root user initialization is cached
+	isCached, _ := app.Cache.Exists(rootUserCacheKey)
+	if isCached {
+		return
+	}
+
+	// Check if the root user already exists in the database
+	existingUser, _ := app.Models.User.GetUserByUsername(os.Getenv("APP_ROOT_USER"))
+	if existingUser != nil {
+		// Mark the root user as initialized in the cache
+		_ = app.Cache.Set(rootUserCacheKey, "true", -1) // -1 indicates no expiration
+		return
+	}
+
+	// Create the root user with default credentials from environment variables
+	rootUser := models.User{
+		Username:    os.Getenv("APP_ROOT_USER"),
+		Password:    os.Getenv("APP_ROOT_PASSWORD"),
+		AccessLevel: 0, // 0 represents the highest level of access
+		Enabled:     true,
+	}
+
+	// Attempt to create the root user
+	if _, err := rootUser.Create(); err != nil {
+		fmt.Printf("Failed to create root user: %v\n", err)
+		return
+	}
+
+	// Cache the root user initialization to prevent duplicate runs
+	_ = app.Cache.Set(rootUserCacheKey, "true", -1)
+
+	fmt.Println("Root user created successfully")
+}
