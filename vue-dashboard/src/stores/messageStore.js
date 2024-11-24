@@ -10,8 +10,8 @@ export const useMessageStore = defineStore("messageStore", () => {
     // - State ---------------------------------------------------------
 
 
-    const flashMessages =ref([]);
-    const flashClass = ref("");
+    const flashMessages =ref(["Email and password are required."]);
+    const flashClass = ref("flash-message--red");
 
     const persistFlashMessage = ref(0);
 

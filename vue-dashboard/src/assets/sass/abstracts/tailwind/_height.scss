@@ -1,0 +1,42 @@
+/* Heights in pixels */
+.h-0 { height: 0px !important; }
+.h-1 { height: 0.25rem !important; } /* 4px if 1rem=16px */
+.h-2 { height: 0.5rem !important; }  /* 8px */
+.h-3 { height: 0.75rem !important; } /* 12px */
+.h-4 { height: 1rem !important; }    /* 16px */
+.h-5 { height: 1.25rem !important; } /* 20px */
+.h-6 { height: 1.5rem !important; }  /* 24px */
+.h-8 { height: 2rem !important; }    /* 32px */
+.h-10 { height: 2.5rem !important; } /* 40px */
+.h-12 { height: 3rem !important; }   /* 48px */
+.h-16 { height: 4rem !important; }   /* 64px */
+.h-20 { height: 5rem !important; }   /* 80px */
+.h-24 { height: 6rem !important; }   /* 96px */
+.h-32 { height: 8rem !important; }   /* 128px */
+.h-40 { height: 10rem !important; }  /* 160px */
+.h-48 { height: 12rem !important; }  /* 192px */
+.h-56 { height: 14rem !important; }  /* 224px */
+.h-64 { height: 16rem !important; }  /* 256px */
+.h-72 { height: 18rem !important; }  /* 288px */
+.h-80 { height: 20rem !important; }  /* 320px */
+.h-96 { height: 24rem !important; }  /* 384px */
+.h-px { height: 1px !important; }    /* 1px specifically */
+
+/* Full Height */
+.h-full { height: 100% !important; }
+
+/* Screen height */
+.h-screen { height: 100vh !important; }
+
+/* Auto height */
+.h-auto { height: auto !important; }
+
+/* Min and Max heights */
+.min-h-0 { min-height: 0 !important; }
+.min-h-full { min-height: 100% !important; }
+.max-h-full { max-height: 100% !important; }
+.max-h-screen-sm { max-height: 640px !important; }
+.max-h-screen-md { max-height: 768px !important; }
+.max-h-screen-lg { max-height: 1024px !important; }
+.max-h-screen-xl { max-height: 1280px !important; }
+.max-h-screen-2xl { max-height: 1536px !important; }

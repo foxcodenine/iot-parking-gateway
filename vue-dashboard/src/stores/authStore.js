@@ -69,6 +69,8 @@ export const useAuthStore = defineStore("authStore", () => {
         rememberMe.value = !rememberMe.value;
     }
 
+    
+
    
     
     // - Expose --------------------------------------------------------

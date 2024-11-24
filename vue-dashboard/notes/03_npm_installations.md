@@ -38,3 +38,20 @@ https://www.npmjs.com/package/axios
     npm install axios
 
 <!-- --------------------------------------------------------------- -->
+
+## validator.js
+
+https://www.npmjs.com/package/validator
+
+    npm install validator
+
+<!-- --------------------------------------------------------------- -->
+
+## vueuse/core
+
+https://www.npmjs.com/package/@vueuse/core
+https://vueuse.org/guide/
+
+    $ npm install @vueuse/core
+
+<!-- --------------------------------------------------------------- -->
