@@ -1,7 +1,7 @@
 <template>
-	<main class="dashboard">
+	<main class="dashboard" :class="{'no-side-bar': !showSideBar}">
 
-		<section class="sidebar" v-if="true">
+		<section class="sidebar" v-if="showSideBar">
 			<TheSidebar></TheSidebar>
 		</section>
 
@@ -18,8 +18,19 @@
 <!-- --------------------------------------------------------------- -->
 
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 import TheSidebar from './components/dashboard/TheSidebar.vue';
+import { computed } from 'vue';
+const route = useRoute();
+
+
+const showSideBar = computed(() => {
+	return !['loginView', 'forgotPasswordView'].includes(route.name)
+});
+
+
+
+
 
 </script>
 
@@ -37,5 +48,9 @@ import TheSidebar from './components/dashboard/TheSidebar.vue';
     // @include respondMobile($bp-medium) {
     //     grid-template-columns: 17rem 1fr;
     // }
+}
+
+.no-side-bar {
+	grid-template-columns: 1fr
 }
 </style>

@@ -1,16 +1,16 @@
 <template>
     <section id="the-sidebar" class="sidebar">
         <div class="sidebar__list">
-            <div class="sidebar__item" @click="goToView('viewHome')" >
+            <div class="sidebar__item" @click="goToView('homeView')" >
                 <svg class="sidebar__svg ">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-map-8"></use>
                 </svg>
-                <div class="sidebar__text">
+                <div class="sidebar__text" >
                     <span>Map</span>
                 </div>
             </div>
     
-            <div class="sidebar__item" @click="goToView('viewHome')" >
+            <div class="sidebar__item" @click="goToView('userView')" >
                 <svg class="sidebar__svg ">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-user-31"></use>
                 </svg>
@@ -19,7 +19,7 @@
                 </div>
             </div>
        
-            <div class="sidebar__item" @click="goToView('viewHome')" >
+            <div class="sidebar__item" @click="goToView('deviceView')" >
                 <svg class="sidebar__svg ">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-view-12"></use>
                 </svg>
@@ -46,6 +46,25 @@
 <!-- --------------------------------------------------------------- -->
 
 <script setup>
+
+import { useRouter } from 'vue-router';
+
+
+
+// - Store -------------------------------------------------------------
+
+
+
+
+// -- data -------------------------------------------------------------
+const router = useRouter();
+
+
+// -- methods ----------------------------------------------------------
+
+function goToView(view ) {
+    router.push({ name: view });
+}
 
 </script>
 
@@ -90,8 +109,8 @@
 
     &__item {
         cursor: pointer;
-        position: relative;
         display: flex;
+        position: relative;
         gap: .3rem;
         flex-direction: column;
         align-items: center;

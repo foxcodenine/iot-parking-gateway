@@ -1,13 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LiveAppView from '../views/LiveAppView.vue'
 import DeviceView from '@/views/DeviceView.vue'
+import UserView from '@/views/UserView.vue'
+import AuthView from '@/views/AuthView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', name: 'home', component: LiveAppView, },
-
-    { path: '/device', name: 'device', component: DeviceView, },
+    { path: '/', name: 'homeView', component: LiveAppView, },
+    { path: '/user', name: 'userView', component: UserView, },
+    { path: '/device', name: 'deviceView', component: DeviceView, },
+    { path: '/login', name: 'loginView', component: AuthView, },
+    { path: '/forgot-password', name: 'forgotPasswordView', component: AuthView, },
 
 
     // {

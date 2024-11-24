@@ -9,6 +9,7 @@
     "preview": "VITE_VUE_ENV=production vite preview"
   },
   "dependencies": {
+    "axios": "^1.7.7",
     "crypto-js": "^4.2.0",
     "dotenv": "^16.4.5",
     "pinia": "^2.2.6",

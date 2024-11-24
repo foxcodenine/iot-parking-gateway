@@ -74,3 +74,9 @@ https://github.com/fatih/color
 
 <!-- --------------------------------------------------------------- -->
 
+### jwt-go
+
+https://github.com/golang-jwt/jwt
+https://pkg.go.dev/github.com/golang-jwt/jwt/v5#section-readme
+
+    $ go get -u github.com/golang-jwt/jwt/v5

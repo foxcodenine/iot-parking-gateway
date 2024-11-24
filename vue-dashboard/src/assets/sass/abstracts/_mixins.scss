@@ -12,6 +12,12 @@ $bp-smallest:   400;
 
 // 16px is the default font-size of a browser
 
+@mixin respond($i) {
+    $i: calc($i / 16) + 0em;
+    @media only screen and (max-width: $i) { @content };                
+
+}
+
 @mixin respondDesktop($i) {
     @media only screen and (max-width: calc(#{$i} / 16 * 1em)) { @content };
 }

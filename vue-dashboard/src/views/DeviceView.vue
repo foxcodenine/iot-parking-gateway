@@ -12,7 +12,7 @@
             <div class="heading--4 mt-10">Devices List</div>      
             
             
-            <TableDevice></TableDevice>
+            <DeviceTable></DeviceTable>
             
         </section>
     </main>
@@ -23,7 +23,7 @@
 <script setup>
 import { ref } from 'vue';
 // import FormOrganisation from '@/components/organisation/FormOrganisation.vue'
-import TableDevice from '@/components/device/TableDevice.vue'
+import DeviceTable from '@/components/device/DeviceTable.vue';
 
 
 

@@ -176,7 +176,7 @@ func initializeRootUser() {
 	}
 
 	// Check if the root user already exists in the database
-	existingUser, _ := app.Models.User.GetUserByUsername(os.Getenv("APP_ROOT_USER"))
+	existingUser, _ := app.Models.User.FindUserByEmail(os.Getenv("APP_ROOT_USER"))
 	if existingUser != nil {
 		// Mark the root user as initialized in the cache
 		_ = app.Cache.Set(rootUserCacheKey, "true", -1) // -1 indicates no expiration
@@ -185,7 +185,7 @@ func initializeRootUser() {
 
 	// Create the root user with default credentials from environment variables
 	rootUser := models.User{
-		Username:    os.Getenv("APP_ROOT_USER"),
+		Email:       os.Getenv("APP_ROOT_USER"),
 		Password:    os.Getenv("APP_ROOT_PASSWORD"),
 		AccessLevel: 0, // 0 represents the highest level of access
 		Enabled:     true,

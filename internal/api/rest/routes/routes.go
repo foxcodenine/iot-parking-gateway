@@ -54,6 +54,7 @@ func Routes() http.Handler {
 	mux.Route("/api", func(r chi.Router) {
 		r.Mount("/device", DeviceRoutes())
 		r.Mount("/user", UserRoutes())
+		r.Mount("/auth", AuthRoutes())
 	})
 
 	return mux

@@ -17,7 +17,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	// Parse and validate input from the API
 	type Request struct {
-		Username    string `json:"username"`
+		Email       string `json:"email"`
 		Password1   string `json:"password1"`
 		Password2   string `json:"password2"`
 		AccessLevel int    `json:"access_level"`
@@ -30,12 +30,12 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate required fields
-	if strings.TrimSpace(req.Username) == "" {
-		http.Error(w, "Username cannot be empty", http.StatusBadRequest)
+	if strings.TrimSpace(req.Email) == "" {
+		http.Error(w, "Email cannot be empty", http.StatusBadRequest)
 		return
 	}
-	if len(req.Username) < 3 {
-		http.Error(w, "Username must be at least 3 characters long", http.StatusBadRequest)
+	if !helpers.EmailRegex.MatchString(req.Email) { // Assuming emailRegex is defined globally for email validation
+		http.Error(w, "Invalid email format", http.StatusBadRequest)
 		return
 	}
 	if strings.TrimSpace(req.Password1) == "" || strings.TrimSpace(req.Password2) == "" {
@@ -61,7 +61,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	// Create a new user instance
 	newUser := &models.User{
-		Username:    req.Username,
+		Email:       req.Email,
 		Password:    req.Password1, // Password will be hashed in the `Create` method
 		AccessLevel: req.AccessLevel,
 		Enabled:     true,
@@ -71,7 +71,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	createdUser, err := newUser.Create()
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateUser) {
-			http.Error(w, "User with this username already exists", http.StatusConflict)
+			http.Error(w, "User with this email already exists", http.StatusConflict)
 			return
 		}
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
@@ -83,7 +83,7 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"id":           createdUser.ID,
-		"username":     createdUser.Username,
+		"email":        createdUser.Email,
 		"access_level": createdUser.AccessLevel,
 		"enabled":      createdUser.Enabled,
 		"created_at":   createdUser.CreatedAt,

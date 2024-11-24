@@ -58,6 +58,21 @@
         }
     }
 
+    &--zinc-lt {
+        background: linear-gradient(
+            145deg,
+            color.adjust($col-zinc-500, $lightness: 30%),
+            color.adjust($col-zinc-500, $lightness: 10%)
+        );
+        &:hover {
+            background: linear-gradient(
+                145deg,
+                color.adjust($col-zinc-600, $lightness: 20%),
+                color.adjust($col-zinc-600, $lightness: 0%)
+            );
+        }
+    }
+
     &--neutral {
         background: linear-gradient(
             145deg,
