@@ -1,42 +1,41 @@
 import { useLocalStorage } from '@vueuse/core';
-import { ref, computed, reactive } from 'vue';
+import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-
-// ---------------------------------------------------------------------
+import { decryptString, encryptString } from '@/utils/cryptoUtils';
 
 export const useAppStore = defineStore("appStore", () => {
+    // State
+    const appUrl = ref(import.meta.env.VITE_VUE_ENV === 'production' ? window.location.origin : import.meta.env.VITE_APP_URL);
+    const appUrlLocalStorage = useLocalStorage("appUrl", appUrl.value);
 
-    // - State ---------------------------------------------------------
-    const appVariables = useLocalStorage("appVariables", {
-        appUrl: import.meta.env.VITE_VUE_ENV === 'production' ? window.location.origin : import.meta.env.VITE_APP_URL,      
-    });
+    // Using local storage to manage the Google API key
+    const googleApiKey = ref(null);
+    const googleApiKeyLocalStorage = useLocalStorage("googleApiKey", null); 
 
-    // Adjust googleApiKey based on environment and availability
-    if (import.meta.env.VITE_VUE_ENV === 'production' && GO_GOOGLE_API_KEY) {
-        appVariables.value.googleApiKey = GO_GOOGLE_API_KEY; // Use value to properly reference the reactive object
-        
-
-    } else if (import.meta.env.VITE_VUE_ENV === 'development') {
-        appVariables.value.googleApiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+    // Initialize Google API Key if not already set in local storage
+    if (googleApiKeyLocalStorage.value === null) {
+        const apiKey = encryptString(import.meta.env.VITE_VUE_ENV === 'production' ? GO_GOOGLE_API_KEY: import.meta.env.VITE_GOOGLE_API_KEY); 
+        googleApiKeyLocalStorage.value = apiKey;  // Store the API key in local storage
+        googleApiKey.value = apiKey;  // Set the reactive reference
+        // GO_GOOGLE_API_KEY = null;
+    } else {
+        googleApiKey.value = googleApiKeyLocalStorage.value;  // Use the stored key
     }
 
+    // Getters
+    const getappUrl = computed(() => appUrl.value || appUrlLocalStorage.value);
+    const getGoogleApiKey = computed(() => decryptString(googleApiKey.value));
 
-
-    // - Getters -------------------------------------------------------
-    const getAppVariables = () => appVariables;
-
-    // - Actions -------------------------------------------------------
-
-
-
+    // Actions
     function resetAppState() {
-
+        appUrlLocalStorage.value = null;
+        googleApiKeyLocalStorage.value = null;
     }
 
-    // - Expose --------------------------------------------------------
+    // Expose
     return {
         resetAppState,
-        getAppVariables,
-        appVariables: appVariables.value, 
+        getappUrl,
+        getGoogleApiKey,
     };
 });

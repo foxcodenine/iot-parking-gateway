@@ -1,22 +1,18 @@
 import CryptoJS from "crypto-js";
 
-function decryptEnv(encryptedText) {
+function encryptString(text) {
+    const secretKey = import.meta.env.VITE_AES_SECRET_KEY
+    return CryptoJS.AES.encrypt(text, secretKey).toString();
+}
 
-    const secretKey = import.meta.env.VITE_APP_SECRET_KEY;
-
-    const decodedData = CryptoJS.enc.Base64.parse(encryptedText).toString(CryptoJS.enc.Hex);
-    const iv = CryptoJS.enc.Hex.parse(decodedData.slice(0, 32));
-    const ciphertext = CryptoJS.enc.Hex.parse(decodedData.slice(32));
-    const key = CryptoJS.enc.Utf8.parse(secretKey);
-    const decrypted = CryptoJS.AES.decrypt({ ciphertext: ciphertext }, key, {
-        iv: iv,
-        mode: CryptoJS.mode.CFB,
-        padding: CryptoJS.pad.NoPadding,
-    });
-
-    return CryptoJS.enc.Utf8.stringify(decrypted);
+// Decryption function
+function decryptString(ciphertext) {
+    const secretKey = import.meta.env.VITE_AES_SECRET_KEY
+    const bytes  = CryptoJS.AES.decrypt(ciphertext, secretKey);
+    return bytes.toString(CryptoJS.enc.Utf8);
 }
 
 export {
-    decryptEnv
+    encryptString,
+    decryptString,
 };

@@ -38,6 +38,7 @@ func (v *VueHandler) ServeIndexWithVariables(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Serve the modified content
+	w.Header().Set("Cache-Control", "no-store, must-revalidate")
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	w.Write(buf.Bytes())
