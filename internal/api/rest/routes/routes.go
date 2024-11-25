@@ -41,12 +41,11 @@ func Routes() http.Handler {
 	// -----------------------------------------------------------------
 
 	// Serve static index.html at route /app
-	mux.Get("/", vueHandler.ServeIndexWithVariables)
+	// mux.Get("/", vueHandler.ServeIndexWithVariables)
+	// mux.Get("/login", vueHandler.ServeIndexWithVariables)
+	// mux.Get("/user", vueHandler.ServeIndexWithVariables)
 
-	// Serve all static files under the dist directory
-	workDir, _ := filepath.Abs(".")
-	filesDir := filepath.Join(workDir, "dist")
-	FileServer(mux, "/", http.Dir(filesDir))
+	// Handle all other routes
 
 	// -----------------------------------------------------------------
 
@@ -55,6 +54,21 @@ func Routes() http.Handler {
 		r.Mount("/device", DeviceRoutes())
 		r.Mount("/user", UserRoutes())
 		r.Mount("/auth", AuthRoutes())
+	})
+
+	mux.NotFound(func(w http.ResponseWriter, r *http.Request) {
+
+		// Serve all static files under the dist directory
+		workDir, _ := filepath.Abs(".")
+		filesDir := filepath.Join(workDir, "dist")
+		FileServer(mux, "/", http.Dir(filesDir))
+
+		if !strings.HasPrefix(r.URL.Path, "/api") {
+			// Let the API handler handle it
+			vueHandler.ServeIndexWithVariables(w, r)
+		}
+		http.NotFound(w, r)
+		return
 	})
 
 	return mux

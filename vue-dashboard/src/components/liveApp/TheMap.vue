@@ -1,7 +1,7 @@
 <template>
     <div class="the-map" >
         <GoogleMap        
-            :api-key="googleAptKey" 
+            :api-key="getAppVar.googleAptKey" 
             style="width: 100%; height: 100vh" 
             :center="center" 
             :zoom="15">
@@ -13,17 +13,18 @@
 <!-- --------------------------------------------------------------- -->
 <script setup>
 
-import { ref } from 'vue';
+import { useAppStore } from '@/stores/appStore';
+import { computed, toRaw } from 'vue';
 import { GoogleMap, Marker } from 'vue3-google-map';
 
-const googleAptKey = ref(GO_GOOGLE_API_KEY);
+const getAppVar = computed(()=>{
+    console.log(toRaw(useAppStore().appVariables))
 
-if (import.meta.env.VITE_VUE_ENV == 'development') {
-    googleAptKey.value = import.meta.env.VITE_GOOGLE_API_KEY
-} else {
-    googleAptKey.value = GO_GOOGLE_API_KEY;
-    GO_GOOGLE_API_KEY = "";
-}
+    console.log(toRaw(useAppStore().appVariables2))
+  
+    return null;
+});
+
 
 const center = { lat: 40.689247, lng: -74.044502 };
 

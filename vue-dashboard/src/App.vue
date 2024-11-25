@@ -21,13 +21,13 @@
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import TheSidebar from './components/dashboard/TheSidebar.vue';
 import { computed } from 'vue';
+import { useAppStore } from './stores/appStore';
 const route = useRoute();
 
 
 const showSideBar = computed(() => {
 	return !['loginView', 'forgotPasswordView'].includes(route.name)
 });
-
 
 
 
