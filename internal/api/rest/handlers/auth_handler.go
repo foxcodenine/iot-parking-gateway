@@ -57,7 +57,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	// Verify the password
 	if !helpers.CheckPasswordHash(payload.Password, user.Password) {
-		http.Error(w, "Invalid email or password!!", http.StatusUnauthorized)
+		http.Error(w, "Invalid email or password!", http.StatusUnauthorized)
 		return
 	}
 

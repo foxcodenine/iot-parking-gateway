@@ -20,9 +20,9 @@
             </div>
 
             <div class="ssign__row mt-3" @click="resetFlashMassage()">
-                <div class="ssign__remember" @click="rememberMe = !rememberMe">
-                    <svg class="ssign__icon" v-if="rememberMe">
-                        <use xlink:href="@/assets/svg/sprite.svg#icon-checkbox-3" v-if="true"></use>
+                <div class="ssign__remember" @click="toggleRememberMe()">
+                    <svg class="ssign__icon" v-if="getRemeberMe">
+                        <use xlink:href="@/assets/svg/sprite.svg#icon-checkbox-3"></use>
                     </svg>
                     <svg class="ssign__icon ssign__icon--empty" v-else></svg>
                     Remeber me
@@ -38,26 +38,29 @@
 <!-- --------------------------------------------------------------- -->
 
 <script setup>
-import { useMessageStore } from '@/stores/messageStore';
+
 import axios from '@/axios';
 import validator from 'validator';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAppStore } from '@/stores/appStore';
+import { useAuthStore } from '@/stores/authStore';
+import { storeToRefs } from 'pinia';
 
+// - Store -------------------------------------------------------------
 
 const appStore = useAppStore();
+const authStore = useAuthStore();
+const { isAuthenticated, getRedirectTo, getRemeberMe } = storeToRefs(authStore);
 
-// -- data -------------------------------------------------------------
+// - Data --------------------------------------------------------------
 
 const router = useRouter();
-const rememberMe = ref(false);
-
-const email = ref("");
-const password = ref("");
+const email = ref("user@dev.com");
+const password = ref("DevPass");
 const flashMessage = ref("")
 
-// -- methods ----------------------------------------------------------
+// - Methods -----------------------------------------------------------
 
 function goToView(view) {
     router.push({ name: view });
@@ -83,17 +86,17 @@ async function submitForm() {
             flashMessage.value = "Please enter a valid email address.";
             return
         }
-
+        
         const response = await axios.post(`${appStore.getAppUrl}/api/auth/login`, {
             email: email.value,
             password: password.value
         });        
 
         if (response.status == 200) {
-            console.log(response.data.token);
-            console.log(response.data.user);
-
-
+            email.value = 'user@dev.com';
+            password.value = 'DevPass';
+            authStore.setJwt(response.data.token);
+            getRedirectTo('mapView');
         }
 
     } catch (err) {
@@ -102,9 +105,16 @@ async function submitForm() {
 
         console.error("! login form !", err);
     }
-
-
 }
+
+function toggleRememberMe() {
+    authStore.toggleRememberMe();
+}
+
+// - Hooks -------------------------------------------------------------
+
+if (isAuthenticated.value) { router.push({ name: 'mapView' }); }
+
 
 </script>
 

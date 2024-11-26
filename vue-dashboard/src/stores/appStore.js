@@ -4,9 +4,9 @@ import { defineStore } from 'pinia';
 import { decryptString, encryptString } from '@/utils/cryptoUtils';
 
 export const useAppStore = defineStore("appStore", () => {
-    // State
+
     const appUrl = ref(import.meta.env.VITE_VUE_ENV === 'production' ? window.location.origin : import.meta.env.VITE_APP_URL);
-    const appUrlLocalStorage = useLocalStorage("appUrl", appUrl.value);
+   
 
     // Using local storage to manage the Google API key
     const googleApiKey = ref(null);
@@ -17,13 +17,13 @@ export const useAppStore = defineStore("appStore", () => {
         const apiKey = encryptString(import.meta.env.VITE_VUE_ENV === 'production' ? GO_GOOGLE_API_KEY: import.meta.env.VITE_GOOGLE_API_KEY); 
         googleApiKeyLocalStorage.value = apiKey;  // Store the API key in local storage
         googleApiKey.value = apiKey;  // Set the reactive reference
-        // GO_GOOGLE_API_KEY = null;
+        GO_GOOGLE_API_KEY = null;
     } else {
         googleApiKey.value = googleApiKeyLocalStorage.value;  // Use the stored key
     }
 
     // Getters
-    const getappUrl = computed(() => appUrl.value || appUrlLocalStorage.value);
+    const getAppUrl = computed(() => appUrl.value);
     const getGoogleApiKey = computed(() => decryptString(googleApiKey.value));
 
     // Actions
@@ -35,7 +35,7 @@ export const useAppStore = defineStore("appStore", () => {
     // Expose
     return {
         resetAppState,
-        getappUrl,
+        getAppUrl,
         getGoogleApiKey,
     };
 });

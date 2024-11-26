@@ -1,7 +1,7 @@
 <template>
     <section id="the-sidebar" class="sidebar">
         <div class="sidebar__list">
-            <div class="sidebar__item" @click="goToView('homeView')" >
+            <div class="sidebar__item" @click="goToView('mapView')" >
                 <svg class="sidebar__svg ">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-map-8"></use>
                 </svg>

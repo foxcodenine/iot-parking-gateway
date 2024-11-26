@@ -18,7 +18,9 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o server cmd/app/main.go
 
 # Use a minimal base image for the runtime
-FROM alpine:latest
+FROM alpine:3.20.3
+
+# RUN apk --no-cache add ca-certificates
 
 # Set the working directory in the runtime container
 WORKDIR /root/
@@ -30,7 +32,6 @@ ENV GO_ENV=production
 COPY --from=builder /app/server .
 COPY --from=builder /app/scripts/wait-for.sh ./wait-for.sh
 COPY --from=builder /app/dist ./dist
-
 
 
 # Copy config files if needed

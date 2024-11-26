@@ -22,9 +22,6 @@ const appStore = useAppStore();
 
 const { getGoogleApiKey } = storeToRefs( appStore );
 
-console.log('>>', getGoogleApiKey.value)
-
-
 const center = { lat: 40.689247, lng: -74.044502 };
 
 </script>
