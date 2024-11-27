@@ -106,6 +106,7 @@ func (u *User) GenerateToken() (string, error) {
 		"user_id":      u.ID,
 		"email":        u.Email,
 		"access_level": u.AccessLevel,
+		"timestamp":    time.Now().Unix(),
 		"exp":          time.Now().Add(time.Second * time.Duration(ttl)).Unix(), // 24-hour expiration
 	}
 

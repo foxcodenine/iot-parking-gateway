@@ -94,10 +94,11 @@ func initializeAppConfig() {
 	}
 
 	// Assign Redis cache instance to the app configuration
-	app.Cache = &cache.RedisCache{
-		Conn:   redisPool,
-		Prefix: os.Getenv("REDIS_PREFIX"), // Use a prefix for cache keys, if provided
-	}
+	// app.Cache = &cache.RedisCache{
+	// 	Conn:   redisPool,
+	// 	Prefix: os.Getenv("REDIS_PREFIX"), // Use a prefix for cache keys, if provided
+	// }
+	app.Cache = cache.NewCache(redisPool, os.Getenv("REDIS_PREFIX"))
 
 	// Initialize the service layer that handles business logic.
 	app.Service = services.NewService(

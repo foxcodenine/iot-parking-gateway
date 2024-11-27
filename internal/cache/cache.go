@@ -17,6 +17,16 @@ type RedisCache struct {
 	mu     sync.Mutex
 }
 
+var RedisCacheRepo *RedisCache
+
+func NewCache(c *redis.Pool, p string) *RedisCache {
+	RedisCacheRepo = &RedisCache{
+		Conn:   c,
+		Prefix: p,
+	}
+	return RedisCacheRepo
+}
+
 // CreateRedisPool initializes and returns a Redis connection pool.
 func CreateRedisPool() (*redis.Pool, error) {
 
