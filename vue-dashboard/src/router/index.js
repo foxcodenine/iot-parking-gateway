@@ -7,6 +7,7 @@ import { useMessageStore } from '@/stores/messageStore'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/authStore'
 import { useJwtComposable } from '@/composables/useJwtComposable'
+import LogoutView from '@/views/LogoutView.vue'
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -16,6 +17,7 @@ const router = createRouter({
 		{ path: '/device', name: 'deviceView', component: DeviceView, },
 		{ path: '/login', name: 'loginView', component: AuthView, },
 		{ path: '/forgot-password', name: 'forgotPasswordView', component: AuthView, },
+		{ path: '/logout', name: 'logoutView', component: LogoutView },
 
 		// {
 		//   path: '/about', name: 'about',

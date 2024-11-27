@@ -28,7 +28,7 @@ if not hex_strings:
 
 # UDP target IP and port
 UDP_IP = "localhost"
-UDP_PORT = 1234
+UDP_PORT = 1236
 
 # Create a socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

@@ -1,6 +1,15 @@
 <template>
     <section id="the-sidebar" class="sidebar">
-        <div class="sidebar__list">
+        <div class="sidebar__list ">
+            <div id="menu-btn" class="sidebar__item" @click="toggleMenu" >
+                <svg class="sidebar__svg ">
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-menu-1"></use>
+                </svg>
+                <div class="sidebar__text" >
+                    <span>Menu</span>
+                </div>
+            </div>
+
             <div class="sidebar__item" @click="goToView('mapView')" >
                 <svg class="sidebar__svg ">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-map-8"></use>
@@ -28,14 +37,14 @@
                 </div>
             </div>
 
-            <div class="sidebar__item" @click="goToView('viewHome')" >
+            <!-- <div class="sidebar__item" @click="goToView('viewHome')" >
                 <svg class="sidebar__svg ">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-gears-2"></use>
                 </svg>
                 <div class="sidebar__text">
                     <span>Settings</span>
                 </div>
-            </div>
+            </div> -->
          
         </div>
 
@@ -47,13 +56,13 @@
 
 <script setup>
 
+import { useDashboardStore } from '@/stores/dashboardStore';
 import { useRouter } from 'vue-router';
-
 
 
 // - Store -------------------------------------------------------------
 
-
+const dashboardStore = useDashboardStore();
 
 
 // -- data -------------------------------------------------------------
@@ -64,6 +73,10 @@ const router = useRouter();
 
 function goToView(view ) {
     router.push({ name: view });
+}
+
+function toggleMenu() {
+    dashboardStore.toggleUserMenu();
 }
 
 </script>
@@ -104,7 +117,7 @@ function goToView(view ) {
         display: flex;
         flex-direction: column;
         gap: 1px;
-        padding-top: .5rem;
+        // padding-top: .5rem;
     }
 
     &__item {
@@ -125,6 +138,7 @@ function goToView(view ) {
             color: $col-zinc-800;
             background-color: $col-zinc-300;
         }
+        
 
         // @include respondMobile($bp-medium) {
         //     flex-direction: row;

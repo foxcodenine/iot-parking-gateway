@@ -60,6 +60,14 @@ const email = ref("user@dev.com");
 const password = ref("DevPass");
 const flashMessage = ref("")
 
+
+watch(isAuthenticated, (newVal) => {
+    if (newVal) {
+        router.push({ name: getRedirectTo.value });
+    } else {
+        router.push({ name: "loginView" });
+    } 
+});
 // - Methods -----------------------------------------------------------
 
 function goToView(view) {
@@ -96,7 +104,6 @@ async function submitForm() {
             email.value = 'user@dev.com';
             password.value = 'DevPass';
             authStore.setJwt(response.data.token);
-            getRedirectTo('mapView');
         }
 
     } catch (err) {

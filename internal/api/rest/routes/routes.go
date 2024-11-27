@@ -2,6 +2,7 @@ package routes
 
 import (
 	"net/http"
+
 	"path/filepath"
 	"strings"
 
@@ -17,59 +18,36 @@ func Routes() http.Handler {
 
 	// Middleware
 	mux.Use(middleware.Recoverer)
-
-	// Basic CORS
-	// for more ideas, see: https://developer.github.com/v3/#cross-origin-resource-sharing
 	mux.Use(cors.Handler(cors.Options{
-		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins: []string{"https://*", "http://*"},
-		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: false,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
+		MaxAge:           300,
 	}))
 
-	// Initialize specific handlers using the repository
-	testHandler := &handlers.TestHandler{}
 	vueHandler := &handlers.VueHandler{}
 
-	// Define routes for each handler
-	mux.Get("/test", testHandler.Index)
+	// Serve modified index.html for SPA routes
+	mux.Get("/", vueHandler.ServeIndexWithVariables)
+	mux.Get("/login", vueHandler.ServeIndexWithVariables)
+	mux.Get("/forgot-password", vueHandler.ServeIndexWithVariables)
+	mux.Get("/device", vueHandler.ServeIndexWithVariables)
+	mux.Get("/user", vueHandler.ServeIndexWithVariables)
+	mux.Get("/app", vueHandler.ServeIndexWithVariables) // add more routes as needed
 
-	// -----------------------------------------------------------------
-
-	// Serve static index.html at route /app
-	// mux.Get("/", vueHandler.ServeIndexWithVariables)
-	// mux.Get("/login", vueHandler.ServeIndexWithVariables)
-	// mux.Get("/user", vueHandler.ServeIndexWithVariables)
-
-	// Handle all other routes
-
-	// -----------------------------------------------------------------
-
-	// Mount api routes
+	// API routes
 	mux.Route("/api", func(r chi.Router) {
 		r.Mount("/device", DeviceRoutes())
 		r.Mount("/user", UserRoutes())
 		r.Mount("/auth", AuthRoutes())
 	})
 
-	mux.NotFound(func(w http.ResponseWriter, r *http.Request) {
-
-		// Serve all static files under the dist directory
-		workDir, _ := filepath.Abs(".")
-		filesDir := filepath.Join(workDir, "dist")
-		FileServer(mux, "/", http.Dir(filesDir))
-
-		if !strings.HasPrefix(r.URL.Path, "/api") {
-			// Let the API handler handle it
-			vueHandler.ServeIndexWithVariables(w, r)
-		}
-		http.NotFound(w, r)
-		return
-	})
+	// Serve all static files under the dist directory
+	workDir, _ := filepath.Abs(".")
+	filesDir := filepath.Join(workDir, "dist")
+	FileServer(mux, "/", http.Dir(filesDir))
 
 	return mux
 }

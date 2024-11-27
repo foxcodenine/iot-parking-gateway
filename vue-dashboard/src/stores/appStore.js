@@ -20,19 +20,23 @@ export const useAppStore = defineStore("appStore", () => {
         GO_GOOGLE_API_KEY = null;
     } else {
         googleApiKey.value = googleApiKeyLocalStorage.value;  // Use the stored key
+        GO_GOOGLE_API_KEY = null;
     }
 
-    // Getters
+    // - Getters -------------------------------------------------------
+
     const getAppUrl = computed(() => appUrl.value);
     const getGoogleApiKey = computed(() => decryptString(googleApiKey.value));
 
-    // Actions
+    // - Actions -------------------------------------------------------
+
     function resetAppState() {
         appUrlLocalStorage.value = null;
         googleApiKeyLocalStorage.value = null;
     }
 
-    // Expose
+    // - Expose --------------------------------------------------------
+    
     return {
         resetAppState,
         getAppUrl,

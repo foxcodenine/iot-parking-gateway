@@ -66,7 +66,6 @@ export const useAuthStore = defineStore("authStore", () => {
     }
 
     function toggleRememberMe() {
-        console.log(1)
         rememberMe.value = !rememberMe.value;
     }   
     

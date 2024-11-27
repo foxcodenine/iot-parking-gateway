@@ -1,6 +1,10 @@
 <template>
 	<main class="dashboard" :class="{'no-side-bar': !showSideBar}">
 
+		<section class="modal" v-if="getIsUserMenuOpen">
+			<TheUserMenu></TheUserMenu>
+		</section>
+
 		<section class="sidebar" v-if="showSideBar">
 			<TheSidebar></TheSidebar>
 		</section>
@@ -20,17 +24,43 @@
 <script setup>
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import TheSidebar from './components/dashboard/TheSidebar.vue';
-import { computed } from 'vue';
-import { useAppStore } from './stores/appStore';
+import TheUserMenu from './components/dashboard/TheUserMenu.vue';
+import { computed, onMounted } from 'vue';
+import { useDashboardStore } from './stores/dashboardStore';
+import { storeToRefs } from 'pinia';
+
+// - Store -------------------------------------------------------------
+
+const dashboardStore = useDashboardStore();
+
+// - Routes ------------------------------------------------------------
+
 const route = useRoute();
 
+const { getIsUserMenuOpen, getIsFetching } = storeToRefs(dashboardStore);
+
+
+// - Computed ----------------------------------------------------------
 
 const showSideBar = computed(() => {
 	return !['loginView', 'forgotPasswordView'].includes(route.name)
 });
 
+// - Methods -----------------------------------------------------------
 
+// Close the user menu when clicks outside the user menu and top bar image
+function closeUserMenuOnClickOutside() {
+    document.querySelector('body').addEventListener('click', (e) => {
+        const userMenuOrBtn = e.target.closest('#the-user-menu')  || e.target.closest('#menu-btn');
+        if (!userMenuOrBtn) {	
+            dashboardStore.updateUserMenu(false);
+        }
+    });
+}
 
+onMounted(()=>{
+	closeUserMenuOnClickOutside();
+});
 
 </script>
 
@@ -48,6 +78,13 @@ const showSideBar = computed(() => {
     // @include respondMobile($bp-medium) {
     //     grid-template-columns: 17rem 1fr;
     // }
+}
+
+.modal {
+    position: fixed;
+    left: 4.25rem;
+    top: .25rem;
+	z-index: 500;
 }
 
 .no-side-bar {
