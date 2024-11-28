@@ -1,14 +1,14 @@
 @use '../abstracts/' as *;
 
 .flash-message {
-    font-family: $font-display;
+    font-family: $font-action;
     font-size: .9rem;
     padding: 0.5rem 1rem; // Slightly increased padding for a better look
     border-radius: $border-radius;
     border: 1px solid transparent;
     background-color: transparent;
     color: $col-slate-800;
-    font-weight: 500;
+    font-weight: 400;
     opacity: 0;
     transition: opacity .3s ease, transform .3s ease; // Added transform transition
     min-height: 2.5rem;

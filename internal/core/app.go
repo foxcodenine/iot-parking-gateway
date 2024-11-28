@@ -1,8 +1,11 @@
 package core
 
 import (
+	"context"
+	"errors"
 	"log"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/middleware"
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/foxcodenine/iot-parking-gateway/internal/mq"
@@ -26,4 +29,12 @@ type App struct {
 	Cron       *cron.Cron
 	UdpServer  *udp.UDPServer
 	Service    *services.Service
+}
+
+func (app *App) GetUserFromContext(ctx context.Context) (*middleware.UserClaims, error) {
+	userData, ok := ctx.Value(middleware.UserContextKey).(*middleware.UserClaims)
+	if !ok || userData == nil {
+		return nil, errors.New("user claims not found or wrong type in context")
+	}
+	return userData, nil
 }

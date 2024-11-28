@@ -10,7 +10,7 @@ export const useDashboardStore = defineStore("dashboardStore", () => {
     // ---- State ------------------------------------------------------
 
     const isUserMenuOpen = ref(false);
-    const isFetching = ref(false)
+    const isLoading = ref(false)
 
     // ---- Getters ----------------------------------------------------
 
@@ -18,8 +18,8 @@ export const useDashboardStore = defineStore("dashboardStore", () => {
         return isUserMenuOpen.value;
     });
 
-    const getIsFetching = computed(()=>{
-        return isFetching.value;
+    const getIsLoading = computed(()=>{
+        return isLoading.value;
     })
 
     // ---- Actions ----------------------------------------------------
@@ -32,8 +32,8 @@ export const useDashboardStore = defineStore("dashboardStore", () => {
         isUserMenuOpen.value = val;
     }
 
-    function setIsFetching(val) {
-        isFetching.value = val;
+    function setIsLoading(val) {
+        isLoading.value = val;
     }
 
 
@@ -42,9 +42,8 @@ export const useDashboardStore = defineStore("dashboardStore", () => {
     return {
         getIsUserMenuOpen,
         toggleUserMenu,
-        updateUserMenu,
-        
-        getIsFetching,
-        setIsFetching,
+        updateUserMenu,        
+        getIsLoading,
+        setIsLoading,
     }
 });

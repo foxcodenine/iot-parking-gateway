@@ -55,3 +55,9 @@ https://vueuse.org/guide/
     $ npm install @vueuse/core
 
 <!-- --------------------------------------------------------------- -->
+
+## vue-loading-overlay
+
+https://www.npmjs.com/package/vue-loading-overlay
+
+    $ npm install vue-loading-overlay

@@ -25,6 +25,7 @@ apiClient.interceptors.request.use(function (config) {
     const isAuthenticated = authStore.isAuthenticated;
 
     if (isAuthenticated) {
+
         const token = authStore.getJwt;
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -58,26 +59,14 @@ apiClient.interceptors.response.use(
     error => {
         console.error('! axios.interceptors.response !');
 
-        let data = error.response?.data;       
+        if (error.status == 401 && useAuthStore().isAuthenticated) {
+            window.location.assign('/logout');
+            return Promise.reject(error);
 
-        if (data?.messages && !data?.actions?.includes('hideMessage')) { 
-            useMessageStore().setFlashMessages(error.response.data.messages, 'flash-message--red');
+        } else {
+            return Promise.reject(error);
         }
-
-        if (data?.actions?.includes('logout')) {           
-            
-            const currentUrl = window.location.href;
-            const lastPart = currentUrl.substring(currentUrl.lastIndexOf('/'));
-
-            if (lastPart != 'login') {
-                const logoutMessage = `Please <a href="/auth/logout">log out</a> and sign in again to refresh your session.`;
-                useMessageStore().setFlashMessages([logoutMessage], 'flash-message--yellow');
-
-                // window.location.assign('/auth/logout');
-            }
-        }
-
-        return Promise.reject(error);
+       
     }
 );
 

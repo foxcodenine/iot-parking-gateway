@@ -15,6 +15,19 @@ type UserHandler struct {
 
 func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
+	userData, err := app.GetUserFromContext(r.Context())
+	if err != nil {
+		app.ErrorLog.Printf("Authentication error: %v", err)
+		http.Error(w, "Authentication error.", http.StatusUnauthorized)
+		return
+	}
+
+	// Check if the user has permission to create a new user
+	if userData.AccessLevel > 1 {
+		http.Error(w, "You do not have the necessary permissions to perform this action.", http.StatusForbidden)
+		return
+	}
+
 	// Parse and validate input from the API
 	type Request struct {
 		Email       string `json:"email"`
@@ -24,38 +37,39 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req Request
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		helpers.RespondWithError(w, err, "Failed to create user", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, "Failed to create user.", http.StatusInternalServerError)
 		return
 	}
 
 	// Validate required fields
 	if strings.TrimSpace(req.Email) == "" {
-		http.Error(w, "Email cannot be empty", http.StatusBadRequest)
+		http.Error(w, "Email cannot be empty.", http.StatusBadRequest)
 		return
 	}
 	if !helpers.EmailRegex.MatchString(req.Email) { // Assuming emailRegex is defined globally for email validation
-		http.Error(w, "Invalid email format", http.StatusBadRequest)
+		http.Error(w, "Invalid email format.", http.StatusBadRequest)
 		return
 	}
 	if strings.TrimSpace(req.Password1) == "" || strings.TrimSpace(req.Password2) == "" {
-		http.Error(w, "Passwords cannot be empty", http.StatusBadRequest)
+		http.Error(w, "Passwords cannot be empty.", http.StatusBadRequest)
 		return
 	}
 	if len(req.Password1) < 6 {
-		http.Error(w, "Password must be at least 6 characters long", http.StatusBadRequest)
+		http.Error(w, "Password must be at least 6 characters long.", http.StatusBadRequest)
 		return
 	}
 
 	// Validate that passwords match
 	if req.Password1 != req.Password2 {
-		http.Error(w, "Passwords do not match", http.StatusBadRequest)
+		http.Error(w, "Passwords do not match.", http.StatusBadRequest)
 		return
 	}
 
 	// Validate access level
 	if req.AccessLevel < 0 || req.AccessLevel > 3 { // Example range validation
-		http.Error(w, "Invalid access level", http.StatusBadRequest)
+		http.Error(w, "Invalid access level.", http.StatusBadRequest)
 		return
 	}
 
@@ -71,22 +85,27 @@ func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	createdUser, err := newUser.Create()
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateUser) {
-			http.Error(w, "User with this email already exists", http.StatusConflict)
+			http.Error(w, "User with this email already exists.", http.StatusConflict)
 			return
 		}
-		http.Error(w, "Failed to create user", http.StatusInternalServerError)
+		http.Error(w, "Failed to create user.", http.StatusInternalServerError)
 		helpers.LogError(err, "Error creating user:")
 		return
 	}
 
+	// Respond with a success message and the created user's data (excluding sensitive info)
+	response := map[string]interface{}{
+		"message": "User created successfully.",
+		"user":    createdUser, // Directly using the createdUser struct
+	}
+
 	// Respond with the created user's data (excluding sensitive info)
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"id":           createdUser.ID,
-		"email":        createdUser.Email,
-		"access_level": createdUser.AccessLevel,
-		"enabled":      createdUser.Enabled,
-		"created_at":   createdUser.CreatedAt,
-	})
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		// Handle error if the JSON encoding fails
+		http.Error(w, "Failed to send response.", http.StatusInternalServerError)
+		helpers.LogError(err, "Error encoding response:")
+	}
 
 }

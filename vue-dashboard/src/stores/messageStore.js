@@ -9,9 +9,8 @@ export const useMessageStore = defineStore("messageStore", () => {
 
     // - State ---------------------------------------------------------
 
-
-    const flashMessages =ref(["Email and password are required."]);
-    const flashClass = ref("flash-message--red");
+    const flashMessages =ref([]);
+    const flashClass = ref("");
 
     const persistFlashMessage = ref(0);
 
@@ -61,7 +60,7 @@ export const useMessageStore = defineStore("messageStore", () => {
         if (persistFlashMessage.value != 0) {
             persistFlashMessage.value -= 1;
         }
-        console.log(persistFlashMessage.value)
+        console.log(persistFlashMessage.value);
     }
     
 

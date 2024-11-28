@@ -17,8 +17,10 @@ func RespondWithError(w http.ResponseWriter, err error, message string, statusCo
 
 	if os.Getenv("DEBUG") == "true" || os.Getenv("DEBUG") == "1" {
 		userError = fmt.Sprintf("%s: at %s:%d: \n%v", message, file, line, err)
+		LogError(err, message)
 	} else {
 		userError = message
+		LogError(err, message)
 	}
 
 	http.Error(w, userError, statusCode)

@@ -1,6 +1,19 @@
 <template>
 	<main class="dashboard" :class="{'no-side-bar': !showSideBar}">
 
+   
+
+            <VueLoadingOverlay   
+                :active="getIsLoading"
+                :is-full-page="true"
+                :lock-scroll="true"         
+                :width="128"
+                :height="128"
+                transition="fade"
+                :opacity="0.4"      
+            />
+      
+
 		<section class="modal" v-if="getIsUserMenuOpen">
 			<TheUserMenu></TheUserMenu>
 		</section>
@@ -22,6 +35,8 @@
 <!-- --------------------------------------------------------------- -->
 
 <script setup>
+import VueLoadingOverlay from 'vue-loading-overlay';
+import 'vue-loading-overlay/dist/css/index.css';
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import TheSidebar from './components/dashboard/TheSidebar.vue';
 import TheUserMenu from './components/dashboard/TheUserMenu.vue';
@@ -37,7 +52,7 @@ const dashboardStore = useDashboardStore();
 
 const route = useRoute();
 
-const { getIsUserMenuOpen, getIsFetching } = storeToRefs(dashboardStore);
+const { getIsUserMenuOpen, getIsLoading } = storeToRefs(dashboardStore);
 
 
 // - Computed ----------------------------------------------------------
