@@ -20,7 +20,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o server cmd/app/main.go
 # Use a minimal base image for the runtime
 FROM alpine:3.20.3
 
-# RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates
 
 # Set the working directory in the runtime container
 WORKDIR /root/

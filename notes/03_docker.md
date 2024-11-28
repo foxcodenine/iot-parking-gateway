@@ -102,6 +102,9 @@ This approach:
     app:
         image: foxcodenine/iot-parking-gateway_app:latest
 
+5. 
+    docker compose pull
+
 <!-- --------------------------------------------------------------- -->
 
 ## For Docker on Windows with WSL2 or Hyper-V
