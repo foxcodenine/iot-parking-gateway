@@ -35,6 +35,7 @@ func Routes() http.Handler {
 	mux.Get("/forgot-password", vueHandler.ServeIndexWithVariables)
 	mux.Get("/device", vueHandler.ServeIndexWithVariables)
 	mux.Get("/user", vueHandler.ServeIndexWithVariables)
+	mux.Get("/user/{id}", vueHandler.ServeIndexWithVariables)
 	mux.Get("/app", vueHandler.ServeIndexWithVariables) // add more routes as needed
 
 	// API routes

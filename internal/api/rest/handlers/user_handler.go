@@ -13,7 +13,59 @@ import (
 type UserHandler struct {
 }
 
-func (u *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (u *UserHandler) Index(w http.ResponseWriter, r *http.Request) {
+	users, err := app.Models.User.All()
+
+	if err != nil {
+		// Log the error and send an HTTP 500 Internal Server Error response
+		http.Error(w, "Unable to retrieve users.", http.StatusInternalServerError)
+		helpers.LogError(err, "Failed to retrieve users from the database.")
+		return
+	}
+
+	userData, err := app.GetUserFromContext(r.Context())
+	if err != nil {
+		app.ErrorLog.Printf("Authentication error: %v", err)
+		http.Error(w, "Authentication error.", http.StatusUnauthorized)
+		return
+	}
+
+	// Initialize the slice for filtered users
+	filteredUsers := make([]*models.User, 0)
+
+	// Apply filtering based on user access level
+	if userData.AccessLevel == 0 {
+		// Root user, access level 0, can see all accounts
+		filteredUsers = users
+	} else {
+		// Non-root users, exclude users with root access
+		for _, user := range users {
+			if user.AccessLevel > 0 { // Exclude root level users
+				filteredUsers = append(filteredUsers, user)
+			}
+		}
+	}
+
+	// Response structure with a success message and user data
+	response := map[string]interface{}{
+		"message": "Users retrieved successfully.",
+		"users":   filteredUsers,
+	}
+
+	// Set content type to application/json before writing the status or data
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK) // HTTP 200 OK for a successful GET request
+
+	// Encode the response as JSON and handle any encoding errors
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Failed to encode users data as JSON.", http.StatusInternalServerError)
+		helpers.LogError(err, "Error encoding users data as JSON:")
+	}
+
+}
+
+func (u *UserHandler) Store(w http.ResponseWriter, r *http.Request) {
 
 	userData, err := app.GetUserFromContext(r.Context())
 	if err != nil {

@@ -38,6 +38,10 @@ export const useAuthStore = defineStore("authStore", () => {
         return useJwtComposable().parseJwt();
     });    
 
+    const getUserAccessLevel = computed(()=>{
+        return useJwtComposable().parseJwt().access_level;
+    });    
+
     // - Actions -------------------------------------------------------
     function reset() {
         jwt.value = null;
@@ -82,5 +86,6 @@ export const useAuthStore = defineStore("authStore", () => {
         getRemeberMe, 
         toggleRememberMe, 
         getUserTokenData,
+        getUserAccessLevel,
     }
 });

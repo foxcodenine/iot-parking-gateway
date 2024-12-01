@@ -2,15 +2,21 @@
     <main class="vview__main">
         <section class="vview__section">
             <div class="heading--2 ">Users</div>
-            <TheFlashMessage></TheFlashMessage>
-            <!-- <div class="heading--4">CREATE NEW ORGANISATION</div> -->
-
-            <!-- <FormOrganisation></FormOrganisation> -->
-
-                
+            <TheFlashMessage ></TheFlashMessage>
             
-            <UserForm></UserForm>
+            <!-- <FormOrganisation></FormOrganisation> -->           
             
+            
+            <div class="heading--4" v-if="!props.userID">CREATE NEW USER</div>
+            <div class="heading--4" v-if="props.userID">Edit USER</div>
+            <KeepAlive>
+                <UserForm v-if="getUserAccessLevel <= 1 " :userID="props.userID"></UserForm>
+            </KeepAlive>
+
+
+            
+            <div class="heading--4">USER LIST</div>
+            <UserTable></UserTable>
             
         </section>
     </main>
@@ -21,8 +27,39 @@
 <script setup>
 import { ref } from 'vue';
 // import FormOrganisation from '@/components/organisation/FormOrganisation.vue'
-import UserForm from '@/components/user/UserForm.vue'
 import TheFlashMessage from '@/components/commen/TheFlashMessage.vue';
+import UserForm from '@/components/user/UserForm.vue'
+import UserEditForm from '@/components/user/UserEditForm.vue';
+import UserTable from '@/components/user/UserTable.vue';
+import { useAuthStore } from '@/stores/authStore';
+import { storeToRefs } from 'pinia';
+import { useUserStore } from '@/stores/userStore';
+
+// - Store -------------------------------------------------------------
+const authStore = useAuthStore();
+const userStore = useUserStore();
+
+const { getUserAccessLevel } = storeToRefs(authStore)
+
+// - Props -------------------------------------------------------------
+
+const props = defineProps({
+    userID: {
+        type: String,
+        required: false, // Because it won't be present in the user list view
+    }
+});
+
+// - Methods -----------------------------------------------------------
+
+
+// - Hooks -------------------------------------------------------------
+
+try {
+    userStore.fetchUsers();
+} catch (error) {
+    console.error('! UserView userStore.fetchUsers() !\n', error);
+}
 
 
 

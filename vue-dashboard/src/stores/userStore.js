@@ -14,7 +14,30 @@ export const useUserStore = defineStore("userStore", () => {
 
     // - Getters -------------------------------------------------------
 
+    const getUsersList = computed(() => usersList.value );
+
+    // Returns a computed property that gives a user by ID
+     const getUserById = (id) => {
+        return usersList.value.find(user => user.id === id);
+    };
+
     // - Actions -------------------------------------------------------
+    async function fetchUsers() {
+        useDashboardStore().setIsLoading(true);
+        try {
+            const response =  await axios.get(useAppStore().getAppUrl + '/api/user');
+            if (response.status == 200 && response.data?.users) {
+                usersList.value = response.data.users;
+                return usersList.value;
+            }
+        } catch (error) {
+            console.error('! userStore.fetchUsers !');
+            throw error; 
+        } finally {
+            useDashboardStore().setIsLoading(false);
+        }
+    }
+
     async function createUser({email, password1,  password2, accessLevel}) {
         useDashboardStore().setIsLoading(true);
         try {
@@ -45,11 +68,16 @@ export const useUserStore = defineStore("userStore", () => {
         
     }
 
+    
+
     // - Expose --------------------------------------------------------
 
     return {
         reset,
         createUser,
         pushUserToList,
+        fetchUsers,
+        getUsersList,
+        getUserById,
     }
 });

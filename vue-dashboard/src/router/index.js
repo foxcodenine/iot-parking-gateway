@@ -8,16 +8,19 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/stores/authStore'
 import { useJwtComposable } from '@/composables/useJwtComposable'
 import LogoutView from '@/views/LogoutView.vue'
+import SvgSpriteView from '@/views/helpers/SvgSpriteView.vue'
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	routes: [
 		{ path: '/', name: 'mapView', component: MapView, },
 		{ path: '/user', name: 'userView', component: UserView, },
+		{ path: '/user/:userID', name: 'userEditView', component: UserView, props: true},
 		{ path: '/device', name: 'deviceView', component: DeviceView, },
 		{ path: '/login', name: 'loginView', component: AuthView, },
 		{ path: '/forgot-password', name: 'forgotPasswordView', component: AuthView, },
 		{ path: '/logout', name: 'logoutView', component: LogoutView },
+		{ path: '/helpers/svg', name: 'viewHelpersSvg', component: SvgSpriteView },
 
 		// {
 		//   path: '/about', name: 'about',

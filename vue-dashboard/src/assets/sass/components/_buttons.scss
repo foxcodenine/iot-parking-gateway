@@ -13,7 +13,7 @@
     font-family: $font-action;
     border: 1px solid currentColor;
     border-radius: $border-radius;
-    transition: all 0.2s ease-in;
+    transition: all 0.2s ease-in !important;
     background: linear-gradient(
         145deg,
         color.adjust($col-slate-500, $lightness: 10%),

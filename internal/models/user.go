@@ -11,6 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	up "github.com/upper/db/v4"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 )
 
@@ -31,6 +32,83 @@ func (u *User) TableName() string {
 }
 
 var ErrDuplicateUser = errors.New("user with this email already exists")
+
+// All retrieves all users either from the cache or the database if not cached.
+func (u *User) All() ([]*User, error) {
+	var users []*User
+
+	// Attempt to retrieve cached users
+	cachedData, err := cache.AppCache.Get("db:users")
+	if err != nil {
+		helpers.LogError(err, "Failed to get users from cache")
+		return nil, err // returning the error to handle it upstream
+	}
+
+	if cachedData != nil {
+		// Asserting the type of cached data to []interface{}
+		cachedUsers, ok := cachedData.([]interface{})
+		if !ok {
+			helpers.LogError(fmt.Errorf("cache data type mismatch: expected []interface{}, got %T", cachedData), "Cache data type mismatch")
+			return nil, fmt.Errorf("cache data type mismatch: expected []interface{}, got %T", cachedData)
+		}
+
+		// Initialize slice to hold the converted user objects
+		users = make([]*User, len(cachedUsers))
+		for i, cachedUser := range cachedUsers {
+			userMap, ok := cachedUser.(map[string]interface{})
+			if !ok {
+				helpers.LogError(fmt.Errorf("failed to assert type for user data: %T", cachedUser), "Error asserting type for cached user data")
+				continue
+			}
+
+			user := &User{} // Create a new User instance
+			// Map data from userMap to user struct fields
+			if id, ok := userMap["id"].(float64); ok { // JSON numbers are by default float64
+				user.ID = int(id)
+			}
+			if email, ok := userMap["email"].(string); ok {
+				user.Email = email
+			}
+			if accessLevel, ok := userMap["access_level"].(float64); ok {
+				user.AccessLevel = int(accessLevel)
+			}
+			if enabled, ok := userMap["enabled"].(bool); ok {
+				user.Enabled = enabled
+			}
+			if createdAt, ok := userMap["created_at"].(string); ok { // Assuming stored as ISO8601 string
+				user.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+			}
+			if updatedAt, ok := userMap["updated_at"].(string); ok {
+				user.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
+			}
+
+			users[i] = user
+		}
+		// filter usrs
+		return users, nil
+	}
+
+	// If not cached, fetch from the database
+	collection := dbSession.Collection(u.TableName())
+	err = collection.Find().All(&users)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve users from database: %w", err)
+	}
+
+	// Cache the users after successful database fetch
+	ttl, err := strconv.Atoi(os.Getenv("REDIS_DEFAULT_TTL"))
+	if err != nil {
+		helpers.LogError(err, "Failed to convert REDIS_DEFAULT_TTL to integer")
+		ttl = 600 // Default TTL as a fallback
+	}
+
+	err = cache.AppCache.Set("db:users", users, ttl)
+	if err != nil {
+		helpers.LogError(err, "Failed to set users in cache")
+	}
+
+	return users, nil
+}
 
 func (u *User) Create() (*User, error) {
 	// Validate required fields
@@ -67,6 +145,12 @@ func (u *User) Create() (*User, error) {
 
 		// Wrap and return other errors
 		return nil, fmt.Errorf("failed to create user: %w", err)
+	}
+
+	err = cache.AppCache.Delete("db:users")
+
+	if err != nil {
+		helpers.LogError(err, "Failed to delete users from cache")
 	}
 
 	// Return the created user, including the ID

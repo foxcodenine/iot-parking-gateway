@@ -13,7 +13,8 @@ func UserRoutes() chi.Router {
 
 	r.Use(middleware.JWTAuthMiddleware)
 
-	r.Post("/", userHandler.CreateUser)
+	r.Get("/", userHandler.Index)
+	r.Post("/", userHandler.Store)
 
 	return r
 }

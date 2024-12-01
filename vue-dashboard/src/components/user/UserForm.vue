@@ -1,10 +1,19 @@
 <template>
-    <form class="fform" autocomplete="off" :class="{ 'fform__disabled': confirmOn }">
+    <form class="fform" autocomplete="off">
+        <transition name="modal" appear>
+            <AdminConfirmationModal v-if="adminModalOn" 
+                @emitCancel="adminModalOn = false" 
+                @emitConfirm="updateUser"
+                appear
+                >
+            </AdminConfirmationModal>
+        </transition>
 
-        <div class="fform__row mt-8 " @click="clearMessage">
+        <div class="fform__row mt-8 " @click="clearMessage" :class="{ 'fform__disabled': confirmOn }">
             <div class="fform__group ">
                 <label class="fform__label" for="email">Email <span class="fform__required">*</span></label>
-                <input class="fform__input" id="email" type="text" placeholder="Enter email" v-model.trim="email">
+                <input class="fform__input" id="email" type="text" placeholder="Enter email" v-model.trim="email"
+                    :disabled="confirmOn">
             </div>
 
             <TheSelector :options="returnAccessLevelOptions" :selectedOption="selectedOptions['accessLevel']"
@@ -12,30 +21,31 @@
                 @emitOption="selectedOptions['accessLevel'] = $event"></TheSelector>
 
         </div>
-        <div class="fform__row mt-4" @click="clearMessage">
+        <div class="fform__row mt-4" @click="clearMessage" :class="{ 'fform__disabled': confirmOn }">
             <div class="fform__group">
                 <label class="fform__label" for="password1">Password<span class="fform__required">*</span></label>
                 <input class="fform__input" id="password1" type="password" placeholder="Enter password"
-                    v-model.trim="password1">
+                    v-model.trim="password1" :disabled="confirmOn">
             </div>
             <div class="fform__group">
                 <label class="fform__label" for="password2">Confirm Password<span
                         class="fform__required">*</span></label>
                 <input class="fform__input" id="password2" type="password" placeholder="Renter password"
-                    v-model.trim="password2">
+                    v-model.trim="password2" :disabled="confirmOn">
             </div>
-
-
         </div>
-     
-            <button class="bbtn bbtn--blue mt-8" v-if="!confirmOn" @click.prevent="initCreateUser()">Create
-                User</button>
 
-            <div class="bbtn__row mt-8">
+        <transition name="fade" mode="out-in">
+            <button v-if="!confirmOn" class="bbtn mt-8" :class="{ 'bbtn--red': editMode, 'bbtn--blue': !editMode }"
+                @click.prevent="initCreateOrUpdateUser()" key="create-button">
+                {{ editMode ? "Update User" : "Create New User" }}
+            </button>
 
-                <button class="bbtn bbtn--zinc-lt" v-if="confirmOn" @click.prevent="confirmOn = false">Cancel</button>
-                <button class="bbtn bbtn--blue" v-if="confirmOn" @click.prevent="createUser">Confirm</button>
+            <div v-else class="bbtn__row mt-8" key="confirm-buttons">
+                <button class="bbtn bbtn--zinc-lt" @click.prevent="confirmOn = false">Cancel</button>
+                <button class="bbtn bbtn--blue" @click.prevent="createUser">Confirm</button>
             </div>
+        </transition>
 
 
 
@@ -48,13 +58,26 @@ import TheSelector from '@/components/commen/TheSelector.vue'
 import { useMessageStore } from '@/stores/messageStore';
 import { useUserStore } from '@/stores/userStore';
 import { computed, reactive, ref, watch } from 'vue';
+import AdminConfirmationModal from '../commen/AdminConfirmationModal.vue';
+
 
 // - Store -------------------------------------------------------------
 const messageStore = useMessageStore();
 const userStore = useUserStore();
 
+// - Props -------------------------------------------------------------
+
+const props = defineProps({
+    userID: {
+        type: String,
+        required: false, // Because it won't be present in the user list view
+    }
+});
+
 // - Data --------------------------------------------------------------
 const confirmOn = ref(false);
+const editMode = ref(false);
+const adminModalOn = ref(false)
 
 const accessLevelList = ref([
     // {id: 0, name: 'Root'},
@@ -72,6 +95,7 @@ const password1 = ref("");
 const password2 = ref("");
 const accessLevel = ref(1);
 
+
 // - computed ----------------------------------------------------------
 
 const returnAccessLevelOptions = computed(() => {
@@ -79,13 +103,39 @@ const returnAccessLevelOptions = computed(() => {
         // TODO: use utilStore.capitalizeFirstLetter() for value.
         return { ...org, _key: org.id, _value: org.name }
     }))
-})
+});
+
+const getUser = computed(() => {
+    return userStore.getUserById(Number(props.userID));
+});
 
 // - watchers -----------------------------------------------------------
 
 watch(() => selectedOptions.accessLevel, (val, oldVal) => {
     accessLevel.value = val._key;
 }, { deep: true });
+
+watch(() => getUser, (val, oldVal) => {
+    confirmOn.value = false;
+    password1.value = '';
+    password2.value = '';
+    if (val.value) {
+        editMode.value = true;
+        email.value = val.value.email;
+        const accessLevel = accessLevelList.value.find(accesslvl => accesslvl.id === Number(val.value.access_level));
+        selectedOptions['accessLevel'] = { ...accessLevel, _key: accessLevel.id, _value: accessLevel.name }
+    } else {
+        editMode.value = false;
+    }
+}, { deep: true, immediate: true });
+
+watch(editMode, (val) => {
+    if (!val) {
+        email.value = '';
+        accessLevel.value = 1;
+        selectedOptions.accessLevel = { _key: 1, _value: 'Administrator' };
+    }
+})
 
 // - methods -----------------------------------------------------------
 
@@ -99,7 +149,7 @@ function resetForm() {
     accessLevel.value = 1;
 }
 
-function initCreateUser() {
+function initCreateOrUpdateUser() {
     messageStore.clearFlashMessage();
     const message = []; // Clear previous messages
     let hasError = false;
@@ -135,11 +185,17 @@ function initCreateUser() {
         return
     }
 
-    confirmOn.value = true;
+
+    if (!editMode.value) {
+        confirmOn.value = true;
+    } else {
+        adminModalOn.value = true;
+    }
 }
 
+
+
 async function createUser() {
-    
     try {
         const response = await userStore.createUser({
             email: email.value,
@@ -167,10 +223,19 @@ async function createUser() {
     }
 }
 
+async function updateUser(payload) {
+    adminModalOn.value = false;
+    console.log(payload);
+}
+
+
 
 
 </script>
 <!-- --------------------------------------------------------------- -->
 
 <style lang="scss" scoped>
-// Placeholder comment to ensure global styles are imported correctly</style>
+.display-none {
+    display: none !important;
+}
+</style>

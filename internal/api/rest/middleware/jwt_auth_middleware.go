@@ -63,7 +63,7 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Check if the user has been logged out
-		logoutTimestampInterface, err := cache.RedisCacheRepo.Get(fmt.Sprintf("logout_timestamp:%d", claims.UserID))
+		logoutTimestampInterface, err := cache.AppCache.Get(fmt.Sprintf("logout_timestamp:%d", claims.UserID))
 		if err != nil {
 			// Handle errors during retrieval from Redis
 			http.Error(w, err.Error(), http.StatusInternalServerError)
