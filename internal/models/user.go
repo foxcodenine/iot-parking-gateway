@@ -157,6 +157,50 @@ func (u *User) Create() (*User, error) {
 	return u, nil
 }
 
+func (u *User) Update(updatePassword bool) (*User, error) {
+	// Validate required fields
+	if strings.TrimSpace(u.Email) == "" {
+		return nil, errors.New("email cannot be empty")
+	}
+	if !helpers.EmailRegex.MatchString(u.Email) {
+		return nil, errors.New("invalid email format")
+	}
+
+	// Updating only the password if it's not empty, assumes other fields are managed separately
+	if updatePassword {
+		fmt.Println(123, u.Password)
+		var err error
+		u.Password, err = helpers.HashPassword(u.Password)
+		if err != nil {
+			return nil, fmt.Errorf("failed to hash password: %w", err)
+		}
+	}
+
+	// Update timestamp for the user
+	u.UpdatedAt = time.Now().UTC()
+
+	// Execute the update operation
+	collection := dbSession.Collection(u.TableName())
+	err := collection.UpdateReturning(u)
+	if err != nil {
+		// Handle possible duplicate email error
+		if strings.Contains(err.Error(), "SQLSTATE 23505") {
+			return nil, ErrDuplicateUser
+		}
+		// Wrap and return other errors
+		return nil, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	// Invalidate the cache after a successful update
+	err = cache.AppCache.Delete("db:users")
+	if err != nil {
+		helpers.LogError(err, "Failed to delete users from cache")
+	}
+
+	// Return the created user, including the ID
+	return u, nil
+}
+
 // FindUserByEmail retrieves a user by their Email. Returns nil if the user is not found.
 func (u *User) FindUserByEmail(email string) (*User, error) {
 	if strings.TrimSpace(email) == "" {
@@ -166,6 +210,23 @@ func (u *User) FindUserByEmail(email string) (*User, error) {
 	collection := dbSession.Collection(u.TableName())
 	var user User
 	err := collection.Find(up.Cond{"email": email}).One(&user)
+	if err != nil {
+		if err == up.ErrNoMoreRows {
+			// No user found with the given email
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to retrieve user: %w", err)
+	}
+
+	return &user, nil
+}
+
+// FindUserByID retrieves a user by their Email. Returns nil if the user is not found.
+func (u *User) FindUserByID(userID int) (*User, error) {
+
+	collection := dbSession.Collection(u.TableName())
+	var user User
+	err := collection.Find(up.Cond{"id": userID}).One(&user)
 	if err != nil {
 		if err == up.ErrNoMoreRows {
 			// No user found with the given email

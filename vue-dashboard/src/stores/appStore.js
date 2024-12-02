@@ -14,7 +14,7 @@ export const useAppStore = defineStore("appStore", () => {
 
     // Initialize Google API Key if not already set in local storage
     if (googleApiKeyLocalStorage.value === null) {
-        const apiKey = encryptString(import.meta.env.VITE_VUE_ENV === 'production' ? GO_GOOGLE_API_KEY: import.meta.env.VITE_GOOGLE_API_KEY); 
+        const apiKey = encryptString(import.meta.env.VITE_VUE_ENV === 'production' ? decryptString(GO_GOOGLE_API_KEY): import.meta.env.VITE_GOOGLE_API_KEY); 
         googleApiKeyLocalStorage.value = apiKey;  // Store the API key in local storage
         googleApiKey.value = apiKey;  // Set the reactive reference
         GO_GOOGLE_API_KEY = null;

@@ -45,4 +45,7 @@ EXPOSE 8080
 
 # Run the binary
 # Use the wait-for script to ensure the Postgres is ready before starting the server
+
+# RUN rm /app/internal/core/core.go
+
 CMD ["./wait-for.sh", "postgres:5432", "--", "./server"]

@@ -15,6 +15,7 @@ func UserRoutes() chi.Router {
 
 	r.Get("/", userHandler.Index)
 	r.Post("/", userHandler.Store)
+	r.Put("/{id}", userHandler.Update)
 
 	return r
 }

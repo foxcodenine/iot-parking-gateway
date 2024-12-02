@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
+	"github.com/go-chi/chi/v5"
 )
 
 type UserHandler struct {
@@ -120,7 +122,7 @@ func (u *UserHandler) Store(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validate access level
-	if req.AccessLevel < 0 || req.AccessLevel > 3 { // Example range validation
+	if req.AccessLevel < 1 || req.AccessLevel > 3 { // Example range validation
 		http.Error(w, "Invalid access level.", http.StatusBadRequest)
 		return
 	}
@@ -141,7 +143,7 @@ func (u *UserHandler) Store(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		http.Error(w, "Failed to create user.", http.StatusInternalServerError)
-		helpers.LogError(err, "Error creating user:")
+		helpers.LogError(err, "Error creating user")
 		return
 	}
 
@@ -157,7 +159,116 @@ func (u *UserHandler) Store(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Handle error if the JSON encoding fails
 		http.Error(w, "Failed to send response.", http.StatusInternalServerError)
-		helpers.LogError(err, "Error encoding response:")
+		helpers.LogError(err, "Error encoding response")
+	}
+}
+
+func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
+	userData, err := app.GetUserFromContext(r.Context())
+	if err != nil {
+		app.ErrorLog.Printf("Authentication error: %v", err)
+		http.Error(w, "Authentication error.", http.StatusUnauthorized)
+		return
 	}
 
+	// Check if the user has permission to update a user
+	if userData.AccessLevel > 1 {
+		http.Error(w, "You do not have the necessary permissions to perform this action.", http.StatusForbidden)
+		return
+	}
+
+	// Fetch user ID from URL parameters
+	userIDStr := chi.URLParam(r, "id")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user ID.", http.StatusBadRequest)
+		return
+	}
+
+	// Parse and validate input from the API
+	type Request struct {
+		Email         string `json:"email"`
+		Password1     string `json:"password1"`
+		Password2     string `json:"password2"`
+		AccessLevel   int    `json:"access_level"`
+		AdminPassword string `json:"admin_password"`
+	}
+
+	var req Request
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body.", http.StatusBadRequest)
+		return
+	}
+
+	// Verify admin password
+	adminUser, err := app.Models.User.FindUserByID(userData.UserID)
+	if err != nil || !helpers.CheckPasswordHash(req.AdminPassword, adminUser.Password) {
+		http.Error(w, "Authentication failed: incorrect admin credentials.", http.StatusForbidden)
+		return
+	}
+
+	// Find the user to update
+	user, err := app.Models.User.FindUserByID(userID)
+	if user == nil || err != nil {
+		http.Error(w, "User not found.", http.StatusNotFound)
+		return
+	}
+
+	// Apply updates from the request to the user model
+	if strings.TrimSpace(req.Email) != "" {
+		if !helpers.EmailRegex.MatchString(req.Email) {
+			http.Error(w, "Invalid email format.", http.StatusBadRequest)
+			return
+		}
+		user.Email = strings.TrimSpace(req.Email)
+	}
+
+	updatePassword := false
+
+	if strings.TrimSpace(req.Password1) != "" {
+		if req.Password1 != req.Password2 {
+			http.Error(w, "Passwords do not match.", http.StatusBadRequest)
+			return
+		}
+		if len(req.Password1) < 6 {
+			http.Error(w, "Password must be at least 6 characters long.", http.StatusBadRequest)
+			return
+		}
+		updatePassword = true
+		user.Password = req.Password1 // Password will be hashed in the Update method
+	}
+
+	if req.AccessLevel >= 0 && req.AccessLevel <= 3 { // Assuming 0-3 are valid access levels
+		if req.AccessLevel > 0 {
+			user.AccessLevel = req.AccessLevel
+		}
+	} else {
+		http.Error(w, "Invalid access level.", http.StatusBadRequest)
+		return
+	}
+
+	// Update the user in the database
+	updatedUser, err := user.Update(updatePassword)
+	if err != nil {
+		if errors.Is(err, models.ErrDuplicateUser) {
+			http.Error(w, "User with this email already exists.", http.StatusConflict)
+			return
+		}
+		http.Error(w, "Failed to update user.", http.StatusInternalServerError)
+		helpers.LogError(err, "Error updating user")
+		return
+	}
+
+	// Respond with success
+	response := map[string]interface{}{
+		"message": "User updated successfully.",
+		"user":    updatedUser,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err = json.NewEncoder(w).Encode(response)
+	if err != nil {
+		http.Error(w, "Failed to encode response.", http.StatusInternalServerError)
+		helpers.LogError(err, "Error encoding response")
+	}
 }

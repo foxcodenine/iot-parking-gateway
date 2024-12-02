@@ -12,7 +12,15 @@ function decryptString(ciphertext) {
     return bytes.toString(CryptoJS.enc.Utf8);
 }
 
+function decryptAES(encryptedText) {
+    const key = import.meta.env.VITE_AES_SECRET_KEY
+    const encryptedBytes = CryptoJS.AES.decrypt(encryptedText, key);
+    const decryptedText = encryptedBytes.toString(CryptoJS.enc.Utf8);
+    return decryptedText;
+}
+
 export {
     encryptString,
     decryptString,
+    decryptAES,
 };

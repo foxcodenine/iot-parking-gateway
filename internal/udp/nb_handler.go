@@ -12,6 +12,7 @@ import (
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/firmware"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
+
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/google/uuid"
 )

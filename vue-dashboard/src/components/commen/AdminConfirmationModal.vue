@@ -33,6 +33,7 @@ function cancel() {
 }
 
 function confirm() {
+    if (adminPassword.value.length < 6) { return }
     emit('emitConfirm', {adminPassword: adminPassword.value});
 }
 

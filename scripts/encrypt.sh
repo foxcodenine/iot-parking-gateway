@@ -21,6 +21,7 @@ files_to_encrypt=(
   .env.development
   notes/04_commands.md
   notes/05_database.sql
+  internal/core/config.go
 )
 
 # Find and encrypt the files

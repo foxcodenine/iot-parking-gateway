@@ -6,6 +6,9 @@ import (
 	"os"
 	"path/filepath"
 	"text/template"
+
+	"github.com/foxcodenine/iot-parking-gateway/internal/core"
+	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 )
 
 type VueHandler struct {
@@ -14,10 +17,12 @@ type VueHandler struct {
 func (v *VueHandler) ServeIndexWithVariables(w http.ResponseWriter, r *http.Request) {
 	// Define your dynamic variable
 
+	googleApiKey, _ := helpers.EncryptAES(os.Getenv("GOOGLE_API_KEY"), core.AES_SECRET_KEY)
+
 	data := struct {
 		GoogleApiKey string
 	}{
-		GoogleApiKey: os.Getenv("GOOGLE_API_KEY"),
+		GoogleApiKey: googleApiKey,
 	}
 
 	// Path to the index.html file

@@ -78,3 +78,6 @@ database.yml
 
 # Docker files
 docker-compose.yml
+
+# Golang files
+config.go
