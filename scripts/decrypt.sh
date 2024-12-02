@@ -22,6 +22,7 @@ files_to_decrypt=(
   .env.development.gpg
   notes/04_commands.md.gpg
   notes/05_database.sql.gpg
+  internal/core/config.go.gpg
 )
 
 # Find and decrypt the files

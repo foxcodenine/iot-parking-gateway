@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -179,6 +180,7 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch user ID from URL parameters
 	userIDStr := chi.URLParam(r, "id")
+	fmt.Println(userIDStr)
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID.", http.StatusBadRequest)
@@ -192,6 +194,7 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Password2     string `json:"password2"`
 		AccessLevel   int    `json:"access_level"`
 		AdminPassword string `json:"admin_password"`
+		Enabled       string `json:"enabled"`
 	}
 
 	var req Request
@@ -245,6 +248,14 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "Invalid access level.", http.StatusBadRequest)
 		return
+	}
+
+	if req.Enabled == "true" {
+		user.Enabled = true
+	}
+
+	if req.Enabled == "false" {
+		user.Enabled = false
 	}
 
 	// Update the user in the database

@@ -57,6 +57,28 @@ export const useUserStore = defineStore("userStore", () => {
         }
     }
 
+    async function updateUser({user_id, email, password1,  password2, access_level, enabled, admin_password}) {
+        useDashboardStore().setIsLoading(true);
+        try {
+            const payload = {                
+                email,
+                password1,
+                password2,
+                access_level,
+                enabled: `${enabled}`,
+                admin_password
+            };
+            
+            return await axios.put(`${useAppStore().getAppUrl}/api/user/${user_id}`, payload);
+            
+        } catch (error){
+            console.error('! userStore.updateUser !');
+            throw error;  
+        } finally {
+            useDashboardStore().setIsLoading(false);
+        }
+    }
+
     function reset() {
     }
 
@@ -66,6 +88,16 @@ export const useUserStore = defineStore("userStore", () => {
             console.log(usersList.value);
         }
         
+    }
+
+
+    function updateUserInList(user) {
+        if (user && user.id) {
+            const index = usersList.value.findIndex(u => u.id == user.id)
+            usersList.value[index].email = user.email;
+            usersList.value[index].access_level = user.access_level;
+            usersList.value[index].enabled = user.enabled;
+        }
     }
 
     
@@ -79,5 +111,7 @@ export const useUserStore = defineStore("userStore", () => {
         fetchUsers,
         getUsersList,
         getUserById,
+        updateUser,
+        updateUserInList
     }
 });

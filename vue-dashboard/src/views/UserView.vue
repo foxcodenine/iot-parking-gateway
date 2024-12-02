@@ -2,20 +2,15 @@
     <main class="vview__main">
         <section class="vview__section">
             <div class="heading--2 ">Users</div>
-            <TheFlashMessage ></TheFlashMessage>
-            
-            <!-- <FormOrganisation></FormOrganisation> -->           
-            
-            
+            <TheFlashMessage ></TheFlashMessage>            
+    
             <div class="heading--4" v-if="!props.userID">CREATE NEW USER</div>
             <div class="heading--4" v-if="props.userID">Edit USER</div>
             <KeepAlive>
                 <UserForm v-if="getUserAccessLevel <= 1 " :userID="props.userID"></UserForm>
             </KeepAlive>
-
-
             
-            <div class="heading--4">USER LIST</div>
+            <div class="heading--4 mt-8">USER LIST</div>
             <UserTable></UserTable>
             
         </section>
@@ -29,7 +24,6 @@ import { ref } from 'vue';
 // import FormOrganisation from '@/components/organisation/FormOrganisation.vue'
 import TheFlashMessage from '@/components/commen/TheFlashMessage.vue';
 import UserForm from '@/components/user/UserForm.vue'
-import UserEditForm from '@/components/user/UserEditForm.vue';
 import UserTable from '@/components/user/UserTable.vue';
 import { useAuthStore } from '@/stores/authStore';
 import { storeToRefs } from 'pinia';

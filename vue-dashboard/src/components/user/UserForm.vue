@@ -12,7 +12,7 @@
         <div class="fform__row mt-8 " @click="clearMessage" :class="{ 'fform__disabled': confirmOn }">
             <div class="fform__group ">
                 <label class="fform__label" for="email">Email <span class="fform__required">*</span></label>
-                <input class="fform__input" id="email" type="text" placeholder="Enter email" v-model.trim="email"
+                <input class="fform__input" id="email" type="text" placeholder="Enter the user's email" v-model.trim="email"
                     :disabled="confirmOn">
             </div>
 
@@ -23,17 +23,19 @@
         </div>
         <div class="fform__row mt-4" @click="clearMessage" :class="{ 'fform__disabled': confirmOn }">
             <div class="fform__group">
-                <label class="fform__label" for="password1">Password<span class="fform__required">*</span></label>
-                <input class="fform__input" id="password1" type="password" placeholder="Enter password"
+                <label class="fform__label" for="password1">Password<span :class="{'fform__required': !editMode}">{{!editMode ? '*' : ''}}</span></label>
+                <input class="fform__input" id="password1" type="password" :placeholder="!editMode ? 'Enter the user\'s password' : 'Leave blank to keep unchanged'"
                     v-model.trim="password1" :disabled="confirmOn">
             </div>
             <div class="fform__group">
                 <label class="fform__label" for="password2">Confirm Password<span
-                        class="fform__required">*</span></label>
+                    :class="{'fform__required': !editMode}">{{!editMode ? '*' : ''}}</span></label>
                 <input class="fform__input" id="password2" type="password" placeholder="Renter password"
                     v-model.trim="password2" :disabled="confirmOn">
             </div>
         </div>
+
+        <TheCheckbox v-if="editMode" :is-checked="accoutEnabled" @emit-checkbox="accoutEnabled = !accoutEnabled">Account Enabled</TheCheckbox>
 
         <transition name="fade" mode="out-in">
             <button v-if="!confirmOn" class="bbtn mt-8" :class="{ 'bbtn--red': editMode, 'bbtn--blue': !editMode }"
@@ -55,6 +57,7 @@
 <!-- --------------------------------------------------------------- -->
 <script setup>
 import TheSelector from '@/components/commen/TheSelector.vue'
+import TheCheckbox from '../commen/TheCheckbox.vue';
 import { useMessageStore } from '@/stores/messageStore';
 import { useUserStore } from '@/stores/userStore';
 import { computed, reactive, ref, watch } from 'vue';
@@ -79,6 +82,7 @@ const confirmOn = ref(false);
 const editMode = ref(false);
 const adminModalOn = ref(false)
 
+
 const accessLevelList = ref([
     // {id: 0, name: 'Root'},
     { id: 1, name: 'Administrator' },
@@ -94,6 +98,7 @@ const email = ref("");
 const password1 = ref("");
 const password2 = ref("");
 const accessLevel = ref(1);
+const accoutEnabled = ref(true)
 
 
 // - computed ----------------------------------------------------------
@@ -122,6 +127,7 @@ watch(() => getUser, (val, oldVal) => {
     if (val.value) {
         editMode.value = true;
         email.value = val.value.email;
+        accoutEnabled.value = val.value.enabled
         const accessLevel = accessLevelList.value.find(accesslvl => accesslvl.id === Number(val.value.access_level));
         selectedOptions['accessLevel'] = { ...accessLevel, _key: accessLevel.id, _value: accessLevel.name }
     } else {
@@ -168,7 +174,7 @@ function initCreateOrUpdateUser() {
     }
 
     // Check if password is more than 6 characters
-    if (password1.value.length < 6) {
+    if (!editMode.value && password1.value.length < 6) {
         message.push("Password must be longer than 6 characters.");
         hasError = true;
     }
@@ -225,7 +231,30 @@ async function createUser() {
 
 async function updateUser(payload) {
     adminModalOn.value = false;
-    console.log(payload);
+    try {
+        const response = await userStore.updateUser({
+            user_id: props.userID,
+            email: email.value,
+            password1: password1.value,
+            password2: password2.value,
+            access_level: accessLevel.value,
+            enabled: accoutEnabled.value,
+            admin_password: payload.adminPassword,
+        });
+
+        if (response.status == 200) {
+            const msg = response.data?.message ?? "User updated successfully.";
+            messageStore.setFlashMessages([msg], "flash-message--green");
+            resetForm();
+            userStore.updateUserInList(response.data?.user);
+        }
+    } catch (error) {
+        console.error("! UserForm.updateUser !\n", error);
+        const errMsg = error.response?.data ?? "Failed to update user"
+        messageStore.setFlashMessages([errMsg], "flash-message--red");
+    } finally {
+        confirmOn.value = false;
+    }
 }
 
 

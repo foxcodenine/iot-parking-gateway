@@ -168,7 +168,6 @@ func (u *User) Update(updatePassword bool) (*User, error) {
 
 	// Updating only the password if it's not empty, assumes other fields are managed separately
 	if updatePassword {
-		fmt.Println(123, u.Password)
 		var err error
 		u.Password, err = helpers.HashPassword(u.Password)
 		if err != nil {
