@@ -155,7 +155,7 @@ func (u *UserHandler) Store(w http.ResponseWriter, r *http.Request) {
 		"user":    createdUser, // Directly using the createdUser struct
 	}
 
-	app.PushAuditToCache(*userData, "CREATE", "user", newUser.ID, r, fmt.Sprintf("Created user with ID %d", newUser.ID))
+	app.PushAuditToCache(*userData, "CREATE", "user", newUser.ID, r, fmt.Sprintf("Created user with ID %d and email '%s'.", newUser.ID, newUser.Email))
 
 	// Respond with the created user's data (excluding sensitive info)
 	w.WriteHeader(http.StatusCreated)
@@ -273,7 +273,7 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.PushAuditToCache(*userData, "UPDATE", "user", userID, r, fmt.Sprintf("Updated user with ID %d", userID))
+	app.PushAuditToCache(*userData, "UPDATE", "user", userID, r, fmt.Sprintf("Updated user with ID %d and email '%s'.", userID, updatedUser.Email))
 
 	// Respond with success
 	response := map[string]interface{}{
@@ -285,6 +285,96 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		http.Error(w, "Failed to encode response.", http.StatusInternalServerError)
+		helpers.LogError(err, "Error encoding response")
+	}
+}
+
+func (u *UserHandler) Destroy(w http.ResponseWriter, r *http.Request) {
+	userData, err := app.GetUserFromContext(r.Context())
+	if err != nil {
+		app.ErrorLog.Printf("Authentication error: %v", err)
+		http.Error(w, "Authentication error.", http.StatusUnauthorized)
+		return
+	}
+
+	// Check if the user has permission to delete a user
+	if userData.AccessLevel > 1 {
+		http.Error(w, "You do not have the necessary permissions to perform this action.", http.StatusForbidden)
+		return
+	}
+
+	// Fetch user ID from URL parameters
+	userIDStr := chi.URLParam(r, "id")
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		http.Error(w, "Invalid user ID.", http.StatusBadRequest)
+		return
+	}
+
+	// Parse and validate input from the API
+	type Request struct {
+		AdminPassword string `json:"admin_password"`
+	}
+
+	var req Request
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body.", http.StatusBadRequest)
+		return
+	}
+
+	// Verify admin password
+	adminUser, err := app.Models.User.FindUserByID(userData.UserID)
+	if err != nil {
+		helpers.LogError(err, "Failed to retrieve admin user for verification.")
+		http.Error(w, "Authentication error.", http.StatusInternalServerError)
+		return
+	}
+
+	if !helpers.CheckPasswordHash(req.AdminPassword, adminUser.Password) {
+		http.Error(w, "Authentication failed: incorrect admin credentials.", http.StatusForbidden)
+		return
+	}
+
+	// Retrieve the user to delete
+	user, err := app.Models.User.FindUserByID(userID)
+	if err != nil {
+		helpers.LogError(err, fmt.Sprintf("Failed to retrieve user with ID %d for deletion.", userID))
+		http.Error(w, "Failed to retrieve user.", http.StatusInternalServerError)
+		return
+	}
+
+	if user == nil {
+		http.Error(w, fmt.Sprintf("User with ID %d not found.", userID), http.StatusNotFound)
+		return
+	}
+
+	// Attempt to delete the user
+	err = app.Models.User.Delete(userID)
+	if err != nil {
+		helpers.LogError(err, fmt.Sprintf("Failed to delete user with ID %d.", userID))
+		http.Error(w, "Failed to delete user.", http.StatusInternalServerError)
+		return
+	}
+
+	// Log the deletion in the audit logs
+	app.PushAuditToCache(
+		*userData,
+		"DELETE",
+		"user",
+		userID,
+		r,
+		fmt.Sprintf("Deleted user with ID %d and email '%s'.", userID, user.Email),
+	)
+
+	// Respond with success
+	response := map[string]interface{}{
+		"message": fmt.Sprintf("User with ID %d successfully deleted.", userID),
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to send response.", http.StatusInternalServerError)
 		helpers.LogError(err, "Error encoding response")
 	}
 }

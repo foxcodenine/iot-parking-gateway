@@ -11,7 +11,7 @@
             </KeepAlive>
             
             <div class="heading--4 mt-8">USER LIST</div>
-            <UserTable></UserTable>
+            <UserTable :userID="props.userID"></UserTable>
             
         </section>
     </main>

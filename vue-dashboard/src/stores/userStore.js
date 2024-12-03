@@ -79,6 +79,23 @@ export const useUserStore = defineStore("userStore", () => {
         }
     }
 
+    async function deleteUser({user_id, admin_password}) {
+        useDashboardStore().setIsLoading(true);
+        try {
+            const payload = { 
+                admin_password
+            };
+            
+            return await axios.delete(`${useAppStore().getAppUrl}/api/user/${user_id}`, {data: {...payload}});
+            
+        } catch (error){
+            console.error('! userStore.deleteUser !');
+            throw error;  
+        } finally {
+            useDashboardStore().setIsLoading(false);
+        }
+    }
+
     function reset() {
     }
 
@@ -86,14 +103,23 @@ export const useUserStore = defineStore("userStore", () => {
         if (user && user.id) {
             usersList.value.push(user);
             console.log(usersList.value);
+        }        
+    }
+
+    function removeUserFromList(userID) {
+        if (userID) {
+            const index = usersList.value.findIndex(u => u.id == userID)
+            if (index == -1) { return }
+
+            usersList.value.splice(index, 1)
         }
-        
     }
 
 
     function updateUserInList(user) {
         if (user && user.id) {
             const index = usersList.value.findIndex(u => u.id == user.id)
+            if (index == -1) { return }
             usersList.value[index].email = user.email;
             usersList.value[index].access_level = user.access_level;
             usersList.value[index].enabled = user.enabled;
@@ -112,6 +138,8 @@ export const useUserStore = defineStore("userStore", () => {
         getUsersList,
         getUserById,
         updateUser,
-        updateUserInList
+        updateUserInList,
+        deleteUser,
+        removeUserFromList,
     }
 });

@@ -64,6 +64,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !user.Enabled {
+		http.Error(w, "User account is disabled. Please contact support.", http.StatusForbidden)
+		return
+	}
+
 	// Generate a token (e.g., JWT or session token)
 	token, err := user.GenerateToken() // Assuming `GenerateToken` is implemented
 	if err != nil {

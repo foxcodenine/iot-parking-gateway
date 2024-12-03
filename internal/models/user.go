@@ -150,7 +150,7 @@ func (u *User) Create() (*User, error) {
 	err = cache.AppCache.Delete("db:users")
 
 	if err != nil {
-		helpers.LogError(err, "Failed to delete users from cache")
+		helpers.LogError(err, "failed to delete users from cache")
 	}
 
 	// Return the created user, including the ID
@@ -193,11 +193,48 @@ func (u *User) Update(updatePassword bool) (*User, error) {
 	// Invalidate the cache after a successful update
 	err = cache.AppCache.Delete("db:users")
 	if err != nil {
-		helpers.LogError(err, "Failed to delete users from cache")
+		helpers.LogError(err, "failed to delete users from cache")
 	}
 
 	// Return the created user, including the ID
 	return u, nil
+}
+
+func (u *User) Delete(userID int) error {
+	// Reference the user collection
+	collection := dbSession.Collection(u.TableName())
+
+	// Check if the user exists before attempting to delete
+	res := collection.Find(up.Cond{"id": userID})
+	count, err := res.Count()
+	if err != nil {
+		// Log the error and return it
+		helpers.LogError(err, fmt.Sprintf("Failed to count users with ID %d", userID))
+		return fmt.Errorf("failed to verify user existence: %w", err)
+	}
+
+	// If no user is found, return an error
+	if count == 0 {
+		err := fmt.Errorf("user with ID %d does not exist", userID)
+		helpers.LogError(err, "Delete operation failed: user not found")
+		return err
+	}
+
+	// Attempt to delete the user
+	if err := res.Delete(); err != nil {
+		// Log the deletion error and return it
+		helpers.LogError(err, fmt.Sprintf("Failed to delete user with ID %d", userID))
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+
+	// Invalidate the users cache after successful deletion
+	err = cache.AppCache.Delete("db:users")
+	if err != nil {
+		// Log the cache deletion error but don't fail the operation
+		helpers.LogError(err, "Failed to invalidate user cache after deletion")
+	}
+
+	return nil
 }
 
 // FindUserByEmail retrieves a user by their Email. Returns nil if the user is not found.
