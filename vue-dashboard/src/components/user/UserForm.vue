@@ -245,8 +245,12 @@ async function updateUser(payload) {
         if (response.status == 200) {
             const msg = response.data?.message ?? "User updated successfully.";
             messageStore.setFlashMessages([msg], "flash-message--green");
-            resetForm();
-            userStore.updateUserInList(response.data?.user);
+     
+            if (response.data?.user) {
+                userStore.updateUserInList(response.data.user);
+            }
+
+     
         }
     } catch (error) {
         console.error("! UserForm.updateUser !\n", error);

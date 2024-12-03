@@ -72,12 +72,15 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 
 		// Check if there's a logout timestamp for the user.
 		if logoutTimestampInterface != nil {
+
 			// Convert the retrieved value to int64. If conversion fails, report an error.
-			logoutTimestamp, ok := logoutTimestampInterface.(int64)
+			logoutTimestampFloat64, ok := logoutTimestampInterface.(float64)
 			if !ok {
 				http.Error(w, "Invalid timestamp format", http.StatusInternalServerError)
 				return
 			}
+
+			logoutTimestamp := int64(logoutTimestampFloat64)
 
 			// Invalidate the token if it was issued before the logout timestamp.
 			// This is triggered when an admin changes critical user account details like email or access level.

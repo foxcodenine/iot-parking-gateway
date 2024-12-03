@@ -196,6 +196,8 @@ func (u *User) Update(updatePassword bool) (*User, error) {
 		helpers.LogError(err, "failed to delete users from cache")
 	}
 
+	cache.AppCache.Set(fmt.Sprintf("logout_timestamp:%d", u.ID), time.Now().Unix(), 86400)
+
 	// Return the created user, including the ID
 	return u, nil
 }
@@ -233,6 +235,8 @@ func (u *User) Delete(userID int) error {
 		// Log the cache deletion error but don't fail the operation
 		helpers.LogError(err, "Failed to invalidate user cache after deletion")
 	}
+
+	cache.AppCache.Set(fmt.Sprintf("logout_timestamp:%d", userID), time.Now().Unix(), 86400)
 
 	return nil
 }
