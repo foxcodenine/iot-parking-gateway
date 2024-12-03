@@ -55,6 +55,7 @@ func main() {
 		app.Service.SyncActivityLogsAndDevices()
 		app.Service.SyncNBIoTKeepaliveLogs()
 		app.Service.SyncNBIoTSettingLogs()
+		app.Service.SyncAuditLogs()
 	})
 	app.Cron.Start()
 

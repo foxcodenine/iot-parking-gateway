@@ -2,10 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
+	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 )
 
 type AuthHandler struct {
@@ -68,6 +71,21 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+
+	// Create the audit log entry
+	auditLogEntry := models.AuditLog{
+		UserID:      user.ID,
+		Email:       user.Email,
+		AccessLevel: user.AccessLevel,
+		HappenedAt:  time.Now().UTC(),
+		Action:      "LOGIN",
+		URL:         r.URL.Path,
+		IPAddress:   getClientIP(r),
+		Details:     fmt.Sprintf("User with ID %d and email '%s' logged in.", user.ID, user.Email),
+	}
+
+	// Push the audit log entry to the cache
+	app.Cache.RPush("audit-logs", auditLogEntry)
 
 	// Respond with the token and user data
 	w.WriteHeader(http.StatusOK)

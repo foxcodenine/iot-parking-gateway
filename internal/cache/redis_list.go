@@ -16,7 +16,7 @@ func (rc *RedisCache) LPush(key string, value any) error {
 	defer conn.Close()
 
 	// Prefix the key
-	prefixedKey := fmt.Sprintf("%s:%s", rc.Prefix, key)
+	prefixedKey := rc.Prefix + key
 
 	// Push the JSON data to the beginning of the list
 	_, err = conn.Do("LPUSH", prefixedKey, jsonData)
@@ -49,6 +49,7 @@ func (rc *RedisCache) RPush(key string, value any) error {
 }
 
 func (rc *RedisCache) LRangeAndDelete(key string) ([]any, error) {
+
 	rc.mu.Lock()         // Lock before accessing the list
 	defer rc.mu.Unlock() // Ensure it's unlocked after
 

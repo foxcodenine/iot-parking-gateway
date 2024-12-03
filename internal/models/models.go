@@ -14,6 +14,7 @@ var dbSession up.Session
 // Models struct will hold references to all database models, e.g., Device.
 type Models struct {
 	ActivityLog         ActivityLog
+	AuditLog            AuditLog
 	Device              Device
 	NbiotDeviceSettings NbiotDeviceSettings
 	NbiotKeepaliveLog   NbiotKeepaliveLog

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -154,6 +155,8 @@ func (u *UserHandler) Store(w http.ResponseWriter, r *http.Request) {
 		"user":    createdUser, // Directly using the createdUser struct
 	}
 
+	app.PushAuditToCache(*userData, "CREATE", "user", newUser.ID, r, fmt.Sprintf("Created user with ID %d", newUser.ID))
+
 	// Respond with the created user's data (excluding sensitive info)
 	w.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(w).Encode(response)
@@ -180,7 +183,7 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	// Fetch user ID from URL parameters
 	userIDStr := chi.URLParam(r, "id")
-	fmt.Println(userIDStr)
+
 	userID, err := strconv.Atoi(userIDStr)
 	if err != nil {
 		http.Error(w, "Invalid user ID.", http.StatusBadRequest)
@@ -270,6 +273,8 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	app.PushAuditToCache(*userData, "UPDATE", "user", userID, r, fmt.Sprintf("Updated user with ID %d", userID))
+
 	// Respond with success
 	response := map[string]interface{}{
 		"message": "User updated successfully.",
@@ -282,4 +287,13 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to encode response.", http.StatusInternalServerError)
 		helpers.LogError(err, "Error encoding response")
 	}
+}
+
+// Helper function to get client IP
+func getClientIP(r *http.Request) string {
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr // fallback to returning the whole field
+	}
+	return ip
 }
