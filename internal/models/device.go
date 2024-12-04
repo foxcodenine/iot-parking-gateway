@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	up "github.com/upper/db/v4"
 )
@@ -63,20 +66,111 @@ func (d *Device) ParseBeaconsJSON() error {
 }
 
 // GetAll retrieves all devices from the database.
-func (d *Device) GetAll() ([]Device, error) {
-	collection := dbSession.Collection(d.TableName())
+func (d *Device) GetAll() ([]*Device, error) {
+	var devices []*Device
 
-	var devices []Device
-	err := collection.Find().All(&devices)
+	// Attempt to retrieve cached devices
+	cachedData, err := cache.AppCache.Get("db:devices")
 	if err != nil {
+		helpers.LogError(err, "Failed to get devices from cache")
 		return nil, err
+	}
+
+	if cachedData != nil {
+		// Asserting the type of cached data to []interface{}
+		cachedDevices, ok := cachedData.([]interface{})
+		if !ok {
+			helpers.LogError(fmt.Errorf("cache data type mismatch: expected []interface{}, got %T", cachedData), "Cache data type mismatch")
+			return nil, fmt.Errorf("cache data type mismatch: expected []interface{}, got %T", cachedData)
+		}
+
+		// Initialize slice to hold the converted device objects
+		devices = make([]*Device, len(cachedDevices))
+		for i, cachedDevice := range cachedDevices {
+			deviceMap, ok := cachedDevice.(map[string]interface{})
+			if !ok {
+				helpers.LogError(fmt.Errorf("failed to assert type for device data: %T", cachedDevice), "Error asserting type for cached device data")
+				continue
+			}
+
+			device := &Device{} // Create a new Device instance
+
+			// Map data from deviceMap to device struct fields
+			if deviceID, ok := deviceMap["device_id"].(string); ok {
+				device.DeviceID = deviceID
+			}
+			if name, ok := deviceMap["name"].(string); ok {
+				device.Name = name
+			}
+			if networkType, ok := deviceMap["network_type"].(string); ok {
+				device.NetworkType = networkType
+			}
+			if firmwareVersion, ok := deviceMap["firmware_version"].(float64); ok {
+				device.FirmwareVersion = firmwareVersion
+			}
+			if latitude, ok := deviceMap["latitude"].(float64); ok {
+				device.Latitude = latitude
+			}
+			if longitude, ok := deviceMap["longitude"].(float64); ok {
+				device.Longitude = longitude
+			}
+			if beacons, ok := deviceMap["beacons"].(string); ok {
+				device.BeaconsJSON = sql.NullString{String: beacons, Valid: true}
+				_ = device.ParseBeaconsJSON()
+			}
+			if happenedAt, ok := deviceMap["happened_at"].(string); ok {
+				device.HappenedAt, _ = time.Parse(time.RFC3339, happenedAt)
+			}
+			if isOccupied, ok := deviceMap["is_occupied"].(bool); ok {
+				device.IsOccupied = isOccupied
+			}
+			if isAllowed, ok := deviceMap["is_allowed"].(bool); ok {
+				device.IsAllowed = isAllowed
+			}
+			if isBlocked, ok := deviceMap["is_blocked"].(bool); ok {
+				device.IsBlocked = isBlocked
+			}
+			if isHidden, ok := deviceMap["is_hidden"].(bool); ok {
+				device.IsHidden = isHidden
+			}
+			if createdAt, ok := deviceMap["created_at"].(string); ok {
+				device.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
+			}
+			if updatedAt, ok := deviceMap["updated_at"].(string); ok {
+				device.UpdatedAt, _ = time.Parse(time.RFC3339, updatedAt)
+			}
+
+			devices[i] = device
+		}
+
+		return devices, nil
+	}
+
+	// If not cached, fetch from the database
+	collection := dbSession.Collection(d.TableName())
+	err = collection.Find().All(&devices)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve devices from database: %w", err)
 	}
 
 	for i := range devices {
 		err := devices[i].ParseBeaconsJSON()
 		if err != nil {
+			helpers.LogError(err, fmt.Sprintf("Error parsing BeaconsJSON for device ID %s:", devices[i].DeviceID))
 			return nil, fmt.Errorf("error parsing BeaconsJSON for device ID %s: %w", devices[i].DeviceID, err)
 		}
+	}
+
+	// Cache the devices after successful database fetch
+	ttl, err := strconv.Atoi(os.Getenv("REDIS_DEFAULT_TTL"))
+	if err != nil {
+		helpers.LogError(err, "Failed to convert REDIS_DEFAULT_TTL to integer")
+		ttl = 600 // Default TTL as a fallback
+	}
+
+	err = cache.AppCache.Set("db:devices", devices, ttl)
+	if err != nil {
+		helpers.LogError(err, "Failed to set devices in cache")
 	}
 
 	return devices, nil
@@ -124,6 +218,12 @@ func (d *Device) Create(newDevice *Device) (*Device, error) {
 		return nil, fmt.Errorf("failed to create device: %w", err)
 	}
 
+	err = cache.AppCache.Delete("db:devices")
+
+	if err != nil {
+		helpers.LogError(err, "failed to delete devices from cache")
+	}
+
 	return newDevice, nil
 }
 
@@ -147,6 +247,11 @@ func (d *Device) UpdateByID(id string, updatedFields map[string]interface{}) (*D
 		return nil, fmt.Errorf("device with ID %s not found", id)
 	}
 
+	err = cache.AppCache.Delete("db:devices")
+	if err != nil {
+		helpers.LogError(err, "failed to delete devices from cache")
+	}
+
 	err = res.Update(updatedFields)
 	if err != nil {
 		return nil, fmt.Errorf("error updating device: %w", err)
@@ -164,6 +269,11 @@ func (d *Device) UpdateByID(id string, updatedFields map[string]interface{}) (*D
 // DeleteByID deletes a device by its ID.
 func (d *Device) DeleteByID(id string) error {
 	collection := dbSession.Collection(d.TableName())
+
+	err := cache.AppCache.Delete("db:devices")
+	if err != nil {
+		helpers.LogError(err, "failed to delete devices from cache")
+	}
 
 	// Check if the device exists by counting matching rows
 	res := collection.Find(up.Cond{"device_id": id})
@@ -194,6 +304,11 @@ func (d *Device) BulkUpdateDevices(deviceData []ActivityLog) error {
 		return nil // No data to update
 	}
 
+	err := cache.AppCache.Delete("db:devices")
+	if err != nil {
+		helpers.LogError(err, "failed to delete devices from cache")
+	}
+
 	var args []interface{}
 	valuesList := make([]string, len(deviceData))
 	for i, data := range deviceData {
@@ -219,7 +334,7 @@ func (d *Device) BulkUpdateDevices(deviceData []ActivityLog) error {
 	`, strings.Join(valuesList, ", "))
 
 	// Execute the constructed query with the arguments
-	_, err := dbSession.SQL().Exec(query, args...)
+	_, err = dbSession.SQL().Exec(query, args...)
 	if err != nil {
 		return fmt.Errorf("failed to execute bulk update for devices: %w", err)
 	}

@@ -50,8 +50,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	user, err := app.Models.User.FindUserByEmail(payload.Email)
 	if err != nil {
 
-		helpers.LogError(err, "Error finding user:")
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, "Internal server error. Error finding user.", http.StatusInternalServerError)
 		return
 	}
 	if user == nil {
@@ -72,8 +71,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Generate a token (e.g., JWT or session token)
 	token, err := user.GenerateToken() // Assuming `GenerateToken` is implemented
 	if err != nil {
-		helpers.LogError(err, "Error generating token:")
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, "Internal server error. Error generating token.", http.StatusInternalServerError)
 		return
 	}
 

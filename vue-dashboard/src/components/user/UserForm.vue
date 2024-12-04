@@ -148,6 +148,7 @@ watch(editMode, (val) => {
 function clearMessage() {
     messageStore.clearFlashMessage();
 }
+
 function resetForm() {
     email.value = "";
     password1.value = "";

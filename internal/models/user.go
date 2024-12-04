@@ -34,7 +34,7 @@ func (u *User) TableName() string {
 var ErrDuplicateUser = errors.New("user with this email already exists")
 
 // All retrieves all users either from the cache or the database if not cached.
-func (u *User) All() ([]*User, error) {
+func (u *User) GetAll() ([]*User, error) {
 	var users []*User
 
 	// Attempt to retrieve cached users

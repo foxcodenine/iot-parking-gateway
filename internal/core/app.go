@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/middleware"
+	"github.com/foxcodenine/iot-parking-gateway/internal/apptypes"
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/foxcodenine/iot-parking-gateway/internal/mq"
@@ -34,8 +34,8 @@ type App struct {
 	Service    *services.Service
 }
 
-func (app *App) GetUserFromContext(ctx context.Context) (*middleware.UserClaims, error) {
-	userData, ok := ctx.Value(middleware.UserContextKey).(*middleware.UserClaims)
+func (app *App) GetUserFromContext(ctx context.Context) (*apptypes.UserClaims, error) {
+	userData, ok := ctx.Value(apptypes.UserContextKey).(*apptypes.UserClaims)
 	if !ok || userData == nil {
 		return nil, errors.New("user claims not found or wrong type in context")
 	}
@@ -43,13 +43,12 @@ func (app *App) GetUserFromContext(ctx context.Context) (*middleware.UserClaims,
 }
 
 func (app *App) PushAuditToCache(
-	userData middleware.UserClaims, // User performing the action
+	userData apptypes.UserClaims, // User performing the action
 	action string, // Action type (e.g., "UPDATE")
 	entity string, // Entity being acted upon
 	entityID int, // ID of the entity
 	r *http.Request, // HTTP request for context
 	details string, // Detailed description of the action
-
 ) {
 	// Create the audit log entry
 	auditLogEntry := models.AuditLog{

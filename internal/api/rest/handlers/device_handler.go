@@ -13,14 +13,19 @@ import (
 type DeviceHandler struct {
 }
 
-func (h *DeviceHandler) ListDevices(w http.ResponseWriter, r *http.Request) {
+func (h *DeviceHandler) Index(w http.ResponseWriter, r *http.Request) {
 
 	devices, err := app.Models.Device.GetAll()
 
 	if err != nil {
-		app.ErrorLog.Printf("Failed to retrieve devices: %v", err)
 		helpers.RespondWithError(w, err, "Failed to retrieve devices", http.StatusInternalServerError)
 		return
+	}
+
+	// Response structure with a success message and user data
+	response := map[string]interface{}{
+		"message": "Devices retrieved successfully.",
+		"devices": devices,
 	}
 
 	// Set the response header to JSON
@@ -28,11 +33,10 @@ func (h *DeviceHandler) ListDevices(w http.ResponseWriter, r *http.Request) {
 
 	// Encode the devices slice to JSON and write it to the response
 
-	err = json.NewEncoder(w).Encode(devices)
+	err = json.NewEncoder(w).Encode(response)
 
 	if err != nil {
-		helpers.RespondWithError(w, err, "Failed to encode response", http.StatusInternalServerError)
-		helpers.LogError(err, "Failed to encode response")
+		helpers.RespondWithError(w, err, "Failed to encode response.", http.StatusInternalServerError)
 		return
 	}
 }

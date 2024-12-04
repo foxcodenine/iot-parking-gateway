@@ -47,7 +47,7 @@ func NB_53(hexStr string) (map[string]any, error) {
 		pkgAmount++
 
 		switch eventID {
-		case 26:
+		case 26, 31:
 			parkingAmount++
 			pkg, err := parseParkingPackage53(hexStr, timestamp, nextOffset1)
 			if err != nil {

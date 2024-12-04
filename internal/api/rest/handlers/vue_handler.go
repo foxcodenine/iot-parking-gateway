@@ -31,14 +31,14 @@ func (v *VueHandler) ServeIndexWithVariables(w http.ResponseWriter, r *http.Requ
 	// Read and parse the HTML file anew on each request
 	tmpl, err := template.ParseFiles(filePath)
 	if err != nil {
-		http.Error(w, "Error loading index.html", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, "Error loading index.html", http.StatusInternalServerError)
 		return
 	}
 
 	// Execute the template with the data
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, data); err != nil {
-		http.Error(w, "Error rendering template", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, "Error rendering template", http.StatusInternalServerError)
 		return
 	}
 

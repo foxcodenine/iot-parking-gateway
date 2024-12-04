@@ -2,14 +2,12 @@
     <main class="vview__main">
         <section class="vview__section">
             <div class="heading--2 ">Devises</div>
-            <p class="flash-message my-4 p-2" :class="flashClasses">
-                {{ flashMessage }}
-            </p>
+            <TheFlashMessage ></TheFlashMessage>
             <!-- <div class="heading--4">CREATE NEW ORGANISATION</div> -->
 
             <!-- <FormOrganisation></FormOrganisation> -->
 
-            <div class="heading--4 mt-10">Devices List</div>      
+            <div class="heading--4">Devices List</div>      
             
             
             <DeviceTable></DeviceTable>
@@ -24,11 +22,27 @@
 import { ref } from 'vue';
 // import FormOrganisation from '@/components/organisation/FormOrganisation.vue'
 import DeviceTable from '@/components/device/DeviceTable.vue';
-
-
+import TheFlashMessage from '@/components/commen/TheFlashMessage.vue';
+import { useAuthStore } from '@/stores/authStore';
+import { useDeviceStore } from '@/stores/deviceStore';
+import { storeToRefs } from 'pinia';
 
 const flashMessage = ref('A device with this ID already exists in the system');
 const flashClasses = ref('flash-message--orange');
+
+// - Store -------------------------------------------------------------
+const authStore = useAuthStore();
+const deviceStore = useDeviceStore();
+
+const { getUserAccessLevel } = storeToRefs(authStore)
+
+// - Hooks -------------------------------------------------------------
+
+try {
+    deviceStore.fetchDevices()
+} catch (error) {
+    console.error('! DeviceView deviceStore.fetchDevices() !\n', error);
+}
 
 </script>
 

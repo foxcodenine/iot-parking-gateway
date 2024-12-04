@@ -4,10 +4,10 @@
             <div class="heading--2 ">Users</div>
             <TheFlashMessage ></TheFlashMessage>            
     
-            <div class="heading--4" v-if="!props.userID">CREATE NEW USER</div>
-            <div class="heading--4" v-if="props.userID">Edit USER</div>
+            <div class="heading--4" v-if="!props.userID && getUserAccessLevel <= 1">CREATE NEW USER</div>
+            <div class="heading--4" v-if="props.userID && getUserAccessLevel <= 1">Edit USER</div>
             <KeepAlive>
-                <UserForm v-if="getUserAccessLevel <= 1 " :userID="props.userID"></UserForm>
+                <UserForm v-if="getUserAccessLevel <= 1" :userID="props.userID"></UserForm>
             </KeepAlive>
             
             <div class="heading--4 mt-8">USER LIST</div>
@@ -30,9 +30,9 @@ import { storeToRefs } from 'pinia';
 import { useUserStore } from '@/stores/userStore';
 
 // - Store -------------------------------------------------------------
-const authStore = useAuthStore();
 const userStore = useUserStore();
 
+const authStore = useAuthStore();
 const { getUserAccessLevel } = storeToRefs(authStore)
 
 // - Props -------------------------------------------------------------

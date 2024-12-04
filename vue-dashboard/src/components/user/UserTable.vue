@@ -1,14 +1,14 @@
 <template>
+    <input class="ttable__search mt-8" v-model="searchTerm" type="text" placeholder="Search...">
+    <AdminConfirmationModal v-if="adminModalOn" 
+            @emitCancel="adminModalOn = false" 
+            @emitConfirm="deleteUser"
+            appear
+            >
+    </AdminConfirmationModal>
     <div class="ttable__container">
-        <AdminConfirmationModal v-if="adminModalOn" 
-                @emitCancel="adminModalOn = false" 
-                @emitConfirm="deleteUser"
-                appear
-                >
-            </AdminConfirmationModal>
-        <input class="ttable__search mt-8" v-model="searchTerm" type="text" placeholder="Search...">
 
-        <table class="ttable  mt-8">
+        <table class="ttable  mt-8" @click="clearMessage">
             <thead>
                 <tr>
                     <th class="cursor-pointer">
@@ -42,7 +42,7 @@
                             <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
                         </svg>
                     </th>
-                    <th>
+                    <th v-if="getUserAccessLevel <= 1">
                     </th>
                 </tr>
             </thead>
@@ -60,7 +60,7 @@
                         </svg>
                     </td>
                     <td>{{ formatDateUtil(user.created_at) }}</td>
-                    <td>
+                    <td v-if="getUserAccessLevel <= 1" >
                         <div class="t-btns ml-auto" v-if="user.access_level >= 1">
                             <a class="t-btns__btn " @click="goToView('userEditView', user.id)">
                                 <svg class="t-btns__icon">
@@ -91,6 +91,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminConfirmationModal from '../commen/AdminConfirmationModal.vue';
 import { useMessageStore } from '@/stores/messageStore';
+import { useAuthStore } from '@/stores/authStore';
 
 
 // - Props -------------------------------------------------------------
@@ -109,20 +110,28 @@ const router = useRouter();
 // - Store -------------------------------------------------------------
 
 const  messageStore = useMessageStore();
+
 const userStore = useUserStore();
 const { getUsersList } = storeToRefs(userStore);
+
+const authStore = useAuthStore();
+const { getUserAccessLevel } = storeToRefs(authStore)
+
 
 // - Data --------------------------------------------------------------
 const searchTerm = ref("");
 const adminModalOn = ref(false);
 
 // -- methods ----------------------------------------------------------
+function clearMessage() {
+    messageStore.clearFlashMessage();
+}
 
 function goToView(view, id) {    
     router.push({ name: view, params: { userID: id } });
 }
 
-function initDeleteUser(id) {
+function initDeleteUser(id) {    
     router.push({ name: 'userEditView', params: { userID: id } });    
     adminModalOn.value = true;
 }
@@ -139,10 +148,11 @@ async function deleteUser(payload) {
 
         if (response.status == 200) {
             const msg = response.data?.message ?? "User deleted successfully.";
-            messageStore.setFlashMessages([msg], "flash-message--green");
-            // resetForm();
             userStore.removeUserFromList(props.userID);
             router.push({ name: 'userView' });
+            setTimeout(()=> {
+                messageStore.setFlashMessages([msg], "flash-message--green");
+            }, 500);
         }
         
     } catch (error) {

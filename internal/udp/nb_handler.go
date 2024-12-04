@@ -53,7 +53,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	// TODO:  Implement checks against a blacklist or whitelist for the device ID.
 
 	// Check if the device ID is already in the Bloom Filter
-	networkTypeAndDeviceID := fmt.Sprintf("nb %d", deviceID)
+	networkTypeAndDeviceID := fmt.Sprintf("NB-IoT %d", deviceID)
 	isDeviceRegistered, err := s.cache.CheckItemInBloomFilter("device-id", networkTypeAndDeviceID)
 	if err != nil {
 		helpers.LogError(err, "Failed to check Bloom Filter for device ID")
@@ -84,7 +84,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		ID:              rawUUID,
 		DeviceID:        strconv.Itoa(deviceID),
 		FirmwareVersion: firmwareVersion,
-		NetworkType:     "nb",
+		NetworkType:     "NB-IoT",
 		RawData:         hexStr,
 		CreatedAt:       time.Now(),
 	}
@@ -124,7 +124,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		i["device_id"] = fmt.Sprintf("%d", parsedData["device_id"])
 		i["raw_id"] = rawUUID
 		i["event_id"] = 26
-		i["network_type"] = "nb"
+		i["network_type"] = "NB-IoT"
 
 		err := s.cache.RPush("nb-activity-logs", i)
 		if err != nil {
@@ -145,7 +145,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		i["device_id"] = fmt.Sprintf("%d", parsedData["device_id"])
 		i["raw_id"] = rawUUID
 		i["event_id"] = 6
-		i["network_type"] = "nb"
+		i["network_type"] = "NB-IoT"
 
 		err := s.cache.RPush("nb-keepalive-logs", i)
 		if err != nil {
@@ -167,7 +167,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		i["device_id"] = fmt.Sprintf("%d", parsedData["device_id"])
 		i["raw_id"] = rawUUID
 		i["event_id"] = 25 // Assuming 25 is the event ID for setting logs
-		i["network_type"] = "nb"
+		i["network_type"] = "NB-IoT"
 
 		// Push the package to Redis
 		err := s.cache.RPush("nb-setting-logs", i)

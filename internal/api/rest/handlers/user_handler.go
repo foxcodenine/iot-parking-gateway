@@ -18,18 +18,16 @@ type UserHandler struct {
 }
 
 func (u *UserHandler) Index(w http.ResponseWriter, r *http.Request) {
-	users, err := app.Models.User.All()
+	users, err := app.Models.User.GetAll()
 
 	if err != nil {
 		// Log the error and send an HTTP 500 Internal Server Error response
-		http.Error(w, "Unable to retrieve users.", http.StatusInternalServerError)
-		helpers.LogError(err, "Failed to retrieve users from the database.")
+		helpers.RespondWithError(w, err, "Unable to retrieve users.", http.StatusInternalServerError)
 		return
 	}
 
 	userData, err := app.GetUserFromContext(r.Context())
 	if err != nil {
-		app.ErrorLog.Printf("Authentication error: %v", err)
 		http.Error(w, "Authentication error.", http.StatusUnauthorized)
 		return
 	}
@@ -63,8 +61,7 @@ func (u *UserHandler) Index(w http.ResponseWriter, r *http.Request) {
 	// Encode the response as JSON and handle any encoding errors
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		http.Error(w, "Failed to encode users data as JSON.", http.StatusInternalServerError)
-		helpers.LogError(err, "Error encoding users data as JSON:")
+		helpers.RespondWithError(w, err, "Failed to encode users data as JSON.", http.StatusInternalServerError)
 	}
 
 }
@@ -144,8 +141,7 @@ func (u *UserHandler) Store(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "User with this email already exists.", http.StatusConflict)
 			return
 		}
-		http.Error(w, "Failed to create user.", http.StatusInternalServerError)
-		helpers.LogError(err, "Error creating user")
+		helpers.RespondWithError(w, err, "Failed to create user.", http.StatusInternalServerError)
 		return
 	}
 
@@ -162,8 +158,7 @@ func (u *UserHandler) Store(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
 		// Handle error if the JSON encoding fails
-		http.Error(w, "Failed to send response.", http.StatusInternalServerError)
-		helpers.LogError(err, "Error encoding response")
+		helpers.RespondWithError(w, err, "Failed to encoding and send response.", http.StatusInternalServerError)
 	}
 }
 
@@ -268,8 +263,7 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "User with this email already exists.", http.StatusConflict)
 			return
 		}
-		http.Error(w, "Failed to update user.", http.StatusInternalServerError)
-		helpers.LogError(err, "Error updating user")
+		helpers.RespondWithError(w, err, "Failed to update user.", http.StatusInternalServerError)
 		return
 	}
 
@@ -284,8 +278,7 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {
-		http.Error(w, "Failed to encode response.", http.StatusInternalServerError)
-		helpers.LogError(err, "Error encoding response")
+		helpers.RespondWithError(w, err, "Failed to encode response.", http.StatusInternalServerError)
 	}
 }
 
@@ -326,8 +319,7 @@ func (u *UserHandler) Destroy(w http.ResponseWriter, r *http.Request) {
 	// Verify admin password
 	adminUser, err := app.Models.User.FindUserByID(userData.UserID)
 	if err != nil {
-		helpers.LogError(err, "Failed to retrieve admin user for verification.")
-		http.Error(w, "Authentication error.", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, "Failed to retrieve admin user for verification.", http.StatusInternalServerError)
 		return
 	}
 
@@ -339,8 +331,7 @@ func (u *UserHandler) Destroy(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the user to delete
 	user, err := app.Models.User.FindUserByID(userID)
 	if err != nil {
-		helpers.LogError(err, fmt.Sprintf("Failed to retrieve user with ID %d for deletion.", userID))
-		http.Error(w, "Failed to retrieve user.", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, fmt.Sprintf("Failed to retrieve user with ID %d.", userID), http.StatusInternalServerError)
 		return
 	}
 
@@ -352,8 +343,7 @@ func (u *UserHandler) Destroy(w http.ResponseWriter, r *http.Request) {
 	// Attempt to delete the user
 	err = app.Models.User.Delete(userID)
 	if err != nil {
-		helpers.LogError(err, fmt.Sprintf("Failed to delete user with ID %d.", userID))
-		http.Error(w, "Failed to delete user.", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, fmt.Sprintf("Failed to delete user with ID %d.", userID), http.StatusInternalServerError)
 		return
 	}
 
@@ -374,8 +364,7 @@ func (u *UserHandler) Destroy(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to send response.", http.StatusInternalServerError)
-		helpers.LogError(err, "Error encoding response")
+		helpers.RespondWithError(w, err, "Failed to send response.", http.StatusInternalServerError)
 	}
 }
 

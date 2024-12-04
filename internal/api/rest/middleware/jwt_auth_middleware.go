@@ -7,26 +7,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/apptypes"
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/golang-jwt/jwt/v5"
-)
-
-// UserClaims defines the structure of the JWT claims used in the application.
-type UserClaims struct {
-	jwt.RegisteredClaims        // Embedding the standard jwt claims
-	AccessLevel          int    `json:"access_level"` // User access level
-	Email                string `json:"email"`        // User's email address
-	Timestamp            int64  `json:"timestamp"`    // The timestamp when the JWT was issued
-	UserID               int    `json:"user_id"`      // Unique identifier for the user
-}
-
-// Define a custom type to ensure that context keys are unique across the application
-type contextKey int
-
-// Declare constants for the keys using the custom type
-const (
-	UserContextKey contextKey = iota // iota increments automatically, userContextKey will be 0
-	// Add other keys here, each will have a unique integer value
 )
 
 // JWTAuthMiddleware creates a middleware for JWT authentication.
@@ -49,7 +32,7 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 		// Retrieve the JWT secret key from environment variables
 		secret := os.Getenv("JWT_SECRET_KEY")
 		tokenStr := parts[1] // The JWT token itself
-		claims := &UserClaims{}
+		claims := &apptypes.UserClaims{}
 
 		// Parse the token with claims
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(t *jwt.Token) (interface{}, error) {
@@ -66,7 +49,8 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 		logoutTimestampInterface, err := cache.AppCache.Get(fmt.Sprintf("logout_timestamp:%d", claims.UserID))
 		if err != nil {
 			// Handle errors during retrieval from Redis
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Failed to retrieve logout timestamp from cache.", http.StatusInternalServerError)
+
 			return
 		}
 
@@ -92,7 +76,7 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		// Add user data to context for access in subsequent handlers
-		ctx := context.WithValue(r.Context(), UserContextKey, claims)
+		ctx := context.WithValue(r.Context(), apptypes.UserContextKey, claims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
