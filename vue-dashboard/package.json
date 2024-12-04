@@ -13,6 +13,7 @@
     "axios": "^1.7.7",
     "crypto-js": "^4.2.0",
     "dotenv": "^16.4.5",
+    "floating-vue": "^5.2.2",
     "pinia": "^2.2.6",
     "sass-loader": "^16.0.3",
     "validator": "^13.12.0",

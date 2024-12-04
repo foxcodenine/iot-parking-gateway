@@ -61,3 +61,11 @@ https://vueuse.org/guide/
 https://www.npmjs.com/package/vue-loading-overlay
 
     $ npm install vue-loading-overlay
+
+<!-- --------------------------------------------------------------- -->
+
+## floating-vue
+
+https://floating-vue.starpad.dev/
+
+    $ npm install floating-vue
