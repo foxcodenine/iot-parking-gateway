@@ -14,10 +14,10 @@ func DeviceRoutes() chi.Router {
 	r.Use(middleware.JWTAuthMiddleware)
 
 	r.Get("/", deviceHandler.Index)
-	r.Get("/{id}", deviceHandler.GetDevice)
-	r.Post("/", deviceHandler.CreateDevice)
-	r.Put("/{id}", deviceHandler.UpdateDevice)
-	r.Delete("/{id}", deviceHandler.DeleteDevice)
+	r.Get("/{id}", deviceHandler.Get)
+	r.Post("/", deviceHandler.Store)
+	r.Put("/{id}", deviceHandler.Update)
+	r.Delete("/{id}", deviceHandler.Destroy)
 
 	return r
 }

@@ -34,6 +34,7 @@ type Device struct {
 	IsHidden        bool           `db:"is_hidden" json:"is_hidden"`   // Indicates if the device is hidden
 	CreatedAt       time.Time      `db:"created_at" json:"created_at"`
 	UpdatedAt       time.Time      `db:"updated_at" json:"updated_at"`
+	DeletedAt       time.Time      `db:"deleted_at" json:"deleted_at"`
 }
 
 // -----------------------------------------------------------------------------
@@ -148,7 +149,8 @@ func (d *Device) GetAll() ([]*Device, error) {
 
 	// If not cached, fetch from the database
 	collection := dbSession.Collection(d.TableName())
-	err = collection.Find().All(&devices)
+	err = collection.Find(up.Cond{"deleted_at": nil}).OrderBy("created_at").All(&devices)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve devices from database: %w", err)
 	}
@@ -178,18 +180,19 @@ func (d *Device) GetAll() ([]*Device, error) {
 
 // -----------------------------------------------------------------------------
 
-// GetByID retrieves a single device by its ID.
+// GetByID retrieves a single device by its ID, excluding soft-deleted records.
 func (d *Device) GetByID(id string) (*Device, error) {
 	collection := dbSession.Collection(d.TableName())
 
 	var device Device
 
-	err := collection.Find(up.Cond{"device_id": id}).One(&device)
+	// Add condition to check `deleted_at IS NULL` in addition to `device_id`.
+	err := collection.Find(up.Cond{"device_id": id, "deleted_at": nil}).One(&device)
 	if err != nil {
 		if errors.Is(err, up.ErrNoMoreRows) {
-			return nil, errors.New("device not found")
+			return nil, errors.New("device not found or has been deleted")
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to retrieve device: %w", err)
 	}
 
 	return &device, nil
@@ -235,6 +238,9 @@ func (d *Device) UpdateByID(id string, updatedFields map[string]interface{}) (*D
 
 	updatedFields["updated_at"] = time.Now().UTC()
 
+	// // Explicitly handle `deleted_at` to ensure it is set to NULL
+	// updatedFields["deleted_at"] = up.Raw("NULL")
+
 	// Check if the device exists by counting matching rows
 	res := collection.Find(up.Cond{"device_id": id})
 	count, err := res.Count()
@@ -247,6 +253,7 @@ func (d *Device) UpdateByID(id string, updatedFields map[string]interface{}) (*D
 		return nil, fmt.Errorf("device with ID %s not found", id)
 	}
 
+	// Clear device in db cache
 	err = cache.AppCache.Delete("db:devices")
 	if err != nil {
 		helpers.LogError(err, "failed to delete devices from cache")
@@ -257,13 +264,7 @@ func (d *Device) UpdateByID(id string, updatedFields map[string]interface{}) (*D
 		return nil, fmt.Errorf("error updating device: %w", err)
 	}
 
-	// Check if `device_id` was updated; if not, return an error
-	newID, ok := updatedFields["device_id"].(string)
-	if !ok {
-		return nil, fmt.Errorf("updated device with ID: %s not found", newID)
-	}
-
-	return d.GetByID(newID) // return the updated device
+	return d.GetByID(id) // return the updated device
 }
 
 // DeleteByID deletes a device by its ID.
@@ -293,6 +294,44 @@ func (d *Device) DeleteByID(id string) error {
 	}
 
 	return nil // Successful deletion
+}
+
+// SoftDeleteByID marks a device as deleted by setting the `deleted_at` field to the current timestamp.
+func (d *Device) SoftDeleteByID(id string) error {
+	collection := dbSession.Collection(d.TableName())
+
+	// Check if the device exists
+	res := collection.Find(up.Cond{"device_id": id})
+	count, err := res.Count()
+	if err != nil {
+		return fmt.Errorf("error checking device existence: %w", err)
+	}
+
+	// If no matching device is found, return a custom error
+	if count == 0 {
+		return fmt.Errorf("device with ID %s not found", id)
+	}
+
+	// Prepare the updated fields for soft deletion
+	updatedFields := map[string]interface{}{
+		"deleted_at": time.Now().UTC(),
+		"updated_at": time.Now().UTC(),
+		"is_blocked": true,
+	}
+
+	// Clear device from the cache
+	err = cache.AppCache.Delete("db:devices")
+	if err != nil {
+		helpers.LogError(err, "failed to delete devices from cache")
+	}
+
+	// Perform the soft deletion
+	err = res.Update(updatedFields)
+	if err != nil {
+		return fmt.Errorf("error soft-deleting device: %w", err)
+	}
+
+	return nil // Successful soft deletion
 }
 
 // -----------------------------------------------------------------------------
@@ -325,6 +364,7 @@ func (d *Device) BulkUpdateDevices(deviceData []ActivityLog) error {
 			firmware_version = v.firmware_version,
 			beacons = v.beacons,
 			happened_at = v.happened_at,
+			deleted_at = NULL,
 			is_occupied = v.is_occupied,
 			updated_at = NOW()
 		FROM (VALUES

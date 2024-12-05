@@ -46,7 +46,7 @@ func (app *App) PushAuditToCache(
 	userData apptypes.UserClaims, // User performing the action
 	action string, // Action type (e.g., "UPDATE")
 	entity string, // Entity being acted upon
-	entityID int, // ID of the entity
+	entityID string, // ID of the entity
 	r *http.Request, // HTTP request for context
 	details string, // Detailed description of the action
 ) {

@@ -13,8 +13,10 @@ CREATE TABLE parking.devices (
     is_blocked BOOLEAN DEFAULT FALSE,      -- Indicates if the device is blocked.
     is_hidden BOOLEAN DEFAULT FALSE,       -- Indicates if the device is hidden from view.
     created_at TIMESTAMP DEFAULT NOW(),  -- Set at record creation.
-    updated_at TIMESTAMP DEFAULT NOW()   -- Updated automatically via trigger.
+    updated_at TIMESTAMP DEFAULT NOW(),   -- Updated automatically via trigger.
+    deleted_at TIMESTAMP NULL   -- Updated automatically via trigger.
 );
+
 
 
 -- Attach a trigger to update the 'updated_at' field before any update operation on 'devices'.

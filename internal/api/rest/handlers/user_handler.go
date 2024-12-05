@@ -151,7 +151,7 @@ func (u *UserHandler) Store(w http.ResponseWriter, r *http.Request) {
 		"user":    createdUser, // Directly using the createdUser struct
 	}
 
-	app.PushAuditToCache(*userData, "CREATE", "user", newUser.ID, r, fmt.Sprintf("Created user with ID %d and email '%s'.", newUser.ID, newUser.Email))
+	app.PushAuditToCache(*userData, "CREATE", "user", fmt.Sprintf("%d", newUser.ID), r, fmt.Sprintf("Created user with ID %d and email '%s'.", newUser.ID, newUser.Email))
 
 	// Respond with the created user's data (excluding sensitive info)
 	w.WriteHeader(http.StatusCreated)
@@ -192,7 +192,7 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		Password2     string `json:"password2"`
 		AccessLevel   int    `json:"access_level"`
 		AdminPassword string `json:"admin_password"`
-		Enabled       string `json:"enabled"`
+		Enabled       bool   `json:"enabled"`
 	}
 
 	var req Request
@@ -248,13 +248,7 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Enabled == "true" {
-		user.Enabled = true
-	}
-
-	if req.Enabled == "false" {
-		user.Enabled = false
-	}
+	user.Enabled = req.Enabled
 
 	// Update the user in the database
 	updatedUser, err := user.Update(updatePassword)
@@ -267,7 +261,7 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.PushAuditToCache(*userData, "UPDATE", "user", userID, r, fmt.Sprintf("Updated user with ID %d and email '%s'.", userID, updatedUser.Email))
+	app.PushAuditToCache(*userData, "UPDATE", "user", fmt.Sprintf("%d", userID), r, fmt.Sprintf("Updated user with ID %d and email '%s'.", userID, updatedUser.Email))
 
 	// Respond with success
 	response := map[string]interface{}{
@@ -352,7 +346,7 @@ func (u *UserHandler) Destroy(w http.ResponseWriter, r *http.Request) {
 		*userData,
 		"DELETE",
 		"user",
-		userID,
+		fmt.Sprintf("%d", userID),
 		r,
 		fmt.Sprintf("Deleted user with ID %d and email '%s'.", userID, user.Email),
 	)

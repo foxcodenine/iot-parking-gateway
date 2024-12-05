@@ -65,7 +65,7 @@ export const useUserStore = defineStore("userStore", () => {
                 password1,
                 password2,
                 access_level,
-                enabled: `${enabled}`,
+                enabled,
                 admin_password
             };
             

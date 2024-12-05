@@ -11,7 +11,7 @@ CREATE TABLE parking.audit_logs (
 
     -- Optional fields related to the action
     entity VARCHAR(50),
-    entity_id INTEGER,
+    entity_id VARCHAR(255),
     url VARCHAR(100),
     ip_address VARCHAR(100),
     details TEXT,

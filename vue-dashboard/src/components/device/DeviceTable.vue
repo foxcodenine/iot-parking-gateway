@@ -4,11 +4,11 @@
 
     <div class="ttable__container">
 
-        <table class="ttable  mt-8">
+        <table class="ttable  mt-8"  @click="clearMessage" >
             <thead>
                 <tr>
 
-                    <th class="cursor-pointer w-48">
+                    <th class="cursor-pointer w-52">
                         Device ID
                         <svg class="t-sort-arrow">
                             <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
@@ -45,26 +45,32 @@
                             <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
                         </svg>
                     </th>
-                    <th class="cursor-pointer" >
-                        Is Occupied
+                    <th class="cursor-pointer w-20">
+                        Occupied
                         <svg class="t-sort-arrow">
                             <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
                         </svg>
                     </th>
-                    <th class="cursor-pointer" >
+                    <th class="cursor-pointer w-20" v-if="getWhitelistBlacklistMode == 'white'">
                         White List
                         <svg class="t-sort-arrow">
                             <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
                         </svg>
                     </th>
-                    <th class="cursor-pointer">
+                    <th class="cursor-pointer w-24" v-else>
                         Black List
                         <svg class="t-sort-arrow">
                             <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
                         </svg>
                     </th>
-                    <th class="cursor-pointer">
-                        Hide
+                    <th class="cursor-pointer w-24">
+                        Hidden
+                        <svg class="t-sort-arrow">
+                            <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
+                        </svg>
+                    </th>
+                    <th class="cursor-pointer w-24">
+                        Registered
                         <svg class="t-sort-arrow">
                             <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
                         </svg>
@@ -74,8 +80,6 @@
                 </tr>
             </thead>
             <tbody>
-
-
 
                 <tr v-if="false">
 
@@ -124,60 +128,87 @@
                 </tr>
 
 
-
                 <tr v-for="device in getDevicesList"
                     :class="{ 'bg-lime-200': selectedDevice.device_id == device.device_id }">
 
                     <td>{{ device.device_id }}</td>
-                    
-                    <td v-if="action=='edit'&&selectedDevice.device_id==device.device_id" >
+
+                    <td v-if="action == 'edit' && selectedDevice.device_id == device.device_id">
                         <input class="ttable__input w-48" type="text" v-model="selectedDevice.name">
                     </td>
                     <td v-else>{{ device.name }}</td>
-      
+
                     <td>{{ device.network_type }}</td>
 
-                    <td v-if="action=='edit'&&selectedDevice.device_id==device.device_id" >
+                    <td v-if="action == 'edit' && selectedDevice.device_id == device.device_id">
                         <input class="ttable__input w-12" type="text" v-model="selectedDevice.firmware_version">
                     </td>
                     <td v-else>{{ device.firmware_version }}</td>
 
-                    <td class="w-8">                   
-                        <svg v-if="action=='edit'&&selectedDevice.device_id==device.device_id" class="ttable__location-btn ">
-                                <use xlink:href="@/assets/svg/sprite.svg#icon-google-maps-2"></use>
-                        </svg>                     
+                    <td class="w-8">
+                        <svg v-if="action == 'edit' && selectedDevice.device_id == device.device_id"
+                            class="ttable__location-btn ">
+                            <use xlink:href="@/assets/svg/sprite.svg#icon-google-maps-2"></use>
+                        </svg>
                     </td>
 
-                    <td v-if="action=='edit'&&selectedDevice.device_id==device.device_id" >
+                    <td v-if="action == 'edit' && selectedDevice.device_id == device.device_id">
                         <input class="ttable__input w-20" type="text" v-model="selectedDevice.latitude">
                     </td>
                     <td v-else>{{ device.latitude }}</td>
 
-                    <td v-if="action=='edit'&&selectedDevice.device_id==device.device_id" >
+                    <td v-if="action == 'edit' && selectedDevice.device_id == device.device_id">
                         <input class="ttable__input w-20" type="text" v-model="selectedDevice.longitude">
                     </td>
                     <td v-else>{{ device.longitude }}</td>
 
-                    <td @click="toggelOccupied(device)" class="ps-10">
-                        <div v-if="action=='edit'&&selectedDevice.device_id==device.device_id" class="circle__outer circle__active" :class="{'circle__occupied': selectedDevice.is_occupied, 'circle__vacant': !selectedDevice.is_occupied}">
-                            <div class="circle__inner"></div>
+                    <td @click="toggelOccupied(device)" class="ps-7">
+                        <div v-if="action == 'edit' && selectedDevice.device_id == device.device_id"
+                            class="circle__outer circle__active"
+                            :class="{ 'circle__occupied': selectedDevice.is_occupied, 'circle__vacant': !selectedDevice.is_occupied }">
+                            <div class="circle__inner"><p>P</p></div>
                         </div>
-                        <div v-else class="circle__outer" :class="{'circle__occupied': device.is_occupied, 'circle__vacant': !device.is_occupied}">
-                            <div class="circle__inner"></div>
+                        <div v-else class="circle__outer"
+                            :class="{ 'circle__occupied': device.is_occupied, 'circle__vacant': !device.is_occupied }">
+                            <div class="circle__inner"><p>P</p></div>
                         </div>
+                    </td>
 
-                    </td>
-                    <td @click="toggelAllowed(device)" class="ps-8">
-                        <div v-if="action=='edit'&&selectedDevice.device_id==device.device_id" class="circle__outer circle__active" :class="{'circle__allowed': selectedDevice.is_allowed}">
-                            <div class="circle__inner"></div>
+                    <td @click="toggelAllowed(device)" class="ps-6" v-if="getWhitelistBlacklistMode == 'white'">
+                        <div v-if="action == 'edit' && selectedDevice.device_id == device.device_id"
+                            class="circle__outer circle__active"
+                            :class="{ 'circle__allowed': selectedDevice.is_allowed }">
+                            <div class="circle__inner"><p v-if="selectedDevice.is_allowed">W</p></div>
                         </div>
-                        <div v-else class="circle__outer" :class="{'circle__allowed': device.is_allowed}">
-                            <div class="circle__inner"></div>
+                        <div v-else class="circle__outer" :class="{ 'circle__allowed': device.is_allowed }">
+                            <div class="circle__inner"><p v-if="device.is_allowed">W</p></div>
                         </div>
                     </td>
-          
-                    <td>{{ device.is_blocked }}</td>
-                    <td>{{ device.is_hidden }}</td>
+
+                    <td @click="toggelBlocked(device)" class="ps-6" v-else>
+                        <div v-if="action == 'edit' && selectedDevice.device_id == device.device_id"
+                            class="circle__outer circle__active"
+                            :class="{ 'circle__blocked': selectedDevice.is_blocked }">
+                            <div class="circle__inner"><p v-if="selectedDevice.is_blocked">B</p></div>
+                        </div>
+                        <div v-else class="circle__outer" :class="{ 'circle__blocked': device.is_blocked }">
+                            <div class="circle__inner"><p v-if="device.is_blocked">B</p></div>
+                        </div>
+                    </td>
+
+                    <td @click="toggelHidden(device)" class="ps-5">
+                        <div v-if="action == 'edit' && selectedDevice.device_id == device.device_id"
+                            class="circle__outer circle__active"
+                            :class="{ 'circle__hidden': selectedDevice.is_hidden }">
+                            <div class="circle__inner"><p v-if="selectedDevice.is_hidden">H</p></div>
+                        </div>
+                        <div v-else class="circle__outer" :class="{ 'circle__hidden': device.is_hidden }">
+                            <div class="circle__inner"><p v-if="device.is_hidden">H</p></div>
+                        </div>
+                    </td>     
+
+                    <td>{{ formatDateUtil(device.created_at) }}</td>
+
                     <td v-if="getUserAccessLevel <= 2">
                         <div class="t-btns ml-auto" v-if="selectedDevice.device_id != device.device_id">
                             <a class="t-btns__btn " @click="initEditDevice(device)">
@@ -192,13 +223,15 @@
                             </a>
                         </div>
                         <div class="t-btns ml-auto" v-else>
-                            <a class="t-btns__btn t-btns__btn--yes" @click="editOrDelete" v-tooltip="{ content: action == 'edit' ? 'Edit Device' : 'Delete Device' }" >
+                            <a class="t-btns__btn t-btns__btn--yes" @click="editOrDelete"
+                                v-tooltip="{ content: action == 'edit' ? 'Edit Device' : 'Delete Device' }">
                                 Yes
                             </a>
-                            <a class="t-btns__btn t-btns__btn--no" @click="cancel" v-tooltip="{ content: action == 'edit' ? 'Cancel Edit' : 'Cancel Delete' }">
+                            <a class="t-btns__btn t-btns__btn--no" @click="resetSelectedDevice"
+                                v-tooltip="{ content: action == 'edit' ? 'Cancel Edit' : 'Cancel Delete' }">
                                 No
                             </a>
-                        </div>     
+                        </div>
                     </td>
                 </tr>
 
@@ -219,6 +252,9 @@ import { vTooltip } from 'floating-vue'
 import 'floating-vue/dist/style.css';
 
 import { onMounted, ref, reactive } from 'vue';
+import { asyncComputed } from '@vueuse/core';
+import { useAppStore } from '@/stores/appStore';
+import { formatDateUtil } from '@/utils/utils';
 
 // - Store -------------------------------------------------------------
 
@@ -229,6 +265,9 @@ const { getDevicesList } = storeToRefs(deviceStore);
 
 const authStore = useAuthStore();
 const { getUserAccessLevel } = storeToRefs(authStore)
+
+const appStore = useAppStore();
+const { getWhitelistBlacklistMode } = storeToRefs(appStore);
 
 // -- Data -------------------------------------------------------------
 const searchTerm = ref("");
@@ -248,7 +287,11 @@ const selectedDevice = reactive({
     is_hidden: null,
 });
 
-function cancel() {
+function clearMessage() {
+    messageStore.clearFlashMessage();
+}
+
+function resetSelectedDevice() {
     action.value = null;
     selectedDevice.device_id = null;
     selectedDevice.name = null;
@@ -282,22 +325,80 @@ function initDeleteDevice(d) {
 }
 
 function editOrDelete() {
+    action.value == "edit" ? editDevice() : deleteDevice();
+}
+
+async function editDevice() {
+    try {
+        const response = await deviceStore.updateDevice(selectedDevice);
+
+        if (response.status == 200) {
+            const msg = response.data?.message ?? "Device updated successfully.";
+            messageStore.setFlashMessages([msg], "flash-message--green");
+     
+            if (response.data?.device) {
+                console.log('A')
+                deviceStore.updateDeviceInList(response.data.device);
+            }     
+        }
+
+    } catch (error) {
+        console.error("! UserForm.updateUser !\n", error);
+        const errMsg = error.response?.data ?? "Failed to update device"
+        messageStore.setFlashMessages([errMsg], "flash-message--red");
+    } finally {
+        resetSelectedDevice();
+    }
+}
+
+async function deleteDevice() {  
+    try {
+
+        const response = await deviceStore.deleteDevice({
+            device_id: selectedDevice.device_id,  
+        });
+
+        if (response.status == 200) {
+            const msg = response.data?.message ?? "Device deleted successfully.";
+            deviceStore.removeDeviceFromList(selectedDevice.device_id);       
+            messageStore.setFlashMessages([msg], "flash-message--green");
+        }
+
+    }  catch (error) {
+        console.error("! DeviceForm.deleteDevice !\n", error);
+        const errMsg = error.response?.data ?? "Failed to delete device"
+        messageStore.setFlashMessages([errMsg], "flash-message--red");
+    } finally {
+    }
 }
 
 function toggelOccupied(device) {
     if (action.value == 'edit' && device.device_id == selectedDevice.device_id) {
-       
+
         selectedDevice.is_occupied = !selectedDevice.is_occupied;
     }
 }
+
 function toggelAllowed(device) {
     if (action.value == 'edit' && device.device_id == selectedDevice.device_id) {
-     
+
         selectedDevice.is_allowed = !selectedDevice.is_allowed;
     }
 }
 
+function toggelBlocked(device) {
+    if (action.value == 'edit' && device.device_id == selectedDevice.device_id) {
 
+        selectedDevice.is_blocked = !selectedDevice.is_blocked;
+    }
+}
+
+function toggelHidden(device) {
+    if (action.value == 'edit' && device.device_id == selectedDevice.device_id) {
+
+        selectedDevice.is_hidden = !selectedDevice.is_hidden;
+    }
+}
 
 </script>
 
@@ -307,7 +408,11 @@ function toggelAllowed(device) {
 .t-btns {
     justify-content: end !important;
 }
-.ttable__input, .ttable__select {
+.ttable {
+    min-width: 79rem;
+}
+.ttable__input,
+.ttable__select {
     background-color: rgba($col-white, .7) !important;
     padding: .2rem .3rem !important;
     height: 1.8rem !important;
@@ -320,21 +425,21 @@ function toggelAllowed(device) {
     transition: all .1s ease;
     margin-bottom: -4px;
     margin-right: -6px;
+
     &:hover {
         transform: scale(1.1);
     }
 }
 
 .circle {
-    &__outer {     
-        opacity: .6;
+    &__outer {
+        opacity: .9;
         width: 1.5rem;
         height: 1.5rem;
         border-radius: 50%;
         color: $col-blue-600;
         border: 1px solid currentColor;
         padding: 1px;
-       
     }
 
     &__inner {
@@ -343,22 +448,55 @@ function toggelAllowed(device) {
         border-radius: 50%;
         border: 1px solid currentColor;
         background-color: currentColor;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        p {
+            color: $col-zinc-50;
+            font-family: $font-action;
+            font-size: .8rem;
+            font-weight: 700;
+            text-align: center;
+            transform: translate(.1px, 1px)
+        }
     }
+
     &__occupied {
         color: $col-red-700 !important;
     }
+
     &__vacant {
         color: $col-green-700 !important;
     }
+
     &__allowed {
         color: $col-zinc-600 !important;
-        
-        & > * {
+        &>* {
             // border: none;
             border-color: $col-zinc-500 !important;
             background-color: $col-zinc-50 !important;
+            p { color: $col-zinc-700; } 
         }
     }
+    &__blocked {
+        color: $col-zinc-800 !important;
+        &>* {
+            // border: none;
+            border-color: $col-zinc-800 !important;            
+        }
+    }
+
+    &__hidden {
+        color: $col-zinc-600 !important;
+        &>* {
+            // border: none;
+            border-color: $col-zinc-600 !important;    
+            background-color: $col-yellow-300 !important;
+            p { color: $col-zinc-700; }        
+        }
+    }
+
     &__active {
         cursor: pointer;
         opacity: 1;

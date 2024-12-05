@@ -5,6 +5,7 @@
         Print to terminal.
         Save to file.
         Disable printing and saving.
+    d. Clear cashed users and devices
 
 2. User View: 
     a. Implement table sorting and search functionality.

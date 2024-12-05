@@ -160,11 +160,7 @@ async function deleteUser(payload) {
         const errMsg = error.response?.data ?? "Failed to delete user"
         messageStore.setFlashMessages([errMsg], "flash-message--red");
     } finally {
-    }
-    
-
-    
-  
+    }      
 }
 </script>
 

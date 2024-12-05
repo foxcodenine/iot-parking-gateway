@@ -36,11 +36,68 @@ export const useDeviceStore = defineStore("deviceStore", () => {
         }
     }
 
+    async function updateDevice({device_id, name, firmware_version,  latitude, longitude, is_occupied, is_allowed, is_blocked, is_hidden}) {
+        useDashboardStore().setIsLoading(true);
+        try {
+            const payload = {                
+                name,
+                firmware_version,
+                latitude,
+                longitude,
+                is_occupied,
+                is_allowed,
+                is_blocked,
+                is_hidden,
+            };
+            
+            return await axios.put(`${useAppStore().getAppUrl}/api/device/${device_id}`, payload);
+            
+        } catch (error){
+            console.error('! deviceStore.updateDevice !');
+            throw error;  
+        } finally {
+            useDashboardStore().setIsLoading(false);
+        }
+    }
+
+    async function deleteDevice({device_id}) {
+        useDashboardStore().setIsLoading(true);
+        try {            
+            return await axios.delete(`${useAppStore().getAppUrl}/api/device/${device_id}`);            
+        } catch (error){
+            console.error('! deviceStore.deleteDevice !');
+            throw error;  
+        } finally {
+            useDashboardStore().setIsLoading(false);
+        }
+    }
+
+    function updateDeviceInList (device) {
+        if (device && device.device_id) {
+            const index = devicesList.value.findIndex(d => d.device_id == device.device_id)
+            if (index == -1) { return }
+            devicesList.value[index] = {...device};
+        }
+    }
+
+    function removeDeviceFromList (deviceID) {
+        if (deviceID) {
+            const index = devicesList.value.findIndex(d => d.device_id == deviceID)
+            if (index == -1) { return }
+
+            devicesList.value.splice(index, 1)
+        }
+    }
+
     // - Expose --------------------------------------------------------
 
     return {
         reset,
         getDevicesList,
         fetchDevices,
+        updateDevice,
+        updateDeviceInList,
+        deleteDevice,
+        removeDeviceFromList,
     }
 });

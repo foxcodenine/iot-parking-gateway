@@ -6,6 +6,8 @@ import { decryptString, encryptString } from '@/utils/cryptoUtils';
 export const useAppStore = defineStore("appStore", () => {
 
     const appUrl = ref(import.meta.env.VITE_VUE_ENV === 'production' ? window.location.origin : import.meta.env.VITE_APP_URL);
+
+    const whitelistBlacklistMode = ref("black");
    
 
     // Using local storage to manage the Google API key
@@ -26,7 +28,12 @@ export const useAppStore = defineStore("appStore", () => {
     // - Getters -------------------------------------------------------
 
     const getAppUrl = computed(() => appUrl.value);
+
     const getGoogleApiKey = computed(() => decryptString(googleApiKey.value));
+
+    const getWhitelistBlacklistMode = computed(() =>{
+        return whitelistBlacklistMode.value;
+    });
 
     // - Actions -------------------------------------------------------
 
@@ -41,5 +48,6 @@ export const useAppStore = defineStore("appStore", () => {
         resetAppState,
         getAppUrl,
         getGoogleApiKey,
+        getWhitelistBlacklistMode,
     };
 });

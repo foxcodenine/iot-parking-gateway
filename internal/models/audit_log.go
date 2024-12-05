@@ -23,7 +23,7 @@ type AuditLog struct {
 
 	// Optional Contextual Information (no longer pointers)
 	Entity    string `db:"entity" json:"entity,omitempty"`         // Name of the entity affected
-	EntityID  int    `db:"entity_id" json:"entity_id,omitempty"`   // ID of the entity affected
+	EntityID  string `db:"entity_id" json:"entity_id,omitempty"`   // ID of the entity affected
 	URL       string `db:"url" json:"url,omitempty"`               // URL accessed
 	IPAddress string `db:"ip_address" json:"ip_address,omitempty"` // IP address of the user
 	Details   string `db:"details" json:"details,omitempty"`       // Additional details about the action
@@ -81,8 +81,9 @@ func NewAuditLog(data map[string]interface{}) (*AuditLog, error) {
 		auditLog.Entity = entity
 	}
 
-	if entityID, ok := data["entity_id"].(float64); ok {
-		auditLog.EntityID = int(entityID)
+	if entityID, ok := data["entity_id"].(string); ok {
+
+		auditLog.EntityID = entityID
 	}
 
 	if ipAddress, ok := data["ip_address"].(string); ok {
