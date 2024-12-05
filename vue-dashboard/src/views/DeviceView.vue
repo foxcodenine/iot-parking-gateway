@@ -1,15 +1,13 @@
 <template>
     <main class="vview__main">
         <section class="vview__section">
+
             <div class="heading--2 ">Devises</div>
             <TheFlashMessage ></TheFlashMessage>
-            <!-- <div class="heading--4">CREATE NEW ORGANISATION</div> -->
 
-            <!-- <FormOrganisation></FormOrganisation> -->
+            <DeviceForm></DeviceForm>
 
-            <div class="heading--4">Devices List</div>      
-            
-            
+            <div class="heading--4 mt-8">Devices List</div>
             <DeviceTable></DeviceTable>
             
         </section>
@@ -26,9 +24,8 @@ import TheFlashMessage from '@/components/commen/TheFlashMessage.vue';
 import { useAuthStore } from '@/stores/authStore';
 import { useDeviceStore } from '@/stores/deviceStore';
 import { storeToRefs } from 'pinia';
+import DeviceForm from '@/components/device/DeviceForm.vue';
 
-const flashMessage = ref('A device with this ID already exists in the system');
-const flashClasses = ref('flash-message--orange');
 
 // - Store -------------------------------------------------------------
 const authStore = useAuthStore();

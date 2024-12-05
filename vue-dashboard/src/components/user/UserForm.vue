@@ -104,9 +104,9 @@ const accoutEnabled = ref(true)
 // - computed ----------------------------------------------------------
 
 const returnAccessLevelOptions = computed(() => {
-    return accessLevelList.value.map((org => {
+    return accessLevelList.value.map((accessLvl => {
         // TODO: use utilStore.capitalizeFirstLetter() for value.
-        return { ...org, _key: org.id, _value: org.name }
+        return { ...accessLvl, _key: accessLvl.id, _value: accessLvl.name }
     }))
 });
 

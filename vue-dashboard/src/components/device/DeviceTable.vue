@@ -81,52 +81,6 @@
             </thead>
             <tbody>
 
-                <tr v-if="false">
-
-                    <td>
-                        <input class="ttable__input" type="text" value="Pam Beesly">
-                    </td>
-                    <td>860226067572735</td>
-                    <td>NB-IoT</td>
-                    <td>3.2</td>
-                    <td>
-                        <input class="ttable__input w-24" type="text" value="35.928676">
-                    </td>
-                    <td>
-                        <input class="ttable__input w-24" type="text" value="14.418638">
-                    </td>
-                    <td>true</td>
-                    <td>
-                        <select>
-                            <option value="active">false</option>
-                            <option value="deactive">true</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select>
-                            <option value="active">false</option>
-                            <option value="deactive">true</option>
-                        </select>
-                    </td>
-                    <td>
-                        <select>
-                            <option value="active">false</option>
-                            <option value="deactive">true</option>
-                        </select>
-                    </td>
-
-                    <td>
-                        <div class="t-btns">
-                            <a class="t-btns__btn t-btns__btn--yes">
-                                Yes
-                            </a>
-                            <a class="t-btns__btn t-btns__btn--no">
-                                No
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-
 
                 <tr v-for="device in getDevicesList"
                     :class="{ 'bg-lime-200': selectedDevice.device_id == device.device_id }">
@@ -458,7 +412,7 @@ function toggelHidden(device) {
             font-size: .8rem;
             font-weight: 700;
             text-align: center;
-            transform: translate(.1px, 1px)
+            // transform: translate(.1px, 1px)
         }
     }
 

@@ -189,7 +189,7 @@ func (h *DeviceHandler) Destroy(w http.ResponseWriter, r *http.Request) {
 	// Set the response header to JSON
 	w.Header().Set("Content-Type", "application/json")
 
-	app.PushAuditToCache(*userData, "UPDATE", "device", id, r, fmt.Sprintf("Marked device with ID %s as soft deleted.", id))
+	app.PushAuditToCache(*userData, "DELETE", "device", id, r, fmt.Sprintf("Marked device with ID %s as soft deleted.", id))
 
 	response := map[string]string{"message": "Device deleted successfully"}
 
