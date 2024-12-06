@@ -63,6 +63,16 @@ func main() {
 	httpServer := httpserver.NewServer(os.Getenv("HTTP_PORT"))
 	httpServer.Start()
 	defer httpServer.Shutdown()
+	time.Sleep(time.Second * 2)
+
+	go func() {
+		time.Sleep(5 * time.Second) // Wait for clients to connect
+		for {
+			fmt.Println(1)
+			time.Sleep(time.Second * 2)
+			httpServer.SocketServer.BroadcastToNamespace("/", "update", "Test message from server")
+		}
+	}()
 }
 
 // ---------------------------------------------------------------------

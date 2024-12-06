@@ -69,3 +69,13 @@ https://www.npmjs.com/package/vue-loading-overlay
 https://floating-vue.starpad.dev/
 
     $ npm install floating-vue
+
+
+<!-- --------------------------------------------------------------- -->
+
+## socket.io-client
+
+https://www.npmjs.com/package/socket.io-client
+https://socket.io/docs/v4/client-initialization/
+
+    $ npm install socket.io-client

@@ -1,34 +1,27 @@
 <template>
-	<main class="dashboard" :class="{'no-side-bar': !showSideBar}">
+    <main class="dashboard" :class="{ 'no-side-bar': !showSideBar }">
 
-   
+        <SockerioClient></SockerioClient>
 
-            <VueLoadingOverlay   
-                :active="getIsLoading"
-                :is-full-page="true"
-                :lock-scroll="true"         
-                :width="128"
-                :height="128"
-                transition="fade"
-                :opacity="0.4"      
-            />
-      
+        <VueLoadingOverlay :active="getIsLoading" :is-full-page="true" :lock-scroll="true" :width="128" :height="128"
+            transition="fade" :opacity="0.4" />
 
-		<section class="modal" v-if="getIsUserMenuOpen">
-			<TheUserMenu></TheUserMenu>
-		</section>
 
-		<section class="sidebar" v-if="showSideBar">
-			<TheSidebar></TheSidebar>
-		</section>
+        <section class="modal" v-if="getIsUserMenuOpen">
+            <TheUserMenu></TheUserMenu>
+        </section>
 
-		<section class="page">
-			<router-view v-slot="{ Component }">
-				<component :is="Component" />
-			</router-view>
-		</section>
+        <section class="sidebar" v-if="showSideBar">
+            <TheSidebar></TheSidebar>
+        </section>
 
-	</main>
+        <section class="page">
+            <router-view v-slot="{ Component }">
+                <component :is="Component" />
+            </router-view>
+        </section>
+
+    </main>
 
 </template>
 
@@ -40,6 +33,7 @@ import 'vue-loading-overlay/dist/css/index.css';
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import TheSidebar from './components/dashboard/TheSidebar.vue';
 import TheUserMenu from './components/dashboard/TheUserMenu.vue';
+import SockerioClient from './components/socketio/SockerioClient.vue';
 import { computed, onMounted } from 'vue';
 import { useDashboardStore } from './stores/dashboardStore';
 import { storeToRefs } from 'pinia';
@@ -58,7 +52,7 @@ const { getIsUserMenuOpen, getIsLoading } = storeToRefs(dashboardStore);
 // - Computed ----------------------------------------------------------
 
 const showSideBar = computed(() => {
-	return !['loginView', 'forgotPasswordView'].includes(route.name)
+    return !['loginView', 'forgotPasswordView'].includes(route.name)
 });
 
 // - Methods -----------------------------------------------------------
@@ -66,15 +60,15 @@ const showSideBar = computed(() => {
 // Close the user menu when clicks outside the user menu and top bar image
 function closeUserMenuOnClickOutside() {
     document.querySelector('body').addEventListener('click', (e) => {
-        const userMenuOrBtn = e.target.closest('#the-user-menu')  || e.target.closest('#menu-btn');
-        if (!userMenuOrBtn) {	
+        const userMenuOrBtn = e.target.closest('#the-user-menu') || e.target.closest('#menu-btn');
+        if (!userMenuOrBtn) {
             dashboardStore.updateUserMenu(false);
         }
     });
 }
 
-onMounted(()=>{
-	closeUserMenuOnClickOutside();
+onMounted(() => {
+    closeUserMenuOnClickOutside();
 });
 
 </script>
@@ -82,7 +76,6 @@ onMounted(()=>{
 <!-- --------------------------------------------------------------- -->
 
 <style lang="scss" scoped>
-
 .dashboard {
     background-color: $col-slate-50;
     display: grid;
@@ -99,10 +92,10 @@ onMounted(()=>{
     position: fixed;
     left: 4.25rem;
     top: .25rem;
-	z-index: 500;
+    z-index: 500;
 }
 
 .no-side-bar {
-	grid-template-columns: 1fr
+    grid-template-columns: 1fr
 }
 </style>

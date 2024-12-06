@@ -14,6 +14,10 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/routes"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	socketio "github.com/googollee/go-socket.io"
+	"github.com/googollee/go-socket.io/engineio"
+	"github.com/googollee/go-socket.io/engineio/transport"
+	"github.com/googollee/go-socket.io/engineio/transport/polling"
+	"github.com/googollee/go-socket.io/engineio/transport/websocket"
 )
 
 // Server encapsulates both the HTTP server and the Socket.IO server,
@@ -23,25 +27,39 @@ type Server struct {
 	SocketServer *socketio.Server
 }
 
+// Easier to get running with CORS. Thanks for help @Vindexus and @erkie
+var allowOriginFunc = func(r *http.Request) bool {
+	return true
+}
+
 // NewServer initializes and returns a new Server instance, setting up
 // both the HTTP and Socket.IO servers with their respective routes and handlers.
 func NewServer(port string) *Server {
 	// Initialize the Socket.IO server
-	socketServer := socketio.NewServer(nil)
+	socketServer := socketio.NewServer(&engineio.Options{
+		Transports: []transport.Transport{
+			&polling.Transport{
+				CheckOrigin: allowOriginFunc,
+			},
+			&websocket.Transport{
+				CheckOrigin: allowOriginFunc,
+			},
+		},
+	})
 
-	// Set up the Socket.IO event handlers
 	socketServer.OnConnect("/", func(s socketio.Conn) error {
+		fmt.Printf("New connection established: %s\n", s.ID()) // Add log here
 		helpers.LogInfo("Connected ID: %s", s.ID())
 		return nil
 	})
 
 	socketServer.OnEvent("/", "update", func(s socketio.Conn, msg string) {
-		// Handle incoming "update" events from clients
+		fmt.Printf("Event received from client: %s\n", msg) // Add log here
 		helpers.LogInfo("Received update: %s", msg)
 	})
 
 	socketServer.OnDisconnect("/", func(s socketio.Conn, reason string) {
-		// Log when a client disconnects
+		fmt.Printf("Client disconnected: %s, Reason: %s\n", s.ID(), reason) // Add log here
 		helpers.LogInfo("Disconnected ID: %s, Reason: %s", s.ID(), reason)
 	})
 
@@ -52,8 +70,8 @@ func NewServer(port string) *Server {
 
 	// Set up the HTTP multiplexer to handle both HTTP routes and Socket.IO routes
 	mux := http.NewServeMux()
-	mux.Handle("/socket.io/", socketServer)
 	mux.Handle("/", routes.Routes())
+	mux.Handle("/socket.io/", socketServer)
 
 	// Create the HTTP server
 	srv := &http.Server{
