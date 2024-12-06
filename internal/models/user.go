@@ -28,7 +28,7 @@ type User struct {
 
 // TableName returns the full table name for the User model in PostgreSQL.
 func (u *User) TableName() string {
-	return "parking.users"
+	return "app.users"
 }
 
 var ErrDuplicateUser = errors.New("user with this email already exists")

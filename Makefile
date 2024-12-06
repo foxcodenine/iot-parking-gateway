@@ -5,7 +5,7 @@ pw ?=
 HASHED_PASSWORD = ffa48c97146cc361eb188bc5d6d23825f4d3a4cb
 
 # Define the server binary name
-SERVER_BINARY = tmp/IOT_PARKING_GATEWAY_SERVER.tmp
+SERVER_BINARY = tmp/IOTRACK_SERVER.tmp
 
 # Define the paths to the scripts
 ENCRYPT_SCRIPT = ./scripts/encrypt.sh

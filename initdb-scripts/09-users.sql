@@ -1,4 +1,4 @@
-CREATE TABLE parking.users (
+CREATE TABLE app.users (
     id SERIAL PRIMARY KEY,                  -- Unique identifier for each user
     email VARCHAR(255) NOT NULL UNIQUE,  -- Email, must be unique
     password VARCHAR(255) NOT NULL,         -- Password for the user
@@ -10,6 +10,6 @@ CREATE TABLE parking.users (
 
 -- Attach a trigger to update the 'updated_at' field before updates.
 CREATE TRIGGER set_updated_at
-BEFORE UPDATE ON parking.users
+BEFORE UPDATE ON app.users
 FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();

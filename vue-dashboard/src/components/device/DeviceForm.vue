@@ -1,4 +1,5 @@
 <template>
+    <LocationModal :modalIsOpen="locationModalOpen" @emitCloseModal="locationModalOpen = false"></LocationModal>
     <form class="fform" autocomplete="off">
         <div class="fform__row mt-8 " @click="clearMessage" :class="{ 'fform__disabled': confirmOn }">
             <div class="fform__group ">
@@ -52,7 +53,7 @@
                         <input class="fform__input" id="longitude" type="text" placeholder="Enter the longitude"
                             v-model.trim="longitude" :disabled="confirmOn">
 
-                        <svg  class="location-btn"><use xlink:href="@/assets/svg/sprite.svg#icon-google-maps-2"></use></svg>
+                        <svg @click="locationModalOpen = true" class="location-btn"><use xlink:href="@/assets/svg/sprite.svg#icon-google-maps-2"></use></svg>
                     </div>
 
                 </div>
@@ -86,6 +87,7 @@ import { useMessageStore } from '@/stores/messageStore';
 import TheSelector from '@/components/commen/TheSelector.vue'
 import TheCheckbox from '../commen/TheCheckbox.vue';
 import { computed, reactive, ref } from 'vue';
+import LocationModal from '../commen/LocationModal.vue';
 
 
 
@@ -94,8 +96,11 @@ const messageStore = useMessageStore();
 
 // - Data --------------------------------------------------------------
 const confirmOn = ref(false);
+const locationModalOpen = ref(false)
+
 const device_id = ref('');
 const name = ref('');
+const firmware_version = ref('');
 const latitude = ref('');
 const longitude = ref('');
 const isBlackListed = ref(false);

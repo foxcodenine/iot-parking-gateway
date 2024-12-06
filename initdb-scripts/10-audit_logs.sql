@@ -1,4 +1,4 @@
-CREATE TABLE parking.audit_logs (
+CREATE TABLE app.audit_logs (
     id SERIAL,
     user_id INTEGER NOT NULL,
     email VARCHAR(100) NOT NULL,
@@ -20,4 +20,4 @@ CREATE TABLE parking.audit_logs (
 );
 
 -- Convert 'audit_logs' to a TimescaleDB hypertable for time-based partitioning
-SELECT create_hypertable('parking.audit_logs', 'happened_at');
+SELECT create_hypertable('app.audit_logs', 'happened_at');

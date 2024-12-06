@@ -43,6 +43,13 @@ body {
 }
 
 
- .v-popper--theme-tooltip {
+.v-popper--theme-tooltip {
   font-family: Arial, Helvetica, sans-serif !important;
+}
+
+.gm-fullscreen-control {
+
+    position: absolute !important;    
+    left: 13rem !important;
+    bottom: 1rem !important;
 }

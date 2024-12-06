@@ -31,7 +31,7 @@ type AuditLog struct {
 
 // TableName returns the full table name for the AuditLog model in PostgreSQL.
 func (a *AuditLog) TableName() string {
-	return "parking.audit_logs"
+	return "app.audit_logs"
 }
 
 // NewAuditLog constructs an AuditLog object from a provided map of data.

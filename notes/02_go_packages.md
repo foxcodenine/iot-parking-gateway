@@ -81,3 +81,12 @@ https://pkg.go.dev/github.com/golang-jwt/jwt/v5#section-readme
 
     $ go get -u github.com/golang-jwt/jwt/v5
 
+<!-- --------------------------------------------------------------- -->
+
+### go-socket.io
+
+https://github.com/googollee/go-socket.io
+
+    $ go get github.com/googollee/go-socket.io
+
+import "github.com/googollee/go-socket.io"
