@@ -12,7 +12,6 @@ import (
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/firmware"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
-
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/google/uuid"
 )
@@ -119,12 +118,15 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	}
 
 	// Push parsed parking data packages to Redis.
+
 	for _, i := range parsedData["parking_packages"].([]map[string]any) {
 		i["firmware_version"] = parsedData["firmware_version"]
 		i["device_id"] = fmt.Sprintf("%d", parsedData["device_id"])
 		i["raw_id"] = rawUUID
 		i["event_id"] = 26
 		i["network_type"] = "NB-IoT"
+
+		// socketserver.IOService.SocketServer.BroadcastToNamespace("/", "update", i)
 
 		err := s.cache.RPush("nb-activity-logs", i)
 		if err != nil {

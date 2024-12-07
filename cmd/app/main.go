@@ -8,6 +8,7 @@ import (
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/handlers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/mq"
+	"github.com/foxcodenine/iot-parking-gateway/internal/socketserver"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/core"
@@ -59,20 +60,26 @@ func main() {
 	})
 	app.Cron.Start()
 
-	// Start the web server
+	// Create and start the the web server.
 	httpServer := httpserver.NewServer(os.Getenv("HTTP_PORT"))
 	httpServer.Start()
 	defer httpServer.Shutdown()
-	time.Sleep(time.Second * 2)
 
-	go func() {
-		time.Sleep(5 * time.Second) // Wait for clients to connect
-		for {
-			fmt.Println(1)
-			time.Sleep(time.Second * 2)
-			httpServer.SocketServer.BroadcastToNamespace("/", "update", "Test message from server")
-		}
-	}()
+	// Create and start the Socket.IO server.
+	socketServer := socketserver.NewServer(os.Getenv("SOCKET_PORT"))
+	socketServer.Start()
+	// defer socketServer.Shutdown()
+
+	// time.Sleep(time.Second * 2)
+
+	// go func() {
+	// 	time.Sleep(5 * time.Second) // Wait for clients to connect
+	// 	for {
+	// 		fmt.Println(1)
+	// 		time.Sleep(time.Second * 2)
+	// 		httpServer.SocketServer.BroadcastToNamespace("/", "update", "Test message from server")
+	// 	}
+	// }()
 }
 
 // ---------------------------------------------------------------------

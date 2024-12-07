@@ -1,0 +1,98 @@
+package socketserver
+
+import (
+	"context"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
+	socketio "github.com/googollee/go-socket.io"
+	"github.com/googollee/go-socket.io/engineio"
+	"github.com/googollee/go-socket.io/engineio/transport"
+	"github.com/googollee/go-socket.io/engineio/transport/polling"
+	"github.com/googollee/go-socket.io/engineio/transport/websocket"
+)
+
+type Server struct {
+	SocketServer *socketio.Server
+	HTTPServer   *http.Server
+}
+
+// Easier to get running with CORS. Thanks for help @Vindexus and @erkie
+var allowOriginFunc = func(r *http.Request) bool {
+	return true
+}
+
+func NewServer(port string) *Server {
+	socketServer := socketio.NewServer(&engineio.Options{
+		Transports: []transport.Transport{
+			&polling.Transport{
+				CheckOrigin: allowOriginFunc,
+			},
+			&websocket.Transport{
+				CheckOrigin: allowOriginFunc,
+			},
+		},
+	})
+
+	socketServer.OnConnect("/", func(s socketio.Conn) error {
+		helpers.LogInfo("Connected ID: %s", s.ID())
+		return nil
+	})
+
+	socketServer.OnEvent("/", "update", func(s socketio.Conn, msg string) {
+		helpers.LogInfo("Received update: %s", msg)
+	})
+
+	socketServer.OnDisconnect("/", func(s socketio.Conn, reason string) {
+		helpers.LogInfo("Disconnected ID: %s, Reason: %s", s.ID(), reason)
+	})
+
+	socketServer.OnError("/", func(s socketio.Conn, err error) {
+		helpers.LogError(err, "Socket.IO error")
+	})
+
+	// Create a new ServeMux
+	mux := http.NewServeMux()
+	mux.Handle("/socket.io/", socketServer) //
+
+	// Create an HTTP server for handling Socket.IO connections
+	httpServer := &http.Server{
+		Addr:    ":" + port,
+		Handler: mux,
+	}
+
+	return &Server{
+		SocketServer: socketServer,
+		HTTPServer:   httpServer,
+	}
+}
+
+func (s *Server) Start() {
+	go func() {
+		helpers.LogInfo("Socket.IO server starting on %s", s.HTTPServer.Addr)
+		if err := s.HTTPServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			helpers.LogError(err, "Error starting Socket.IO server: %v")
+		}
+	}()
+}
+
+func (s *Server) Shutdown() {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	helpers.LogInfo("Socket.IO server shutting down...")
+	if err := s.SocketServer.Close(); err != nil {
+		helpers.LogError(err, "Error shutting down Socket.IO server: %v")
+	}
+	if err := s.HTTPServer.Shutdown(ctx); err != nil {
+		helpers.LogError(err, "HTTP server forced to shutdown: %v")
+	}
+}

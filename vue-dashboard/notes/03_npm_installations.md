@@ -78,4 +78,8 @@ https://floating-vue.starpad.dev/
 https://www.npmjs.com/package/socket.io-client
 https://socket.io/docs/v4/client-initialization/
 
-    $ npm install socket.io-client
+    <!-- $ npm install socket.io-client -->
+    $ npm install socket.io-client@2.4.0
+
+Note: - Version 2.4.0 of the socket.io-client is used due to compatibility requirements with the
+    existing Go backend (go-socket.io), which currently supports only up to Socket.IO protocol 1.4. 
