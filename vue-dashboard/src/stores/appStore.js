@@ -6,9 +6,8 @@ import { decryptString, encryptString } from '@/utils/cryptoUtils';
 export const useAppStore = defineStore("appStore", () => {
 
     const appUrl = ref(import.meta.env.VITE_VUE_ENV === 'production' ? window.location.origin : import.meta.env.VITE_APP_URL);
-
-    const whitelistBlacklistMode = ref("black");
-   
+    const defaultLatitude = ref(import.meta.env.VITE_VUE_ENV === 'production' ? GO_DEFAULT_LATITUDE : import.meta.env.VITE_DEFAULT_LATITUDE);
+    const defaultLongitude = ref(import.meta.env.VITE_VUE_ENV === 'production' ? GO_DEFAULT_LONGITUDE : import.meta.env.VITE_DEFAULT_LONGITUDE);
 
     // Using local storage to manage the Google API key
     const googleApiKey = ref(null);
@@ -25,6 +24,10 @@ export const useAppStore = defineStore("appStore", () => {
         GO_GOOGLE_API_KEY = null;
     }
 
+    const whitelistBlacklistMode = ref("black"); 
+    
+    const pageScrollDisabled = ref(false);
+
     // - Getters -------------------------------------------------------
 
     const getAppUrl = computed(() => appUrl.value);
@@ -35,12 +38,23 @@ export const useAppStore = defineStore("appStore", () => {
         return whitelistBlacklistMode.value;
     });
 
+    const getDefaultLatitude = computed(()=>{         
+        return defaultLatitude.value;
+     });
+    const getDefaultLongitude = computed(()=>{ return defaultLongitude.value });
+
+    const getPageScrollDisabled = computed(()=> pageScrollDisabled.value);
+
     // - Actions -------------------------------------------------------
 
     function resetAppState() {
         appUrlLocalStorage.value = null;
         googleApiKeyLocalStorage.value = null;
     }
+
+    function setPageScrollDisabled(val) {
+        pageScrollDisabled.value = val;
+    } 
 
     // - Expose --------------------------------------------------------
     
@@ -49,5 +63,9 @@ export const useAppStore = defineStore("appStore", () => {
         getAppUrl,
         getGoogleApiKey,
         getWhitelistBlacklistMode,
+        getDefaultLatitude,
+        getDefaultLongitude,
+        getPageScrollDisabled,
+        setPageScrollDisabled,
     };
 });

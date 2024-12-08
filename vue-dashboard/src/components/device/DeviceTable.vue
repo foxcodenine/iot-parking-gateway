@@ -1,5 +1,13 @@
 <template>
 
+    <LocationModal 
+        v-if="locationModalOpen"
+        :modalIsOpen="locationModalOpen" 
+        :markerPosition="{lat:selectedDevice.latitude, lng:selectedDevice.longitude}" 
+        @emitCloseModal="locationModalOpen = false"
+        @emitMarkerPosition="updateMarkerPosition"
+    ></LocationModal>
+
     <input class="ttable__search mt-8" v-model="searchTerm" type="text" placeholder="Search...">
 
     <div class="ttable__container">
@@ -101,6 +109,7 @@
 
                     <td class="w-8">
                         <svg v-if="action == 'edit' && selectedDevice.device_id == device.device_id"
+                        @click="locationModalOpen = true"
                             class="ttable__location-btn ">
                             <use xlink:href="@/assets/svg/sprite.svg#icon-google-maps-2"></use>
                         </svg>
@@ -205,10 +214,12 @@ import { storeToRefs } from 'pinia';
 import { vTooltip } from 'floating-vue'
 import 'floating-vue/dist/style.css';
 
-import { onMounted, ref, reactive } from 'vue';
+import { onMounted, ref, reactive, watch } from 'vue';
 import { asyncComputed } from '@vueuse/core';
 import { useAppStore } from '@/stores/appStore';
 import { formatDateUtil } from '@/utils/utils';
+
+import LocationModal from '../commen/LocationModal.vue';
 
 // - Store -------------------------------------------------------------
 
@@ -226,6 +237,8 @@ const { getWhitelistBlacklistMode } = storeToRefs(appStore);
 // -- Data -------------------------------------------------------------
 const searchTerm = ref("");
 
+const locationModalOpen = ref(false);
+
 const action = ref(null);
 
 const selectedDevice = reactive({
@@ -241,6 +254,14 @@ const selectedDevice = reactive({
     is_hidden: null,
 });
 
+// - Watchers ----------------------------------------------------------
+
+watch( locationModalOpen, (val)=>{
+    appStore.setPageScrollDisabled(val);
+});
+
+// - Methods -----------------------------------------------------------
+
 function clearMessage() {
     messageStore.clearFlashMessage();
 }
@@ -251,8 +272,8 @@ function resetSelectedDevice() {
     selectedDevice.name = null;
     selectedDevice.network_type = null;
     selectedDevice.firmware_version = null;
-    selectedDevice.latitude = null;
-    selectedDevice.longitude = null;
+    selectedDevice.latitude = 0;
+    selectedDevice.longitude = 0;
     selectedDevice.is_occupied = null;
     selectedDevice.is_allowed = null;
     selectedDevice.is_blocked = null;
@@ -352,6 +373,11 @@ function toggelHidden(device) {
 
         selectedDevice.is_hidden = !selectedDevice.is_hidden;
     }
+}
+
+function updateMarkerPosition(latLng) {
+    selectedDevice.latitude = latLng.lat;
+    selectedDevice.longitude = latLng.lng;
 }
 
 </script>
@@ -456,4 +482,6 @@ function toggelHidden(device) {
         opacity: 1;
     }
 }
+
+
 </style>

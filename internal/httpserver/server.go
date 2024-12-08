@@ -12,21 +12,83 @@ import (
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/routes"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
+
+	// "github.com/go-chi/chi/v5"
+	socketio "github.com/googollee/go-socket.io"
+	"github.com/googollee/go-socket.io/engineio"
+	"github.com/googollee/go-socket.io/engineio/transport"
+	"github.com/googollee/go-socket.io/engineio/transport/polling"
+	"github.com/googollee/go-socket.io/engineio/transport/websocket"
+	gorillaWebSocket "github.com/gorilla/websocket"
 )
 
 // Server wraps the http.Server.
 type Server struct {
-	HTTPServer *http.Server
+	HTTPServer   *http.Server
+	SocketServer *socketio.Server
+	Port         string
 }
+
+// allowOriginFunc allows all origins; used to configure CORS in the transports.
+var allowOriginFunc = func(r *http.Request) bool {
+	return true
+}
+
+var IOService *Server
 
 // NewServer initializes a new HTTP server on the specified port with routes configured.
 func NewServer(port string) *Server {
+
+	socketServer := socketio.NewServer(&engineio.Options{
+		Transports: []transport.Transport{
+			&polling.Transport{
+				CheckOrigin: allowOriginFunc,
+			},
+			&websocket.Transport{
+				CheckOrigin: allowOriginFunc,
+			},
+		},
+	})
+
+	socketServer.OnConnect("/", func(s socketio.Conn) error {
+		helpers.LogInfo("Connected ID: %s", s.ID())
+		return nil
+	})
+
+	socketServer.OnEvent("/", "update", func(s socketio.Conn, msg string) {
+		helpers.LogInfo("Received update: %s", msg)
+	})
+
+	socketServer.OnDisconnect("/", func(s socketio.Conn, reason string) {
+		helpers.LogInfo("Disconnected ID: %s, Reason: %s", s.ID(), reason)
+	})
+
+	socketServer.OnError("/", func(s socketio.Conn, err error) {
+		// Handle WebSocket-specific errors using gorillaWebSocket package
+		if websocketErr, ok := err.(*gorillaWebSocket.CloseError); ok {
+			switch websocketErr.Code {
+			case gorillaWebSocket.CloseGoingAway, gorillaWebSocket.CloseNormalClosure:
+				helpers.LogInfo("Normal disconnect by client ID: %s, Code: %d", s.ID(), websocketErr.Code)
+				return
+			}
+		}
+		helpers.LogError(err, "Socket.IO error")
+	})
+
+	mux := http.NewServeMux()
+	mux.Handle("/socket.io/", socketServer)
+	mux.Handle("/", routes.Routes())
+
+	// ------------------------------------------
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", port),
-		Handler: routes.Routes(), // Setup HTTP routing.
+		Handler: mux,
 	}
+
 	return &Server{
-		HTTPServer: srv,
+		HTTPServer:   srv,
+		SocketServer: socketServer,
+		Port:         port,
 	}
 }
 
@@ -38,6 +100,12 @@ func (s *Server) Start() {
 			helpers.LogError(err, "Error starting the server: %v\n")
 		}
 	}()
+	go func() {
+		if err := s.SocketServer.Serve(); err != nil {
+			helpers.LogError(err, "Error starting Socket.IO server")
+		}
+	}()
+
 }
 
 // Shutdown gracefully shuts down the server without interrupting any active connections.

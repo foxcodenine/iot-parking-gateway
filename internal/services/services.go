@@ -3,6 +3,8 @@ package services
 import (
 	"fmt"
 	"log"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
@@ -54,11 +56,22 @@ func (s *Service) RegisterNewDevices() {
 		networkType := deviceInfo[:spaceIndex]
 		deviceID := deviceInfo[spaceIndex+1:]
 
+		latitude, err := strconv.ParseFloat(os.Getenv("DEFAULT_LATITUDE"), 64)
+		if err != nil {
+			latitude = 0
+		}
+		longitude, err := strconv.ParseFloat(os.Getenv("DEFAULT_LONGITUDE"), 64)
+		if err != nil {
+			longitude = 0
+		}
+
 		// Define a new device model instance.
 		newDevice := models.Device{
 			DeviceID:    deviceID,
 			Name:        "new " + deviceID,
 			NetworkType: networkType,
+			Latitude:    latitude,
+			Longitude:   longitude,
 		}
 
 		// Attempt to create a new device record in the database.

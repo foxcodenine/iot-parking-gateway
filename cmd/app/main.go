@@ -8,7 +8,7 @@ import (
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/handlers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/mq"
-	"github.com/foxcodenine/iot-parking-gateway/internal/socketserver"
+	// "github.com/foxcodenine/iot-parking-gateway/internal/socketserver"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/core"
@@ -66,8 +66,8 @@ func main() {
 	defer httpServer.Shutdown()
 
 	// Create and start the Socket.IO server.
-	socketServer := socketserver.NewServer(os.Getenv("SOCKET_PORT"))
-	socketServer.Start()
+	// socketServer := socketserver.NewServer(os.Getenv("SOCKET_PORT"))
+	// socketServer.Start()
 	// defer socketServer.Shutdown()
 
 	// time.Sleep(time.Second * 2)

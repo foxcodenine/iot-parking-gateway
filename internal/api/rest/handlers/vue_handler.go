@@ -20,9 +20,13 @@ func (v *VueHandler) ServeIndexWithVariables(w http.ResponseWriter, r *http.Requ
 	googleApiKey, _ := helpers.EncryptAES(os.Getenv("GOOGLE_API_KEY"), core.AES_SECRET_KEY)
 
 	data := struct {
-		GoogleApiKey string
+		GoogleApiKey     string
+		defaultLatitude  string
+		defaultLongitude string
 	}{
-		GoogleApiKey: googleApiKey,
+		GoogleApiKey:     googleApiKey,
+		defaultLatitude:  os.Getenv("DEFAULT_LATITUDE"),
+		defaultLongitude: os.Getenv("DEFAULT_LONGITUDE"),
 	}
 
 	// Path to the index.html file

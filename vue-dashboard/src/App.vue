@@ -1,5 +1,5 @@
 <template>
-    <main class="dashboard" :class="{ 'no-side-bar': !showSideBar }">
+    <main class="dashboard" :class="{ 'no-side-bar': !showSideBar }" >
 
         <SockerioClient></SockerioClient>
 
@@ -15,7 +15,7 @@
             <TheSidebar></TheSidebar>
         </section>
 
-        <section class="page">
+        <section class="page" >
             <router-view v-slot="{ Component }">
                 <component :is="Component" />
             </router-view>
@@ -34,22 +34,35 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 import TheSidebar from './components/dashboard/TheSidebar.vue';
 import TheUserMenu from './components/dashboard/TheUserMenu.vue';
 import SockerioClient from './components/socketio/SockerioClient.vue';
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useDashboardStore } from './stores/dashboardStore';
 import { storeToRefs } from 'pinia';
+import { useScrollLock } from '@vueuse/core'
+import { useAppStore } from './stores/appStore';
 
 // - Store -------------------------------------------------------------
 
 const dashboardStore = useDashboardStore();
+const appStore = useAppStore();
+const { getPageScrollDisabled } = storeToRefs(appStore);
 
 // - Routes ------------------------------------------------------------
 
 const route = useRoute();
-
 const { getIsUserMenuOpen, getIsLoading } = storeToRefs(dashboardStore);
 
 
+// - Page scrolling ----------------------------------------------------
+
+const htmlEL = document.querySelector('html');
+const isLocked = useScrollLock(htmlEL);
+isLocked.value = getPageScrollDisabled.value;
+watch(getPageScrollDisabled, (val) => {
+    isLocked.value = val
+})
+
 // - Computed ----------------------------------------------------------
+
 
 const showSideBar = computed(() => {
     return !['loginView', 'forgotPasswordView'].includes(route.name)

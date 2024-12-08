@@ -1,5 +1,12 @@
 <template>
-    <LocationModal :modalIsOpen="locationModalOpen" @emitCloseModal="locationModalOpen = false"></LocationModal>
+    <LocationModal 
+        v-if="locationModalOpen"
+        :modalIsOpen="locationModalOpen" 
+        :markerPosition="{lat:latitude, lng:longitude}" 
+        @emitCloseModal="locationModalOpen = false"
+        @emitMarkerPosition="updateMarkerPosition"
+    ></LocationModal>
+
     <form class="fform" autocomplete="off">
         <div class="fform__row mt-8 " @click="clearMessage" :class="{ 'fform__disabled': confirmOn }">
             <div class="fform__group ">
@@ -86,13 +93,17 @@
 import { useMessageStore } from '@/stores/messageStore';
 import TheSelector from '@/components/commen/TheSelector.vue'
 import TheCheckbox from '../commen/TheCheckbox.vue';
-import { computed, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import LocationModal from '../commen/LocationModal.vue';
+import { useAppStore } from '@/stores/appStore';
+import { storeToRefs } from 'pinia';
 
 
 
 // - Store -------------------------------------------------------------
 const messageStore = useMessageStore();
+const appStore = useAppStore();
+const { getDefaultLatitude, getDefaultLongitude } = storeToRefs(appStore);
 
 // - Data --------------------------------------------------------------
 const confirmOn = ref(false);
@@ -127,6 +138,12 @@ const returnNetworkType = computed(() => {
     }))
 });
 
+// - Watchers ----------------------------------------------------------
+
+watch( locationModalOpen, (val)=>{
+    appStore.setPageScrollDisabled(val);
+});
+
 // - Methods -----------------------------------------------------------
 
 function clearMessage() {
@@ -140,6 +157,16 @@ function initCreateDevice() {
 function createDevice() {
 
 }
+
+function updateMarkerPosition(latLng) {
+    latitude.value = latLng.lat;
+    longitude.value = latLng.lng;
+}
+
+onMounted(()=>{
+    latitude.value = Number(getDefaultLatitude.value)
+    longitude.value = Number(getDefaultLongitude.value)
+})
 
 </script>
 
@@ -166,5 +193,8 @@ function createDevice() {
     &:hover {
         transform: scale(1.1);
     }
+}
+.no-scrolling {
+    overflow-x:hidden;
 }
 </style>

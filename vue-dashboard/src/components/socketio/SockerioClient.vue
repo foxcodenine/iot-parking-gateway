@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="display: none;">
       <h1>Socket.io with Vue</h1>
       <button @click="sendData">Send Data</button>
   </div>
@@ -10,6 +10,7 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import socketIOClient from 'socket.io-client';
+import { useAppStore } from '@/stores/appStore';
 
 const socket = ref(null);
 
@@ -23,8 +24,7 @@ const sendData = () => {
 onMounted(() => {
   localStorage.setItem('debug', ''); // Disable debug logs
 
-  // Initialize the socket connection
-  socket.value = socketIOClient('http://localhost:8088', {
+  socket.value = socketIOClient(useAppStore().getAppUrl, {
     //   path: '/socket.io/',
       transports: ['websocket'],
       reconnection: true,

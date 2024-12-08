@@ -102,7 +102,6 @@ export const useUserStore = defineStore("userStore", () => {
     function pushUserToList(user) {
         if (user && user.id) {
             usersList.value.push(user);
-            console.log(usersList.value);
         }        
     }
 
