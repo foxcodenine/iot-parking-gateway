@@ -30,7 +30,7 @@ func NewService(m models.Models, rc *cache.RedisCache, il, el *log.Logger) *Serv
 // RegisterNewDevices retrieves device IDs from Redis, creates new device records in the database, and logs the outcome.
 func (s *Service) RegisterNewDevices() {
 	// Retrieve device IDs from Redis and delete the set afterwards.
-	deviceEntries, err := s.cache.SMembersDel("device-to-create")
+	deviceEntries, err := s.cache.SMembersDel("to-register-devices")
 	if err != nil {
 		s.errorLog.Printf("Failed to retrieve device IDs from Redis: %v", err)
 		return
@@ -105,9 +105,8 @@ func (s *Service) RegisterNewDevices() {
 // PopulateDeviceBloomFilter retrieves all devices from the database and populates a Bloom Filter with their network type and device IDs.
 func (s *Service) PopulateDeviceBloomFilter() {
 	// Fetch all devices from the database.
-
-	tmp := models.Device{}
-	devices, err := tmp.GetAll()
+	deviceInstance := models.Device{}
+	devices, err := deviceInstance.GetAllIncludingDeleted()
 	if err != nil {
 		s.errorLog.Printf("Error retrieving devices from Postgres: %v", err)
 		return
@@ -122,6 +121,6 @@ func (s *Service) PopulateDeviceBloomFilter() {
 		keyStrings = append(keyStrings, key)
 	}
 
-	// Add all composite keys to the Bloom Filter named "device-id".
-	s.cache.AddItemsToBloomFilter("device-id", keyStrings)
+	// Add all composite keys to the Bloom Filter named "registered-devices".
+	s.cache.AddItemsToBloomFilter("registered-devices", keyStrings)
 }

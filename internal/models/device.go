@@ -34,7 +34,7 @@ type Device struct {
 	IsHidden        bool           `db:"is_hidden" json:"is_hidden"`   // Indicates if the device is hidden
 	CreatedAt       time.Time      `db:"created_at" json:"created_at"`
 	UpdatedAt       time.Time      `db:"updated_at" json:"updated_at"`
-	DeletedAt       time.Time      `db:"deleted_at" json:"deleted_at"`
+	DeletedAt       time.Time      `db:"deleted_at,omitempty" json:"deleted_at,omitempty"`
 }
 
 // -----------------------------------------------------------------------------
@@ -180,6 +180,32 @@ func (d *Device) GetAll() ([]*Device, error) {
 
 // -----------------------------------------------------------------------------
 
+// GetAllIncludingDeleted retrieves all devices from the database, including those that have been soft-deleted.
+func (d *Device) GetAllIncludingDeleted() ([]*Device, error) {
+	var devices []*Device
+
+	// Fetch all devices, including those with `deleted_at` not NULL
+	collection := dbSession.Collection(d.TableName())
+	err := collection.Find().OrderBy("created_at").All(&devices)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve all devices including deleted ones: %w", err)
+	}
+
+	// Parse BeaconsJSON for each device
+	for i := range devices {
+		err := devices[i].ParseBeaconsJSON()
+		if err != nil {
+			helpers.LogError(err, fmt.Sprintf("Error parsing BeaconsJSON for device ID %s:", devices[i].DeviceID))
+			return nil, fmt.Errorf("error parsing BeaconsJSON for device ID %s: %w", devices[i].DeviceID, err)
+		}
+	}
+
+	return devices, nil
+}
+
+// -----------------------------------------------------------------------------
+
 // GetByID retrieves a single device by its ID, excluding soft-deleted records.
 func (d *Device) GetByID(id string) (*Device, error) {
 	collection := dbSession.Collection(d.TableName())
@@ -228,6 +254,53 @@ func (d *Device) Create(newDevice *Device) (*Device, error) {
 	}
 
 	return newDevice, nil
+}
+
+// Upsert inserts a new device or updates specific fields if the device already exists.
+func (d *Device) Upsert(device *Device) (*Device, error) {
+	collection := dbSession.Collection(d.TableName())
+
+	// Prepare the upsert query with positional placeholders
+	sqlQuery := `
+		INSERT INTO parking.devices (
+			device_id, name, network_type, firmware_version, latitude, longitude, beacons, 
+			happened_at, is_occupied, is_allowed, is_blocked, created_at, updated_at, deleted_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NULL
+		)
+		ON CONFLICT (device_id) DO UPDATE SET
+			is_allowed = false,
+			is_blocked = false,
+			is_hidden = false,
+			deleted_at = NULL,
+			updated_at = EXCLUDED.updated_at;
+	`
+
+	// Prepare the parameter values
+	params := []interface{}{
+		device.DeviceID,
+		device.Name,
+		device.NetworkType,
+		device.FirmwareVersion,
+		device.Latitude,
+		device.Longitude,
+		device.BeaconsJSON,
+		device.HappenedAt,
+		device.IsOccupied,
+		device.IsAllowed,
+		device.IsBlocked,
+		time.Now().UTC(),
+		time.Now().UTC(),
+	}
+
+	// Execute the query
+	_, err := collection.Session().SQL().Exec(sqlQuery, params...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to upsert device: %w", err)
+	}
+
+	// Return the updated device
+	return d.GetByID(device.DeviceID)
 }
 
 // -----------------------------------------------------------------------------

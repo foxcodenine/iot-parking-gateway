@@ -8,6 +8,7 @@ import (
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/handlers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/mq"
+
 	// "github.com/foxcodenine/iot-parking-gateway/internal/socketserver"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
@@ -46,7 +47,7 @@ func main() {
 	defer app.UdpServer.Stop()
 
 	// // Initialize and Populate a Bloom Filter in Redis to efficiently check the existence of device IDs.
-	app.Cache.CreateBloomFilter("device-id", 0.00001, 100000)
+	app.Cache.CreateBloomFilter("registered-devices", 0.00001, 100000)
 	app.Service.PopulateDeviceBloomFilter()
 
 	// Start cron

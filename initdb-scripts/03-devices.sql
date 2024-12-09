@@ -14,7 +14,7 @@ CREATE TABLE parking.devices (
     is_hidden BOOLEAN DEFAULT FALSE,       -- Indicates if the device is hidden from view.
     created_at TIMESTAMP DEFAULT NOW(),  -- Set at record creation.
     updated_at TIMESTAMP DEFAULT NOW(),   -- Updated automatically via trigger.
-    deleted_at TIMESTAMP NULL   -- Updated automatically via trigger.
+    deleted_at TIMESTAMP DEFAULT NULL   -- Updated automatically via trigger.
 );
 
 

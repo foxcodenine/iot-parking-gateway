@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 
@@ -63,11 +64,17 @@ func (h *DeviceHandler) Store(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the Create method on the Device model (example uses hardcoded device ID)
-	device, err := app.Models.Device.Create(&newDevice)
+	device, err := app.Models.Device.Upsert(&newDevice)
 	if err != nil {
-		app.ErrorLog.Printf("Failed to create device: %v", err)
 		helpers.RespondWithError(w, err, "Failed to create device", http.StatusInternalServerError)
 		return
+	}
+
+	deviceIdentifierKey := fmt.Sprintf("%s %s", newDevice.NetworkType, newDevice.DeviceID)
+
+	_, err = cache.AppCache.AddItemToBloomFilter("registered-devices", deviceIdentifierKey)
+	if err != nil {
+		helpers.LogError(err, "Failed to add device ID to the Bloom Filter")
 	}
 
 	// Set the response header to JSON

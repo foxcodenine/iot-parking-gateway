@@ -11,16 +11,22 @@ import (
 )
 
 // RespondWithError logs the error, captures file/line, and sends a detailed error response.
-func RespondWithError(w http.ResponseWriter, err error, message string, statusCode int) {
+func RespondWithError(w http.ResponseWriter, err error, message string, statusCode int, depth ...int) {
 	_, file, line, _ := runtime.Caller(1)
 	var userError string
 
+	// Set the default depth to 2 if none is provided
+	callDepth := 3
+	if len(depth) > 0 {
+		callDepth = depth[0]
+	}
+
 	if os.Getenv("DEBUG") == "true" || os.Getenv("DEBUG") == "1" {
 		userError = fmt.Sprintf("%s: at %s:%d: \n%v", message, file, line, err)
-		LogError(err, message)
+		LogError(err, message, callDepth)
 	} else {
 		userError = message
-		LogError(err, message)
+		LogError(err, message, callDepth)
 	}
 
 	http.Error(w, userError, statusCode)

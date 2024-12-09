@@ -52,22 +52,22 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	// TODO:  Implement checks against a blacklist or whitelist for the device ID.
 
 	// Check if the device ID is already in the Bloom Filter
-	networkTypeAndDeviceID := fmt.Sprintf("NB-IoT %d", deviceID)
-	isDeviceRegistered, err := s.cache.CheckItemInBloomFilter("device-id", networkTypeAndDeviceID)
+	deviceIdentifierKey := fmt.Sprintf("NB-IoT %d", deviceID)
+	isDeviceRegistered, err := s.cache.CheckItemInBloomFilter("registered-devices", deviceIdentifierKey)
 	if err != nil {
 		helpers.LogError(err, "Failed to check Bloom Filter for device ID")
 	}
 
-	// If the device ID is not registered, add it to the set and Bloom Filter
+	// If the device ID is not registered, track it for registration and prevent duplicates.
 	if !isDeviceRegistered {
-		// Add the device ID to a Redis set for later processing
-		if err := s.cache.SAdd("device-to-create", networkTypeAndDeviceID); err != nil {
-			helpers.LogError(err, "Failed to add device ID to the set")
+		// Add the device to a Redis set for tracking devices that need registration.
+		if err := s.cache.SAdd("to-register-devices", deviceIdentifierKey); err != nil {
+			helpers.LogError(err, "Failed to add device ID to the 'to-register-devices' set")
 		}
 
-		// Add the device ID to the Bloom Filter to register it
-		if _, err := s.cache.AddItemToBloomFilter("device-id", networkTypeAndDeviceID); err != nil {
-			helpers.LogError(err, "Failed to add device ID to the Bloom Filter")
+		// Add the device ID to the Bloom Filter to prevent duplicate registrations in the future.
+		if _, err := s.cache.AddItemToBloomFilter("registered-devices", deviceIdentifierKey); err != nil {
+			helpers.LogError(err, "Failed to add device ID to the 'registered-devices' Bloom Filter")
 		}
 	}
 
