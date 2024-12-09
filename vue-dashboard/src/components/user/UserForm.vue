@@ -188,10 +188,9 @@ function initCreateOrUpdateUser() {
 
     if (hasError) {
         messageStore.setFlashMessages(message);
-        messageStore.setFlashClass("flash-message--orange");
+        messageStore.setFlashClass("flash-message--yellow");
         return
     }
-
 
     if (!editMode.value) {
         confirmOn.value = true;

@@ -22,11 +22,13 @@
     a. Implement whitelist and blacklist functionality.
 
 5. Device Page:
-    a. Add a table for devices.
-    b. Include a form for device creation.
-    c. Add edit functionality.
-    d. Develop device location model.
-    e. Implement hiding, whitelisting, and blacklisting.
+
+    a. Add access level in form and table
+    b. Add new device to list
+    c  Implement table sorting and search functionality.
+  
+  
+
 
 6. Device API:
     a. Add authentication and check user access_level.

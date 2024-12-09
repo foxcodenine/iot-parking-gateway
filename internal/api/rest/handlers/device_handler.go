@@ -44,29 +44,65 @@ func (h *DeviceHandler) Index(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DeviceHandler) Store(w http.ResponseWriter, r *http.Request) {
+	userData, err := app.GetUserFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Authentication error.", http.StatusUnauthorized)
+		return
+	}
+
+	// Check if the user has permission to update a user
+	if userData.AccessLevel > 2 {
+		http.Error(w, "You do not have the necessary permissions to perform this action.", http.StatusForbidden)
+		return
+	}
 
 	var payload struct {
-		DeviceID    string `json:"device_id"`
-		NetworkType string `json:"network_type"`
+		DeviceID        string  `json:"device_id"`
+		Name            string  `json:"name"`
+		NetworkType     string  `json:"network_type"`
+		FirmwareVersion float64 `json:"firmware_version"`
+		Latitude        float64 `json:"latitude"`
+		Longitude       float64 `json:"longitude"`
+		IsAllowed       bool    `json:"is_allowed"`
+		IsBlocked       bool    `json:"is_blocked"`
+		IsHidden        bool    `json:"is_hidden"`
 	}
 
 	// Decode the JSON body into the payload struct
-	err := json.NewDecoder(r.Body).Decode(&payload)
+	err = json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
-		app.ErrorLog.Printf("Failed to create device: %v", err)
-		helpers.RespondWithError(w, err, "Failed to create device", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, "Failed to create device!!", http.StatusInternalServerError)
+		return
+	}
+
+	// Validation logic
+	if len(payload.DeviceID) < 3 || len(payload.Name) < 3 {
+		http.Error(w, "Device ID and Name must be at least 3 characters long.", http.StatusBadRequest)
+		return
+	}
+
+	validNetworkTypes := map[string]bool{"LoRa": true, "SigFox": true, "NB-IoT": true}
+	if _, ok := validNetworkTypes[payload.NetworkType]; !ok {
+		http.Error(w, "Network Type must be either 'LoRa', 'SigFox', or 'NB-IoT'.", http.StatusBadRequest)
 		return
 	}
 
 	newDevice := models.Device{
-		DeviceID:    payload.DeviceID,
-		NetworkType: payload.NetworkType,
+		DeviceID:        payload.DeviceID,
+		NetworkType:     payload.NetworkType,
+		Name:            payload.Name,
+		FirmwareVersion: payload.FirmwareVersion,
+		Latitude:        payload.Latitude,
+		Longitude:       payload.Longitude,
+		IsAllowed:       payload.IsAllowed,
+		IsBlocked:       payload.IsBlocked,
+		IsHidden:        payload.IsHidden,
 	}
 
 	// Call the Create method on the Device model (example uses hardcoded device ID)
 	device, err := app.Models.Device.Upsert(&newDevice)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Failed to create device", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, "Failed to create device!!!", http.StatusInternalServerError)
 		return
 	}
 
@@ -79,6 +115,8 @@ func (h *DeviceHandler) Store(w http.ResponseWriter, r *http.Request) {
 
 	// Set the response header to JSON
 	w.Header().Set("Content-Type", "application/json")
+
+	app.PushAuditToCache(*userData, "UPDATE", "device", newDevice.DeviceID, r, fmt.Sprintf("Created device with ID %s.", newDevice.DeviceID))
 
 	// Encode the created device to JSON and write it to the response
 	if err = json.NewEncoder(w).Encode(device); err != nil {

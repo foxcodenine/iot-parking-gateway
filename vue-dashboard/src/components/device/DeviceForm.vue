@@ -12,7 +12,7 @@
             <div class="fform__group ">
                 <label class="fform__label" for="device_id">Device Id <span class="fform__required">*</span></label>
                 <input class="fform__input" id="device_id" type="text" placeholder="Enter device ID"
-                    v-model.trim="device_id" :disabled="confirmOn">
+                    v-model.trim="deviceId" :disabled="confirmOn">
             </div>
             <div class="fform__group ">
                 <label class="fform__label" for="name">Device Name <span class="fform__required">*</span></label>
@@ -37,9 +37,14 @@
                 </div>
 
                 <div class="fform__group ">
-                    <label class="fform__label" for="firmware_version">Firmware Version <span class="fform__required">*</span></label>
-                    <input class="fform__input" id="firmware_version" type="text" placeholder="Enter the firmware version"
-                        v-model.trim="firmware_version" :disabled="confirmOn">
+                    <label class="fform__label" for="firmware_version">Firmware Version </label>
+                    <input class="fform__input" 
+                    id="firmware_version" 
+                    type="text"  
+                    placeholder="Enter the firmware version"
+                    :value="formattedFirmwareVersion" 
+                    @focusout="formatFirmwareVersion" 
+                    :disabled="confirmOn">
                 </div>
 
             </div>            
@@ -97,21 +102,24 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import LocationModal from '../commen/LocationModal.vue';
 import { useAppStore } from '@/stores/appStore';
 import { storeToRefs } from 'pinia';
+import { useDeviceStore } from '@/stores/deviceStore';
 
 
 
 // - Store -------------------------------------------------------------
 const messageStore = useMessageStore();
+
 const appStore = useAppStore();
 const { getDefaultLatitude, getDefaultLongitude } = storeToRefs(appStore);
+
+const deviceStore = useDeviceStore();
 
 // - Data --------------------------------------------------------------
 const confirmOn = ref(false);
 const locationModalOpen = ref(false)
 
-const device_id = ref('');
+const deviceId = ref('');
 const name = ref('');
-const firmware_version = ref('');
 const latitude = ref('');
 const longitude = ref('');
 const isBlackListed = ref(false);
@@ -129,6 +137,27 @@ const selectedOptions = reactive({
     'networkType': { _key: 'NB-IoT', _value: 'NB-IoT' }
 });
 
+// - firmwareVersion ----------------------------------------------------
+
+const firmwareVersion = ref('0');
+
+// Computed property to format the firmware version for display
+const formattedFirmwareVersion = computed(() => {
+    return parseFloat(firmwareVersion.value).toFixed(1);
+});
+
+// Method to handle input and format to one decimal place
+function formatFirmwareVersion(event) {
+    let value = event.target.value;
+    if (value === '' || isNaN(value)) {
+        firmwareVersion.value = '';
+    } else {
+        // Restrict to one decimal point
+        let floatVal = parseFloat(value);
+        firmwareVersion.value = floatVal.toFixed(1);
+    }
+}
+
 // - Computed ----------------------------------------------------------
 
 const returnNetworkType = computed(() => {
@@ -138,24 +167,115 @@ const returnNetworkType = computed(() => {
     }))
 });
 
+
+
 // - Watchers ----------------------------------------------------------
 
 watch( locationModalOpen, (val)=>{
     appStore.setPageScrollDisabled(val);
 });
 
+
 // - Methods -----------------------------------------------------------
+
+
+
+
 
 function clearMessage() {
     messageStore.clearFlashMessage();
 }
 
+function resetForm() {
+    // Reset all form fields
+    deviceId.value = '';
+    name.value = '';
+    firmwareVersion.value = '0';
+    latitude.value = getDefaultLatitude.value ? Number(getDefaultLatitude.value) : 0; 
+    longitude.value = getDefaultLongitude.value ? Number(getDefaultLongitude.value) : 0; 
+    isWhiteListed.value = false;
+    isBlackListed.value = false;
+    isHidden.value = false;
+
+    selectedOptions.networkType = { _key: 'NB-IoT', _value: 'NB-IoT' };
+}
+
+
 function initCreateDevice() {
+    // Clear previous messages
+    messageStore.clearFlashMessage();
+
+    // Prepare an array to store error messages
+    const errors = [];
+
+    // Validate that the deviceId is not empty
+    if (!deviceId.value.trim()) {
+        errors.push("Device ID is required.");
+    }
+
+    // Validate that the name is not empty
+    if (!name.value.trim()) {
+        errors.push("Device Name is required.");
+    }
+
+    // Validate that a valid network type is selected
+    if (!selectedOptions.networkType || !networkType.value.some(nt => nt.id === selectedOptions.networkType._key)) {
+        errors.push("A valid Network Type must be selected.");
+    }
+
+    // Validate the firmware version to be a valid number
+    if (!firmwareVersion.value || isNaN(firmwareVersion.value) || firmwareVersion.value.trim() === '') {
+        errors.push("Firmware Version must be a valid number.");
+    }
+
+    // If there are any errors, display them and do not proceed
+    if (errors.length > 0) {
+        messageStore.setFlashMessages(errors, 'flash-message--yellow'); // Update to use your actual method for displaying errors
+        return; // Stop the function if there are errors
+    }
+
+    // If no errors, proceed
     confirmOn.value = true;
 }
 
-function createDevice() {
+async function createDevice() {
+    try {
+        // Prepare the payload ensuring all fields are correctly referenced
+        const payload = {
+            device_id: deviceId.value,  
+            name: name.value,           
+            network_type: selectedOptions.networkType._key, 
+            firmware_version: Number(firmwareVersion.value), 
+            latitude: latitude.value,   
+            longitude: longitude.value, 
+            is_allowed: isWhiteListed.value, 
+            is_blocked: isBlackListed.value, 
+            is_hidden: isHidden.value   
+        };
 
+        console.log(payload)
+
+        // Make the API call to create the device
+        const response = await deviceStore.createDevice(payload);
+        console.log(response)
+
+        if (response.status == 200) {
+            const msg = response.data?.message ?? "Device created successfully.";
+            messageStore.setFlashMessages([msg], "flash-message--green");
+            resetForm();
+            // deviceStore.pushUserToList(response.data?.user);
+
+        }
+
+
+    } catch (error) {
+        console.error("! DeviceForm.createDevice !\n", error);
+        const errMsg = error.response?.data ?? "Failed to create device";
+        messageStore.setFlashMessages([errMsg], "flash-message--red");
+
+    } finally {
+        confirmOn.value = false;
+    }
 }
 
 function updateMarkerPosition(latLng) {
@@ -163,9 +283,10 @@ function updateMarkerPosition(latLng) {
     longitude.value = latLng.lng;
 }
 
+
 onMounted(()=>{
-    latitude.value = Number(getDefaultLatitude.value)
-    longitude.value = Number(getDefaultLongitude.value)
+    latitude.value = getDefaultLatitude.value ? Number(getDefaultLatitude.value) : 0; 
+    longitude.value = getDefaultLongitude.value ? Number(getDefaultLongitude.value) : 0; 
 })
 
 </script>

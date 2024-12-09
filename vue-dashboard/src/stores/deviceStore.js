@@ -36,6 +36,33 @@ export const useDeviceStore = defineStore("deviceStore", () => {
         }
     }
 
+    async function createDevice({device_id, name, network_type, firmware_version, latitude, longitude, is_allowed, is_blocked, is_hidden}) {   
+
+        useDashboardStore().setIsLoading(true);
+     
+        try {
+            const payload = {
+                device_id, 
+                name, 
+                network_type, 
+                firmware_version, 
+                latitude, 
+                longitude, 
+                is_allowed, 
+                is_blocked, 
+                is_hidden
+            };  
+
+            return await axios.post(useAppStore().getAppUrl + '/api/device', payload);
+            
+        } catch (error){
+            console.error('! deviceStore.createDevice !');
+            throw error;  
+        } finally {
+            useDashboardStore().setIsLoading(false);
+        }
+    }
+
     async function updateDevice({device_id, name, firmware_version,  latitude, longitude, is_occupied, is_allowed, is_blocked, is_hidden}) {
         useDashboardStore().setIsLoading(true);
         try {
@@ -99,5 +126,6 @@ export const useDeviceStore = defineStore("deviceStore", () => {
         updateDeviceInList,
         deleteDevice,
         removeDeviceFromList,
+        createDevice,
     }
 });

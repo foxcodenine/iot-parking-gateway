@@ -264,9 +264,9 @@ func (d *Device) Upsert(device *Device) (*Device, error) {
 	sqlQuery := `
 		INSERT INTO parking.devices (
 			device_id, name, network_type, firmware_version, latitude, longitude, beacons, 
-			happened_at, is_occupied, is_allowed, is_blocked, created_at, updated_at, deleted_at
+			happened_at, is_occupied, is_allowed, is_blocked, is_hidden, created_at, updated_at, deleted_at
 		) VALUES (
-			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NULL
+			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,  $14, NULL
 		)
 		ON CONFLICT (device_id) DO UPDATE SET
 			is_allowed = false,
@@ -289,6 +289,7 @@ func (d *Device) Upsert(device *Device) (*Device, error) {
 		device.IsOccupied,
 		device.IsAllowed,
 		device.IsBlocked,
+		device.IsHidden,
 		time.Now().UTC(),
 		time.Now().UTC(),
 	}
@@ -297,6 +298,12 @@ func (d *Device) Upsert(device *Device) (*Device, error) {
 	_, err := collection.Session().SQL().Exec(sqlQuery, params...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to upsert device: %w", err)
+	}
+
+	err = cache.AppCache.Delete("db:devices")
+
+	if err != nil {
+		helpers.LogError(err, "failed to delete devices from cache")
 	}
 
 	// Return the updated device
