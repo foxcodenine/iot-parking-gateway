@@ -253,18 +253,14 @@ async function createDevice() {
             is_hidden: isHidden.value   
         };
 
-        console.log(payload)
-
         // Make the API call to create the device
         const response = await deviceStore.createDevice(payload);
-        console.log(response)
 
         if (response.status == 200) {
             const msg = response.data?.message ?? "Device created successfully.";
             messageStore.setFlashMessages([msg], "flash-message--green");
             resetForm();
-            // deviceStore.pushUserToList(response.data?.user);
-
+            deviceStore.pushDeviceToList(response.data?.device);
         }
 
 

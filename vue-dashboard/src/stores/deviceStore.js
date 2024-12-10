@@ -99,6 +99,12 @@ export const useDeviceStore = defineStore("deviceStore", () => {
         }
     }
 
+    function pushDeviceToList(device) {
+        if (device && device.device_id) {
+            devicesList.value.push(device);
+        }  
+    }
+
     function updateDeviceInList (device) {
         if (device && device.device_id) {
             const index = devicesList.value.findIndex(d => d.device_id == device.device_id)
@@ -127,5 +133,6 @@ export const useDeviceStore = defineStore("deviceStore", () => {
         deleteDevice,
         removeDeviceFromList,
         createDevice,
+        pushDeviceToList,
     }
 });

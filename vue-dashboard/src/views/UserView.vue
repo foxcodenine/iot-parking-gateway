@@ -4,13 +4,13 @@
             <div class="heading--2 ">Users</div>
             <TheFlashMessage ></TheFlashMessage>            
     
-            <div class="heading--4" v-if="!props.userID && getUserAccessLevel <= 1">CREATE NEW USER</div>
-            <div class="heading--4" v-if="props.userID && getUserAccessLevel <= 1">Edit USER</div>
+            <div class="heading--4" v-if="!props.userID && getUserAccessLevel <= 1">Create new user</div>
+            <div class="heading--4" v-if="props.userID && getUserAccessLevel <= 1">Edit user</div>
             <KeepAlive>
                 <UserForm v-if="getUserAccessLevel <= 1" :userID="props.userID"></UserForm>
             </KeepAlive>
             
-            <div class="heading--4 mt-8">USER LIST</div>
+            <div class="heading--4 mt-8">Users list</div>
             <UserTable :userID="props.userID"></UserTable>
             
         </section>

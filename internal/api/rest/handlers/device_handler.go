@@ -71,7 +71,7 @@ func (h *DeviceHandler) Store(w http.ResponseWriter, r *http.Request) {
 	// Decode the JSON body into the payload struct
 	err = json.NewDecoder(r.Body).Decode(&payload)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Failed to create device!!", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, "Failed to create device", http.StatusInternalServerError)
 		return
 	}
 
@@ -102,8 +102,14 @@ func (h *DeviceHandler) Store(w http.ResponseWriter, r *http.Request) {
 	// Call the Create method on the Device model (example uses hardcoded device ID)
 	device, err := app.Models.Device.Upsert(&newDevice)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Failed to create device!!!", http.StatusInternalServerError)
+		helpers.RespondWithError(w, err, "Failed to create device", http.StatusInternalServerError)
 		return
+	}
+
+	// Response structure with a success message and user data
+	response := map[string]interface{}{
+		"message": "Devices created successfully.",
+		"device":  device,
 	}
 
 	deviceIdentifierKey := fmt.Sprintf("%s %s", newDevice.NetworkType, newDevice.DeviceID)
@@ -119,7 +125,7 @@ func (h *DeviceHandler) Store(w http.ResponseWriter, r *http.Request) {
 	app.PushAuditToCache(*userData, "UPDATE", "device", newDevice.DeviceID, r, fmt.Sprintf("Created device with ID %s.", newDevice.DeviceID))
 
 	// Encode the created device to JSON and write it to the response
-	if err = json.NewEncoder(w).Encode(device); err != nil {
+	if err = json.NewEncoder(w).Encode(response); err != nil {
 		helpers.RespondWithError(w, err, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}

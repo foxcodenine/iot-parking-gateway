@@ -5,9 +5,10 @@
             <div class="heading--2 ">Devises</div>
             <TheFlashMessage ></TheFlashMessage>
 
-            <DeviceForm></DeviceForm>
+            <div class="heading--4" v-if="getUserAccessLevel <= 1">Create new device</div>
+            <DeviceForm  v-if="getUserAccessLevel <= 2"></DeviceForm>
 
-            <div class="heading--4 mt-8">Devices List</div>
+            <div class="heading--4 mt-8">Devices list</div>
             <DeviceTable></DeviceTable>
             
         </section>
