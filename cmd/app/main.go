@@ -9,8 +9,6 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/handlers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/mq"
 
-	// "github.com/foxcodenine/iot-parking-gateway/internal/socketserver"
-
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/core"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
@@ -33,7 +31,9 @@ func main() {
 	// Initialize database connection
 	initializeDatabase()
 	defer app.DB.Close()
+
 	initializeRootUser()
+	initializeAppSettings()
 
 	// Initialize and set up handlers with app configuration
 	initializeHandlers()
@@ -65,22 +65,6 @@ func main() {
 	httpServer := httpserver.NewServer(os.Getenv("HTTP_PORT"))
 	httpServer.Start()
 	defer httpServer.Shutdown()
-
-	// Create and start the Socket.IO server.
-	// socketServer := socketserver.NewServer(os.Getenv("SOCKET_PORT"))
-	// socketServer.Start()
-	// defer socketServer.Shutdown()
-
-	// time.Sleep(time.Second * 2)
-
-	// go func() {
-	// 	time.Sleep(5 * time.Second) // Wait for clients to connect
-	// 	for {
-	// 		fmt.Println(1)
-	// 		time.Sleep(time.Second * 2)
-	// 		httpServer.SocketServer.BroadcastToNamespace("/", "update", "Test message from server")
-	// 	}
-	// }()
 }
 
 // ---------------------------------------------------------------------
@@ -113,10 +97,6 @@ func initializeAppConfig() {
 	}
 
 	// Assign Redis cache instance to the app configuration
-	// app.Cache = &cache.RedisCache{
-	// 	Conn:   redisPool,
-	// 	Prefix: os.Getenv("REDIS_PREFIX"), // Use a prefix for cache keys, if provided
-	// }
 	app.Cache = cache.NewCache(redisPool, os.Getenv("REDIS_PREFIX"))
 
 	// Initialize the service layer that handles business logic.
@@ -186,39 +166,87 @@ func initializeHandlers() {
 // ---------------------------------------------------------------------
 
 func initializeRootUser() {
-	// Construct the cache key for the root user
-	rootUserCacheKey := "initialized-root-user:" + os.Getenv("APP_ROOT_EMAIL")
+	// Get the current root user details or a new user if not existing
+	rootUser, err := app.Models.User.GetRootUser()
+	if err != nil {
+		helpers.LogError(err, "Failed to retrieve root user")
+		return
+	}
 
+	if rootUser == nil {
+
+		// If rootUser does not exist, initialize a new User struct
+		rootUser = &models.User{
+			Email:       os.Getenv("APP_ROOT_EMAIL"),
+			Password:    os.Getenv("APP_ROOT_PASSWORD"),
+			AccessLevel: 0, // Root access level
+			Enabled:     true,
+		}
+		// Attempt to create the root user
+		if _, err := rootUser.Create(); err != nil {
+			helpers.LogError(err, "Failed to create root user")
+			return
+		}
+	} else {
+		// Update the existing root user details
+		rootUser.Email = os.Getenv("APP_ROOT_EMAIL")
+		rootUser.Password = os.Getenv("APP_ROOT_PASSWORD")
+		rootUser.AccessLevel = 0
+		rootUser.Enabled = true
+
+		// Attempt to update the root user
+		if _, err := rootUser.Update(true); err != nil {
+			helpers.LogError(err, "Failed to update root user")
+			return
+		}
+	}
+
+	app.InfoLog.Println("Root user created or updated and cached successfully")
+}
+
+func initializeAppSettings() {
 	// Check if the root user initialization is cached
-	isCached, _ := app.Cache.Exists(rootUserCacheKey)
+	isCached, _ := app.Cache.Exists("app:settings")
+
 	if isCached {
 		return
 	}
 
-	// Check if the root user already exists in the database
-	existingUser, _ := app.Models.User.FindUserByEmail(os.Getenv("APP_ROOT_EMAIL"))
-	if existingUser != nil {
-		// Mark the root user as initialized in the cache
-		_ = app.Cache.Set(rootUserCacheKey, "true", -1) // -1 indicates no expiration
-		return
+	var settings = []models.Setting{
+		{
+			Key:         "default_latitude",
+			Val:         os.Getenv("DEFAULT_LATITUDE"),
+			Description: "Default latitude for map centering and initial device placement on the map.",
+			AccessLevel: 1, // Administrator access level
+			UpdatedBy:   0,
+		},
+		{
+			Key:         "default_longitude",
+			Val:         os.Getenv("DEFAULT_LONGITUDE"),
+			Description: "Default longitude for map centering and initial device placement on the map.",
+			AccessLevel: 1, // Administrator access level
+			UpdatedBy:   0,
+		},
+		{
+			Key:         "jwt_expiration_seconds",
+			Val:         os.Getenv("JWT_EXPIRATION_TIME"),
+			Description: "Duration in seconds for which a user's JSON Web Token (JWT) remains valid after login.",
+			AccessLevel: 0, // Root access level if only developers should modify this setting
+			UpdatedBy:   0,
+		},
+		{
+			Key:         "redis_ttl_seconds",
+			Val:         os.Getenv("REDIS_DEFAULT_TTL"),
+			Description: "Default time-to-live (TTL) in seconds for items stored in the Redis cache, impacting how long user and device data are cached.",
+			AccessLevel: 0, // Root access level if this setting is critical and should only be modified by developers
+			UpdatedBy:   0,
+		},
 	}
 
-	// Create the root user with default credentials from environment variables
-	rootUser := models.User{
-		Email:       os.Getenv("APP_ROOT_EMAIL"),
-		Password:    os.Getenv("APP_ROOT_PASSWORD"),
-		AccessLevel: 0, // 0 represents the highest level of access
-		Enabled:     true,
+	for _, setting := range settings {
+		if _, err := setting.Upsert(&setting); err != nil {
+			helpers.LogError(err, "Failed to create application setting: "+setting.Key)
+			continue // Optionally continue on error, depends on your error handling strategy
+		}
 	}
-
-	// Attempt to create the root user
-	if _, err := rootUser.Create(); err != nil {
-		fmt.Printf("Failed to create root user: %v\n", err)
-		return
-	}
-
-	// Cache the root user initialization to prevent duplicate runs
-	_ = app.Cache.Set(rootUserCacheKey, "true", -1)
-
-	app.InfoLog.Println("Root user created successfully")
 }

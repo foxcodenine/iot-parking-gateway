@@ -299,3 +299,76 @@ func (u *User) GenerateToken() (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
 }
+
+func (u *User) Upsert(newUser *User, updatePassword bool) (*User, error) {
+	collection := dbSession.Collection(u.TableName())
+
+	// Prepare the upsert query with positional placeholders
+	sqlQuery := `
+        INSERT INTO app.users (
+            email, password, access_level, enabled, created_at, updated_at
+        ) VALUES (
+            $1, $2, $3, $4, $5, $6
+        )
+        ON CONFLICT (email) DO UPDATE SET
+            access_level = EXCLUDED.access_level,
+            enabled = EXCLUDED.enabled,
+            updated_at = EXCLUDED.updated_at
+    `
+
+	// Prepare password logic based on whether we are updating the password
+	hashedPassword := newUser.Password
+	if updatePassword {
+		var err error
+		hashedPassword, err = helpers.HashPassword(newUser.Password)
+		if err != nil {
+			return nil, fmt.Errorf("failed to hash password: %w", err)
+		}
+	}
+
+	// Prepare the parameter values
+	params := []interface{}{
+		newUser.Email,
+		hashedPassword,
+		newUser.AccessLevel,
+		newUser.Enabled,
+		time.Now().UTC(), // CreatedAt
+		time.Now().UTC(), // UpdatedAt
+	}
+
+	// Execute the query
+	_, err := collection.Session().SQL().Exec(sqlQuery, params...)
+	if err != nil {
+		return nil, helpers.WrapError(fmt.Errorf("failed to upsert user: %w", err))
+	}
+
+	// Invalidate the cache for users
+	err = cache.AppCache.Delete("db:users")
+	if err != nil {
+		helpers.LogError(err, "Failed to invalidate users cache after upsert")
+	}
+
+	// Retrieve the upserted user to ensure return data is current
+	updatedUser, err := u.FindUserByEmail(newUser.Email)
+	if err != nil {
+		return nil, helpers.WrapError(fmt.Errorf("failed to retrieve upserted user: %w", err))
+	}
+
+	return updatedUser, nil
+}
+
+func (u *User) GetRootUser() (*User, error) {
+
+	collection := dbSession.Collection(u.TableName())
+	var user User
+	err := collection.Find(up.Cond{"access_level": 0}).One(&user)
+	if err != nil {
+		if err == up.ErrNoMoreRows {
+			// No user found with the given email
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to retrieve user: %w", err)
+	}
+
+	return &user, nil
+}

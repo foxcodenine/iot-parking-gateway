@@ -20,6 +20,7 @@ type Models struct {
 	NbiotKeepaliveLog   NbiotKeepaliveLog
 	NbiotSettingLog     NbiotSettingLog
 	RawDataLog          RawDataLog
+	Setting             Setting
 	User                User
 }
 

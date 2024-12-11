@@ -90,6 +90,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Push the audit log entry to the cache
 	app.Cache.RPush("audit-logs", auditLogEntry)
 
+	settings, _ := app.Cache.HGetAll("app:settings")
+
 	// Respond with the token and user data
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -101,5 +103,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			"enabled":      user.Enabled,
 			"created_at":   user.CreatedAt,
 		},
+		"setting": settings,
 	})
 }

@@ -82,13 +82,65 @@ func (s *Setting) Create(newSetting *Setting) (*Setting, error) {
 	}
 
 	// Attempt to cache the new setting in Redis
-	err = cache.AppCache.HSet("app-settings", newSetting.Key, newSetting)
+	err = cache.AppCache.HSet("app:settings", newSetting.Key, newSetting.Val)
 	if err != nil {
 		// Log the error without disrupting the main flow as caching failure is often not critical
 		helpers.LogError(err, "Failed to cache new setting in Redis")
 	}
 
 	return newSetting, nil
+}
+
+// Upsert creates a new setting or updates it if it already exists based on its unique key.
+func (s *Setting) Upsert(newSetting *Setting) (*Setting, error) {
+	collection := dbSession.Collection(s.TableName())
+
+	// Prepare the upsert query with positional placeholders
+	sqlQuery := `
+        INSERT INTO app.settings (
+            key, val, description, access_level, created_at, updated_at, updated_by
+        ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7
+        )
+        ON CONFLICT (key) DO UPDATE SET
+            val = EXCLUDED.val,
+            description = EXCLUDED.description,
+            access_level = EXCLUDED.access_level,
+            updated_at = EXCLUDED.updated_at,
+            updated_by = EXCLUDED.updated_by;
+    `
+
+	// Prepare the parameter values
+	params := []interface{}{
+		newSetting.Key,
+		newSetting.Val,
+		newSetting.Description,
+		newSetting.AccessLevel,
+		time.Now().UTC(),
+		time.Now().UTC(),
+		newSetting.UpdatedBy,
+	}
+
+	// Execute the query
+	_, err := collection.Session().SQL().Exec(sqlQuery, params...)
+	if err != nil {
+		return nil, helpers.WrapError(fmt.Errorf("failed to upsert setting: %w", err))
+	}
+
+	// Retrieve the upserted setting to ensure return data is current
+	updatedSetting, err := s.GetByKey(newSetting.Key)
+	if err != nil {
+		return nil, helpers.WrapError(fmt.Errorf("failed to retrieve upserted setting: %w", err))
+	}
+
+	// Attempt to update the setting in Redis
+	err = cache.AppCache.HSet("app:settings", newSetting.Key, updatedSetting.Val)
+	if err != nil {
+		// Log the error without disrupting the main flow as caching failure is often not critical
+		helpers.LogError(err, "Failed to update setting in Redis")
+	}
+
+	return updatedSetting, nil
 }
 
 // UpdateByKey updates specific fields of a setting identified by its unique key.
@@ -123,7 +175,7 @@ func (s *Setting) UpdateByKey(key string, updatedFields map[string]interface{}) 
 	}
 
 	// Attempt to update the setting in Redis
-	err = cache.AppCache.HSet("app-settings", key, updatedSetting.Val)
+	err = cache.AppCache.HSet("app:settings", key, updatedSetting.Val)
 	if err != nil {
 		// Log the error without disrupting the main flow as caching failure is often not critical
 		helpers.LogError(err, "Failed to update setting in Redis")
