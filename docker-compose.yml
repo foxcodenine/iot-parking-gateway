@@ -24,7 +24,6 @@ services:
       - GO_ENV=${GO_ENV}
 
       # JWT Configuration 
-      - JWT_EXPIRATION_TIME=${JWT_EXPIRATION_TIME}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
 
       # Application Ports 
@@ -53,6 +52,13 @@ services:
 
       # Google API Configuration
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+
+      # Settings
+      - DEVICE_ACCESS_MODE=${DEVICE_ACCESS_MODE}
+      - DEFAULT_LATITUDE=${DEFAULT_LATITUDE}
+      - DEFAULT_LONGITUDE=${DEFAULT_LONGITUDE}
+      - JWT_EXPIRATION_TIME=${JWT_EXPIRATION_TIME}
+      - REDIS_DEFAULT_TTL=${REDIS_DEFAULT_TTL}
 
     networks:
       - app-network  
