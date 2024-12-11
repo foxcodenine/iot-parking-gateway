@@ -1,5 +1,5 @@
 import { useLocalStorage } from '@vueuse/core';
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import { defineStore } from 'pinia';
 import { decryptString, encryptString } from '@/utils/cryptoUtils';
 
@@ -24,9 +24,12 @@ export const useAppStore = defineStore("appStore", () => {
         GO_GOOGLE_API_KEY = null;
     }
 
+
+    const appSettings = useLocalStorage('appSettings', null)
+
     const whitelistBlacklistMode = ref("black"); 
     
-    const pageScrollDisabled = ref(false);
+    const pageScrollDisabled = useLocalStorage("googleApiKey", null); 
 
     // - Getters -------------------------------------------------------
 
@@ -45,6 +48,10 @@ export const useAppStore = defineStore("appStore", () => {
 
     const getPageScrollDisabled = computed(()=> pageScrollDisabled.value);
 
+    const getAppSettings = computed(() => appSettings.value)
+
+    
+
     // - Actions -------------------------------------------------------
 
     function resetAppState() {
@@ -55,6 +62,10 @@ export const useAppStore = defineStore("appStore", () => {
     function setPageScrollDisabled(val) {
         pageScrollDisabled.value = val;
     } 
+
+    function setAppSettings(newSettings) {
+        appSettings.value = newSettings
+      }
 
     // - Expose --------------------------------------------------------
     
@@ -67,5 +78,6 @@ export const useAppStore = defineStore("appStore", () => {
         getDefaultLongitude,
         getPageScrollDisabled,
         setPageScrollDisabled,
+        getAppSettings, setAppSettings 
     };
 });

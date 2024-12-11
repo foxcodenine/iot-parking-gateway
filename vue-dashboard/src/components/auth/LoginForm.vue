@@ -104,7 +104,10 @@ async function submitForm() {
             email.value = 'user@dev.com';
             password.value = 'DevPass';
             authStore.setJwt(response.data.token);
+            appStore.setAppSettings(response.data.settings)
         }
+
+        
 
     } catch (err) {
         const errorMessage = err.response?.data || err.message || 'Unable to log in. Please check your email and password.';

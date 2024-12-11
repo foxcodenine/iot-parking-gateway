@@ -103,6 +103,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			"enabled":      user.Enabled,
 			"created_at":   user.CreatedAt,
 		},
-		"setting": settings,
+		"settings": settings,
 	})
 }
