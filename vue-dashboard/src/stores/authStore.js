@@ -7,23 +7,25 @@ import { useRouter } from 'vue-router';
 export const useAuthStore = defineStore("authStore", () => {
 
     // - State ---------------------------------------------------------
-    
-    const jwt = ref(null);  // Start with a non-persistent state
-    const jwtLocalStorage = useLocalStorage("jwt", null); // Local storage for when remember me is true
-    const jwtSessionStorage = useSessionStorage("jwt", null); // Session storage for when remember me is false
-
     const rememberMe = useLocalStorage("rememberMe", false);
+
+    let jwtStorage = rememberMe.value ? useLocalStorage('jwt', null) : useSessionStorage('jwt', null);;
+
+    const jwt = computed({
+        get: () => jwtStorage.value,
+        set: (val) => jwtStorage.value = val
+    });   
     
     const redirectTo = ref("mapView");    
     
     // - Getters -------------------------------------------------------
 
     const isAuthenticated = computed(() => {
-        return Boolean(jwt.value) || Boolean(jwtLocalStorage.value) || Boolean(jwtSessionStorage.value);           
+        return Boolean(jwt.value);           
     });
 
     const getJwt = computed(()=>{
-        return jwt.value || jwtLocalStorage.value || jwtSessionStorage.value;
+        return jwt.value;
     });
 
     const getRemeberMe = computed(()=>{
@@ -43,26 +45,17 @@ export const useAuthStore = defineStore("authStore", () => {
     });    
 
     // - Actions -------------------------------------------------------
-    function reset() {
-        jwt.value = null;
-        jwtLocalStorage.value = null;  
-        jwtSessionStorage.value = null; 
-    }
 
-    function setJwt(token) {
-        
+    function setJwt(token) {        
         jwt.value = token;
-        if (rememberMe.value) {
-            jwtLocalStorage.value = token;  
-        } else {
-            jwtSessionStorage.value = token;
-        }  
     }
 
     function clearJwt() {
         jwt.value = null;
-        jwtLocalStorage.value = null;  
-        jwtSessionStorage.value = null;  
+    }
+
+    function resetAuthStore() {
+        jwt.value = null;
     }
 
     function setRedirectTo(payload) {
@@ -76,8 +69,9 @@ export const useAuthStore = defineStore("authStore", () => {
     // - Expose --------------------------------------------------------
 
     return {
+        rememberMe,
         getJwt,
-        reset,
+        resetAuthStore,
         isAuthenticated,
         setJwt,
         clearJwt,

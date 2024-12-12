@@ -106,3 +106,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		"settings": settings,
 	})
 }
+
+func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	userData, err := app.GetUserFromContext(r.Context())
+	if err != nil {
+		http.Error(w, "Authentication error.", http.StatusUnauthorized)
+		return
+	}
+
+	fmt.Println(userData)
+}

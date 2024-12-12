@@ -8,6 +8,13 @@
             </svg>
         </div>
 
+        <div class="menu__link">
+            <div class="menu__text">Application Settings</div>
+            <svg class="menu__icon">
+                <use xlink:href="@/assets/svg/sprite.svg#icon-settings-2"></use>
+            </svg>
+        </div>
+
         <div class="menu__link" @click="logout()">
             <div class="menu__text">Logout</div>
             <svg class="menu__icon">
@@ -43,7 +50,7 @@ function logout() {
     background-color: $col-zinc-800;
     border-radius: $border-radius;
     box-shadow: $box-shadow-4;
-    width: 12rem;
+    width: 14rem;
 
 
     &__link {

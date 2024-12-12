@@ -3,7 +3,7 @@
         <div id="create-asset-modal-background" class="my-modal__background" @click="closeModal"></div>
         <div class="my-modal__wrapper">
             <div id="create-asset-modal-map" class="my-modal__map">
-                <GoogleMap :api-key="getGoogleApiKey" class="map" :zoom="mapZoom" :center="mapCenter" @click="updatedMarkerLocation">
+                <GoogleMap v-if="apiKey" :api-key="apiKey" class="map" :zoom="mapZoom" :center="mapCenter" @click="updatedMarkerLocation">
                     <Marker :options="{ position: markerPosition }"></Marker>
                 </GoogleMap>
             </div>
@@ -18,10 +18,13 @@ import { GoogleMap, Marker, CustomMarker } from "vue3-google-map";
 import { defineProps, defineEmits } from 'vue';
 import { useAppStore } from '@/stores/appStore';
 import { storeToRefs } from 'pinia';
+import { onMounted } from 'vue';
+
+// - Store -------------------------------------------------------------
 
 const appStore = useAppStore();
 
-const { getGoogleApiKey } = storeToRefs(appStore);
+// - Props -------------------------------------------------------------
 
 const props = defineProps({
     modalIsOpen: {
@@ -34,12 +37,22 @@ const props = defineProps({
     }
 });
 
+// - Data --------------------------------------------------------------
+
+const apiKey = ref(null);
+const mapZoom = ref(15);
+const mapCenter = computed(() => props.markerPosition);
+
+// - Hooks -------------------------------------------------------------
+
+onMounted(async () => {
+    apiKey.value = await appStore.getGoogleApiKey();
+});
 
 
 const emits = defineEmits(['emitCloseModal', 'emitMarkerPosition']);
 
-const mapZoom = ref(11.2);
-const mapCenter = computed(() => props.markerPosition);
+
 
 function closeModal() {
     emits('emitCloseModal');

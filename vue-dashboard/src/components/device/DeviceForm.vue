@@ -110,7 +110,7 @@ import { useDeviceStore } from '@/stores/deviceStore';
 const messageStore = useMessageStore();
 
 const appStore = useAppStore();
-const { getDefaultLatitude, getDefaultLongitude } = storeToRefs(appStore);
+
 
 const deviceStore = useDeviceStore();
 
@@ -175,12 +175,14 @@ watch( locationModalOpen, (val)=>{
     appStore.setPageScrollDisabled(val);
 });
 
+const getDefaultLatitude = computed(()=>{
+    return appStore.getAppSettings.default_latitude ? Number( appStore.getAppSettings.default_latitude) : 0;
+});
+const getDefaultLongitude = computed(()=>{
+    return appStore.getAppSettings.default_longitude ? Number( appStore.getAppSettings.default_longitude) : 0;
+});
 
 // - Methods -----------------------------------------------------------
-
-
-
-
 
 function clearMessage() {
     messageStore.clearFlashMessage();
@@ -191,15 +193,14 @@ function resetForm() {
     deviceId.value = '';
     name.value = '';
     firmwareVersion.value = '0';
-    latitude.value = getDefaultLatitude.value ? Number(getDefaultLatitude.value) : 0; 
-    longitude.value = getDefaultLongitude.value ? Number(getDefaultLongitude.value) : 0; 
+    latitude.value = getDefaultLatitude.value; 
+    longitude.value = getDefaultLongitude.value; 
     isWhiteListed.value = false;
     isBlackListed.value = false;
     isHidden.value = false;
 
     selectedOptions.networkType = { _key: 'NB-IoT', _value: 'NB-IoT' };
 }
-
 
 function initCreateDevice() {
     // Clear previous messages
@@ -281,8 +282,8 @@ function updateMarkerPosition(latLng) {
 
 
 onMounted(()=>{
-    latitude.value = getDefaultLatitude.value ? Number(getDefaultLatitude.value) : 0; 
-    longitude.value = getDefaultLongitude.value ? Number(getDefaultLongitude.value) : 0; 
+    latitude.value = getDefaultLatitude.value ; 
+    longitude.value = getDefaultLongitude.value; 
 })
 
 </script>

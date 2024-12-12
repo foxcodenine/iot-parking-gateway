@@ -4,7 +4,7 @@
         <SockerioClient></SockerioClient>
 
         <VueLoadingOverlay :active="getIsLoading" :is-full-page="true" :lock-scroll="true" :width="128" :height="128"
-            transition="fade" :opacity="0.4" />
+            transition="fade" :opacity="0.0" />
 
 
         <section class="modal" v-if="getIsUserMenuOpen">

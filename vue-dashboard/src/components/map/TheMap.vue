@@ -1,11 +1,13 @@
 <template>
-    <div class="the-map" >
-        <GoogleMap        
-            :api-key="getGoogleApiKey" 
-            style="width: 100%; height: 100vh" 
-            :center="center" 
-            :zoom="15">
-            <Marker :options="{ position: center }" />
+    <div class="the-map">
+        <GoogleMap
+            v-if="apiKey"
+            :api-key="apiKey"
+            style="width: 100%; height: 100vh"
+            :center="getMapCenter"
+            :zoom="15"
+        >
+            <Marker :options="{ position: getMapCenter }" />
         </GoogleMap>
     </div>
 </template>
@@ -15,14 +17,33 @@
 
 import { useAppStore } from '@/stores/appStore';
 import { storeToRefs } from 'pinia';
+import { onMounted, ref } from 'vue';
 import { computed, toRaw } from 'vue';
 import { GoogleMap, Marker } from 'vue3-google-map';
 
+// - Store -------------------------------------------------------------
+
 const appStore = useAppStore();
 
-const { getGoogleApiKey } = storeToRefs( appStore );
+// - Data --------------------------------------------------------------
 
-const center = { lat: 40.689247, lng: -74.044502 };
+const apiKey = ref(null);
+
+// - Computed ----------------------------------------------------------
+
+const getMapCenter = computed(()=>{
+    const lat = appStore.getAppSettings.default_latitude ? Number( appStore.getAppSettings.default_latitude) : 0;
+    const lng = appStore.getAppSettings.default_longitude ? Number( appStore.getAppSettings.default_longitude) : 0;
+    return { lat, lng };
+});
+
+// - Hooks -------------------------------------------------------------
+
+onMounted(async () => {
+    apiKey.value = await appStore.getGoogleApiKey();
+});
+
+// ---------------------------------------------------------------------
 
 </script>
 

@@ -59,7 +59,7 @@
                             <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
                         </svg>
                     </th>
-                    <th class="cursor-pointer w-20" v-if="getWhitelistBlacklistMode == 'white'">
+                    <th class="cursor-pointer w-20" v-if="getAppSettings.device_access_mode != 'black_list'">
                         White List
                         <svg class="t-sort-arrow">
                             <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
@@ -137,7 +137,7 @@
                         </div>
                     </td>
 
-                    <td @click="toggelAllowed(device)" class="ps-6" v-if="getWhitelistBlacklistMode == 'white'">
+                    <td @click="toggelAllowed(device)" class="ps-6" v-if="getAppSettings.device_access_mode != 'black_list'">
                         <div v-if="action == 'edit' && selectedDevice.device_id == device.device_id"
                             class="circle__outer circle__active"
                             :class="{ 'circle__allowed': selectedDevice.is_allowed }">
@@ -232,7 +232,7 @@ const authStore = useAuthStore();
 const { getUserAccessLevel } = storeToRefs(authStore)
 
 const appStore = useAppStore();
-const { getWhitelistBlacklistMode } = storeToRefs(appStore);
+const { getAppSettings } = storeToRefs(appStore);
 
 // -- Data -------------------------------------------------------------
 const searchTerm = ref("");

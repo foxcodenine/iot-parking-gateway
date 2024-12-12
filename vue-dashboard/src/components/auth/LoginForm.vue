@@ -51,7 +51,7 @@ import { storeToRefs } from 'pinia';
 
 const appStore = useAppStore();
 const authStore = useAuthStore();
-const { isAuthenticated, getRedirectTo, getRemeberMe } = storeToRefs(authStore);
+const { getRemeberMe } = storeToRefs(authStore);
 
 // - Data --------------------------------------------------------------
 
@@ -61,13 +61,7 @@ const password = ref("DevPass");
 const flashMessage = ref("")
 
 
-watch(isAuthenticated, (newVal) => {
-    if (newVal) {
-        router.push({ name: getRedirectTo.value });
-    } else {
-        router.push({ name: "loginView" });
-    } 
-});
+
 // - Methods -----------------------------------------------------------
 
 function goToView(view) {
@@ -121,9 +115,9 @@ function toggleRememberMe() {
     authStore.toggleRememberMe();
 }
 
-// - Hooks -------------------------------------------------------------
 
-if (isAuthenticated.value) { router.push({ name: 'mapView' }); }
+
+
 
 
 </script>

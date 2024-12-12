@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/authStore'
 import { useJwtComposable } from '@/composables/useJwtComposable'
 import LogoutView from '@/views/LogoutView.vue'
 import SvgSpriteView from '@/views/helpers/SvgSpriteView.vue'
+import { useAppStore } from '@/stores/appStore'
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -40,6 +41,7 @@ router.beforeEach(async (to, from, next) => {
 	// useAuthStore() & useMessageStore() to ensure Pinia is properly initialized 
 
 	const authStore = useAuthStore();
+	const appStore = useAppStore();
 	const messageStore = useMessageStore();
 
 	// Clear flash message
@@ -55,7 +57,8 @@ router.beforeEach(async (to, from, next) => {
 
 	// Token expiration check
 	if (!checkJwtExpiration()) {
-		authStore.clearJwt();
+		authStore.resetAuthStore();
+		appStore.resetAppStore();		
 	
 		if (!isAuthenticated.value && to.name !== 'loginView') {
 			// TODO: Log token has expired - logout

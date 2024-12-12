@@ -71,7 +71,6 @@ func main() {
 
 func initializeAppConfig() {
 	time.Sleep(time.Millisecond * 10)
-	fmt.Println("")
 
 	// Load InfoLog and ErrorLog
 	app.InfoLog = helpers.GetInfoLog()
@@ -205,14 +204,38 @@ func initializeRootUser() {
 }
 
 func initializeAppSettings() {
-	// Check if the root user initialization is cached
-	isCached, _ := app.Cache.Exists("app:settings")
-
+	// Check if the settings initialization is cached to avoid reinitialization
+	isCached, err := app.Cache.Exists("app:settings")
+	if err != nil {
+		helpers.LogError(err, "Error checking cache for app settings")
+	}
 	if isCached {
+		return // If settings are already cached, no need to reinitialize
+	}
+
+	// Encrypt the Google API key before storing it in the database
+	googleApiKey, err := helpers.EncryptAES(os.Getenv("GOOGLE_API_KEY"), core.AES_SECRET_KEY)
+	if err != nil {
+		helpers.LogFatal(err, "Failed to encrypt Google API Key")
 		return
 	}
 
+	// Prepare the settings data
 	var settings = []models.Setting{
+		{
+			Key:         "google_api_key",
+			Val:         googleApiKey,
+			Description: "API key used for accessing Google services like Maps and Places.",
+			AccessLevel: 0, // Root access level
+			UpdatedBy:   0,
+		},
+		{
+			Key:         "device_access_mode",
+			Val:         os.Getenv("DEVICE_ACCESS_MODE"),
+			Description: "Defines the access control mode for devices, determining whether they are managed via a blacklist or whitelist approach.",
+			AccessLevel: 1, // Administrator access level
+			UpdatedBy:   0,
+		},
 		{
 			Key:         "default_latitude",
 			Val:         os.Getenv("DEFAULT_LATITUDE"),
@@ -231,21 +254,23 @@ func initializeAppSettings() {
 			Key:         "jwt_expiration_seconds",
 			Val:         os.Getenv("JWT_EXPIRATION_TIME"),
 			Description: "Duration in seconds for which a user's JSON Web Token (JWT) remains valid after login.",
-			AccessLevel: 0, // Root access level if only developers should modify this setting
+			AccessLevel: 0, // Root access level
 			UpdatedBy:   0,
 		},
 		{
 			Key:         "redis_ttl_seconds",
 			Val:         os.Getenv("REDIS_DEFAULT_TTL"),
 			Description: "Default time-to-live (TTL) in seconds for items stored in the Redis cache, impacting how long user and device data are cached.",
-			AccessLevel: 0, // Root access level if this setting is critical and should only be modified by developers
+			AccessLevel: 0, // Root access level
 			UpdatedBy:   0,
 		},
 	}
 
+	// Insert or update settings in the database
 	for _, setting := range settings {
-		if _, err := setting.Upsert(&setting); err != nil {
-			helpers.LogError(err, "Failed to create application setting: "+setting.Key)
+		_, err := setting.Upsert(&setting)
+		if err != nil {
+			helpers.LogFatal(err, "Failed to initialize application setting: "+setting.Key)
 			continue // Optionally continue on error, depends on your error handling strategy
 		}
 	}

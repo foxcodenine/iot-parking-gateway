@@ -22,12 +22,14 @@ onMounted(async () => {
             //     axios.post(`${import.meta.env.VITE_WEB_BACKEND_NODE_AUTH_URL}/auth/logout`, {user});
             // }
 
-            useAuthStore().clearJwt();
+            useAuthStore().resetAuthStore();
+            useAppStore().resetAppStore(); 
             useDashboardStore().updateUserMenu(false);
 
-            // useAppStore().resetAppState();
-
             useRouter().push({ name: 'loginView' });
+
+            localStorage.clear();
+            sessionStorage.clear();
 
         } catch (error) {
             console.error('! logout !  \n', error);

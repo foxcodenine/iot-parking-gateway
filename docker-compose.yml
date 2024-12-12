@@ -50,10 +50,8 @@ services:
       - RABBITMQ_PORT=${RABBITMQ_PORT}
       - RABBITMQ_USER=${RABBITMQ_USER}
 
-      # Google API Configuration
+      # Settings      
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-
-      # Settings
       - DEVICE_ACCESS_MODE=${DEVICE_ACCESS_MODE}
       - DEFAULT_LATITUDE=${DEFAULT_LATITUDE}
       - DEFAULT_LONGITUDE=${DEFAULT_LONGITUDE}

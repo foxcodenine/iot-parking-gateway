@@ -20,12 +20,18 @@
 import { computed, ref } from 'vue';
 import LoginForm from '@/components/auth/LoginForm.vue';
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm.vue';
-import { useRoute } from 'vue-router';
-
+import { useRoute, useRouter } from 'vue-router';
+import { watch } from 'vue';
+import { useAuthStore } from '@/stores/authStore';
+import { storeToRefs } from 'pinia';
 
 
 // Use Vue Router to access the current route
 const route = useRoute();
+const router = useRouter();
+
+const authStore = useAuthStore();
+const { isAuthenticated, getRedirectTo } = storeToRefs(authStore);
 
 // -- computed ----------------------------------------------------------
 
@@ -33,14 +39,22 @@ const route = useRoute();
 const currentFormComponent = computed(() => {
     if (route.name === 'loginView') {
         return LoginForm;
+        
     } else if (route.name === 'forgotPasswordView') {
         return ForgotPasswordForm;
     }
     return null; // Or a default component if necessary
 });
 
-
-
+watch(isAuthenticated, (newVal) => {
+    if (newVal) {
+        router.push({ name: getRedirectTo.value });
+    } else {
+        router.push({ name: "loginView" });
+    } 
+}, {
+    immediate: true,
+});
 
 </script>
 
