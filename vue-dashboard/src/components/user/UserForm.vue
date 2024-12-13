@@ -57,11 +57,12 @@
 <!-- --------------------------------------------------------------- -->
 <script setup>
 import TheSelector from '@/components/commen/TheSelector.vue'
-import TheCheckbox from '../commen/TheCheckbox.vue';
+import TheCheckbox from '@/components/commen/TheCheckbox.vue';
 import { useMessageStore } from '@/stores/messageStore';
 import { useUserStore } from '@/stores/userStore';
 import { computed, reactive, ref, watch } from 'vue';
-import AdminConfirmationModal from '../commen/AdminConfirmationModal.vue';
+import AdminConfirmationModal from '@/components/commen/AdminConfirmationModal.vue';
+
 
 
 // - Store -------------------------------------------------------------

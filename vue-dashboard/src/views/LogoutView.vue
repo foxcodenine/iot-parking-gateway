@@ -1,46 +1,43 @@
 <template>
+    <div style="display: none;"></div>
 </template>
 
-<!-- --------------------------------------------------------------- -->
-
 <script setup>
-import { useAppStore } from '@/stores/appStore';
 import { useAuthStore } from '@/stores/authStore';
+import { useAppStore } from '@/stores/appStore';
+import { useDashboardStore } from '@/stores/dashboardStore';
 import axios from '@/axios';
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useDashboardStore } from '@/stores/dashboardStore';
+
+// Initialize composables outside of any functions
+const authStore = useAuthStore();
+const appStore = useAppStore();
+const dashboardStore = useDashboardStore();
+const router = useRouter();
 
 onMounted(async () => {
+    try {
+        // Perform the logout API request
+        await axios.post(`${appStore.getAppUrl}/api/auth/logout`);
 
-    (async () => {
-        try {
+        // Clear user-related states in the store
+        authStore.resetAuthStore();
+        appStore.resetAppStore();
+        
 
-            const user = useAuthStore().getUserTokenData;
+    } catch (error) {
+        console.error('Logout Error:', error);
+        // Optionally handle errors specific to logout failure if needed
+    } finally {
+        dashboardStore.updateUserMenu(false);
+        
+        // Always clear local storage and session storage
+        localStorage.clear();
+        sessionStorage.clear();
 
-            // if (user.id && user.email) {
-            //     axios.post(`${import.meta.env.VITE_WEB_BACKEND_NODE_AUTH_URL}/auth/logout`, {user});
-            // }
-
-            useAuthStore().resetAuthStore();
-            useAppStore().resetAppStore(); 
-            useDashboardStore().updateUserMenu(false);
-
-            useRouter().push({ name: 'loginView' });
-
-            localStorage.clear();
-            sessionStorage.clear();
-
-        } catch (error) {
-            console.error('! logout !  \n', error);
-        }
-    })();
-
-})
-
-
+        // Navigate to the login view regardless of the outcome of the above operations
+        router.push({ name: 'loginView' });
+    }
+});
 </script>
-
-<!-- --------------------------------------------------------------- -->
-
-<style lang="scss" scoped></style>

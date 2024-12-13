@@ -46,15 +46,24 @@ func (s *Service) RegisterNewDevices() {
 			continue
 		}
 
-		// Extract network type and device ID from the string.
-		spaceIndex := strings.Index(deviceInfo, " ")
-		if spaceIndex == -1 {
-			s.errorLog.Printf("Device information string does not contain a space: %s", deviceInfo)
-			continue
+		// Split the string into parts based on spaces
+		parts := strings.Split(deviceInfo, " ")
+		if len(parts) < 3 {
+			s.errorLog.Printf("Device information string does not have enough parts: %s\n", deviceInfo)
+			return // or continue if in a loop
 		}
 
-		networkType := deviceInfo[:spaceIndex]
-		deviceID := deviceInfo[spaceIndex+1:]
+		// Assign parts to specific variables
+		networkType := parts[0]
+		deviceID := parts[1]
+		firmwareVersionStr := parts[2]
+
+		// Convert firmwareVersionStr to a float
+		firmwareVersion, err := strconv.ParseFloat(firmwareVersionStr, 64) // 64 specifies the precision
+		if err != nil {
+			s.errorLog.Printf("Failed to convert firmware version to float: %s\n", err)
+			return // or handle the error appropriately
+		}
 
 		latitude, err := strconv.ParseFloat(os.Getenv("DEFAULT_LATITUDE"), 64)
 		if err != nil {
@@ -67,11 +76,12 @@ func (s *Service) RegisterNewDevices() {
 
 		// Define a new device model instance.
 		newDevice := models.Device{
-			DeviceID:    deviceID,
-			Name:        "new " + deviceID,
-			NetworkType: networkType,
-			Latitude:    latitude,
-			Longitude:   longitude,
+			DeviceID:        deviceID,
+			Name:            "new " + deviceID,
+			NetworkType:     networkType,
+			Latitude:        latitude,
+			Longitude:       longitude,
+			FirmwareVersion: firmwareVersion,
 		}
 
 		// Attempt to create a new device record in the database.

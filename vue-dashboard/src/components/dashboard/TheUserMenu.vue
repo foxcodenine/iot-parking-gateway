@@ -8,7 +8,7 @@
             </svg>
         </div>
 
-        <div class="menu__link">
+        <div class="menu__link" @click="settings()">
             <div class="menu__text">Application Settings</div>
             <svg class="menu__icon">
                 <use xlink:href="@/assets/svg/sprite.svg#icon-settings-2"></use>
@@ -28,6 +28,7 @@
 <!-- --------------------------------------------------------------- -->
 
 <script setup>
+import { useDashboardStore } from '@/stores/dashboardStore';
 import { useRouter } from 'vue-router';
 
 
@@ -39,6 +40,10 @@ const router = useRouter();
 
 function logout() {
     router.push({ name: 'logoutView' });
+}
+function settings() {
+    useDashboardStore().updateUserMenu(false);
+    router.push({ name: 'settingsView' });
 }
 
 </script>

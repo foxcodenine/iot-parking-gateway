@@ -84,7 +84,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Action:      "LOGIN",
 		URL:         r.URL.Path,
 		IPAddress:   getClientIP(r),
-		Details:     fmt.Sprintf("User with ID %d and email '%s' logged in.", user.ID, user.Email),
+		Details:     fmt.Sprintf("User with ID %d and email '%s' successfully logged.", user.ID, user.Email),
 	}
 
 	// Push the audit log entry to the cache
@@ -114,5 +114,18 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(userData)
+	// Create the audit log entry
+	auditLogEntry := models.AuditLog{
+		UserID:      userData.UserID,
+		Email:       userData.Email,
+		AccessLevel: userData.AccessLevel,
+		HappenedAt:  time.Now().UTC(),
+		Action:      "LOGOUT",
+		URL:         r.URL.Path,
+		IPAddress:   getClientIP(r),
+		Details:     fmt.Sprintf("User with ID %d and email '%s' successfully logged out.", userData.UserID, userData.Email),
+	}
+
+	// Push the audit log entry to the cache
+	app.Cache.RPush("audit-logs", auditLogEntry)
 }

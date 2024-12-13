@@ -61,7 +61,8 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	// If the device ID is not registered, track it for registration and prevent duplicates.
 	if !isDeviceRegistered {
 		// Add the device to a Redis set for tracking devices that need registration.
-		if err := s.cache.SAdd("to-register-devices", deviceIdentifierKey); err != nil {
+		deviceDataKey := fmt.Sprintf("%s %f", deviceIdentifierKey, firmwareVersion)
+		if err := s.cache.SAdd("to-register-devices", deviceDataKey); err != nil {
 			helpers.LogError(err, "Failed to add device ID to the 'to-register-devices' set")
 		}
 

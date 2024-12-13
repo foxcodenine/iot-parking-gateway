@@ -109,10 +109,10 @@ onMounted(() => {
     &__item {
         cursor: pointer;
         font-family: $font-action;
-        color: $col-slate-400;
+        color: $col-zinc-400;
         font-weight: 400;
         padding: 2px 1rem;
-        border: 1px solid $col-slate-400;
+        border: 1px solid $col-zinc-400;
         text-wrap: nowrap;
 
         &:not(:nth-last-child(2)) {
@@ -121,7 +121,7 @@ onMounted(() => {
 
         &:hover {
             color: $col-text-2;
-            background-color: $col-rose-200;
+            background-color: $col-blue-200;
             border-color: $col-text-2;
 
             &+.tabs-mb__item {
@@ -131,8 +131,8 @@ onMounted(() => {
 
         &--active {
             color: $col-white;
-            background-color: $col-slate-400;
-            border-color: $col-slate-400;
+            background-color: $col-zinc-400;
+            border-color: $col-zinc-400;
         }
     }
 }
@@ -142,18 +142,21 @@ onMounted(() => {
 
     &__empty {
         display: block;
-        border-bottom: 1px solid $col-slate-400 !important;
+        border-bottom: 1px solid $col-zinc-400 !important;
         flex: 1;
     }
 
     &__item {
         cursor: pointer;
         font-family: $font-action;
-        color: $col-slate-400;
+        color: $col-zinc-400;
         font-weight: 400;
-        padding: 2px 1rem;
-        border: 1px solid $col-slate-400;
-        font-size: 1rem;
+        padding: 2px 0.5rem;
+        min-width: 11rem;
+        border: 1px solid $col-zinc-400;
+        display: flex;
+        justify-content: center;
+        font-size: .9rem;
         text-wrap: nowrap;
 
         &:not(:nth-last-child(2)) {
@@ -161,26 +164,26 @@ onMounted(() => {
         }
 
         &:not(:nth-last-child(2)) {
-            border-bottom: 1px solid $col-slate-400;
+            border-bottom: 1px solid $col-zinc-400;
             border-right: none;
         }
 
         &:hover {
             color: $col-text-2;
-            background-color: $col-rose-200;
+            background-color: $col-blue-200;
             border-color: $col-text-2;
             border-bottom: 1px solid $col-text-2 !important;
 
             &+.tabs-dt__item {
-                border-top: 1px solid $col-slate-400;
+                border-top: 1px solid $col-zinc-400;
                 border-left: 1px solid $col-text-2;
             }
         }
 
         &--active {
             color: $col-white;
-            background-color: $col-slate-400;
-            border-color: $col-slate-400;
+            background-color: $col-zinc-400;
+            border-color: $col-zinc-400;
         }
     }
 }
