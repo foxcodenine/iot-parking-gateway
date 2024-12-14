@@ -23,9 +23,6 @@ services:
       - DEBUG=${DEBUG}
       - GO_ENV=${GO_ENV}
 
-      # JWT Configuration 
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-
       # Application Ports 
       - HTTP_PORT=${HTTP_PORT}
       - UDP_PORT=${UDP_PORT}
