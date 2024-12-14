@@ -195,7 +195,7 @@ async function deleteUser(payload) {
             admin_password: payload.adminPassword,
         });
 
-        if (response.status == 200) {
+        if (response?.status == 200) {
             const msg = response.data?.message ?? "User deleted successfully.";
             userStore.removeUserFromList(props.userID);
             router.push({ name: 'userView' });

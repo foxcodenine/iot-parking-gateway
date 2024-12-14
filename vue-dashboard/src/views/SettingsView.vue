@@ -3,6 +3,7 @@
         <section class="vview__section">
             <div class="heading--2 ">Application Settings</div>
             <TheFlashMessage ></TheFlashMessage>  
+            
             <TheTabs
                 :tabsObjectData="tabsObjectData_1"
                 :isDisabled="false"

@@ -92,13 +92,16 @@ async function submitForm() {
         const response = await axios.post(`${appStore.getAppUrl}/api/auth/login`, {
             email: email.value,
             password: password.value
-        });        
+        });       
 
-        if (response.status == 200) {
+  
+
+        if (response?.status == 200) {
             email.value = 'user@dev.com';
             password.value = 'DevPass';
             authStore.setJwt(response.data.token);
             appStore.setAppSettings(response.data.settings)
+            
         }
 
         

@@ -26,7 +26,7 @@ export const useUserStore = defineStore("userStore", () => {
         useDashboardStore().setIsLoading(true);
         try {
             const response =  await axios.get(useAppStore().getAppUrl + '/api/user');
-            if (response.status == 200 && response.data?.users) {
+            if (response?.status == 200 && response.data?.users) {
                 usersList.value = response.data.users;
                 return usersList.value;
             }

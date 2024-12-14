@@ -43,6 +43,7 @@ func Routes() http.Handler {
 		r.Mount("/device", DeviceRoutes())
 		r.Mount("/user", UserRoutes())
 		r.Mount("/auth", AuthRoutes())
+		r.Mount("/setting", SettingRoutes())
 	})
 
 	// Serve all static files under the dist directory

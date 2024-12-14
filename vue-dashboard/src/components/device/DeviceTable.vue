@@ -384,7 +384,7 @@ async function editDevice() {
     try {
         const response = await deviceStore.updateDevice(selectedDevice);
 
-        if (response.status == 200) {
+        if (response?.status == 200) {
             const msg = response.data?.message ?? "Device updated successfully.";
             messageStore.setFlashMessages([msg], "flash-message--green");
 
@@ -410,7 +410,7 @@ async function deleteDevice() {
             device_id: selectedDevice.device_id,
         });
 
-        if (response.status == 200) {
+        if (response?.status == 200) {
             const msg = response.data?.message ?? "Device deleted successfully.";
             deviceStore.removeDeviceFromList(selectedDevice.device_id);
             messageStore.setFlashMessages([msg], "flash-message--green");

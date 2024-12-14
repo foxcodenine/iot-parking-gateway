@@ -257,7 +257,7 @@ async function createDevice() {
         // Make the API call to create the device
         const response = await deviceStore.createDevice(payload);
 
-        if (response.status == 200) {
+        if (response?.status == 200) {
             const msg = response.data?.message ?? "Device created successfully.";
             messageStore.setFlashMessages([msg], "flash-message--green");
             resetForm();

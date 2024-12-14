@@ -24,7 +24,7 @@ export const useDeviceStore = defineStore("deviceStore", () => {
         useDashboardStore().setIsLoading(true);
         try {
             const response =  await axios.get(useAppStore().getAppUrl + '/api/device');
-            if (response.status == 200 && response.data?.devices) {
+            if (response?.status == 200 && response.data?.devices) {
                 devicesList.value = response.data.devices;
                 return devicesList.value;
             }

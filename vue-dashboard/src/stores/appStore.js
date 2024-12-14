@@ -3,6 +3,8 @@ import { ref, computed, reactive } from 'vue';
 import { defineStore } from 'pinia';
 import {  decryptAES } from '@/utils/cryptoUtils';
 import { useAuthStore } from './authStore';
+import { useDashboardStore } from './dashboardStore';
+import axios from '@/axios';
 
 export const useAppStore = defineStore("appStore", () => {
 
@@ -35,6 +37,22 @@ export const useAppStore = defineStore("appStore", () => {
 
     // - Actions -------------------------------------------------------
 
+    async function updateSettings(payload) {
+        useDashboardStore().setIsLoading(true);
+
+        console.log(`${getAppUrl.value}/api/setting`)
+        try {            
+            return await axios.put(`${getAppUrl.value}/api/setting`, payload);
+            
+        } catch (error){
+            console.error('! appStore.updateSettings !');
+            throw error;  
+        } finally {
+            useDashboardStore().setIsLoading(false);
+        }
+    }
+
+
     function resetAppStore() {
         appSettings.value = null;
         googleApiKey.value = null;
@@ -64,6 +82,7 @@ export const useAppStore = defineStore("appStore", () => {
         getGoogleApiKey,
         getPageScrollDisabled,
         setPageScrollDisabled,
-        getAppSettings, setAppSettings 
+        getAppSettings, setAppSettings,
+        updateSettings,
     };
 });

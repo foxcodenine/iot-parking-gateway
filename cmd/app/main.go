@@ -126,15 +126,27 @@ func initializeAppConfig() {
 
 func loadEnv() error {
 	env := os.Getenv("GO_ENV")
-	app.InfoLog.Printf("App running in environment: %s\n", os.Getenv("GO_ENV"))
 
 	switch env {
 	case "production":
-		return nil
 	default:
-
-		return godotenv.Load(".env.development") // Load development environment
+		godotenv.Load(".env.development") // Load development environment
 	}
+
+	// Generate a new JWT secret key
+	secretKey, err := helpers.GenerateJWTSecretKey(44)
+	if err != nil {
+		return fmt.Errorf("failed to generate a new JWT secret key. \n%w", err)
+	}
+
+	// Update the environment variable
+	err = os.Setenv("JWT_SECRET_KEY", secretKey)
+	if err != nil {
+		return fmt.Errorf("failed to set new JWT secret key in environment. \n%w", err)
+	}
+
+	app.InfoLog.Printf("App running in environment: %s\n", os.Getenv("GO_ENV"))
+	return nil
 }
 
 // ---------------------------------------------------------------------

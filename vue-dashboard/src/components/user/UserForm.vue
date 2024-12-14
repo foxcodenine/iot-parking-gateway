@@ -211,7 +211,7 @@ async function createUser() {
             accessLevel: accessLevel.value
         });
 
-        if (response.status == 201) {
+        if (response?.status == 201) {
             const msg = response.data?.message ?? "User created successfully.";
             messageStore.setFlashMessages([msg], "flash-message--green");
             resetForm();
@@ -243,7 +243,7 @@ async function updateUser(payload) {
             admin_password: payload.adminPassword,
         });
 
-        if (response.status == 200) {
+        if (response?.status == 200) {
             const msg = response.data?.message ?? "User updated successfully.";
             messageStore.setFlashMessages([msg], "flash-message--green");
      

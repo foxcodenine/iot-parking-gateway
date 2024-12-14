@@ -50,21 +50,26 @@ apiClient.interceptors.response.use(
             useMessageStore().setFlashMessages(response.data.messages);
             useMessageStore().setFlashClass('flash-message--blue');
         }
-        
+
         return response;
     },
 
     error => {
         console.error('! axios.interceptors.response !');
+        console.error(error)
 
         if (error.status == 401 && useAuthStore().isAuthenticated) {
-            window.location.assign('/logout');
+            localStorage.clear();
+            sessionStorage.clear();
+
+            // Navigate to the login view regardless of the outcome of the above operations
+            window.location.assign('/login');
             return Promise.reject(error);
 
         } else {
             return Promise.reject(error);
         }
-       
+
     }
 );
 

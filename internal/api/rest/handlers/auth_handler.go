@@ -53,10 +53,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		helpers.RespondWithError(w, err, "Internal server error. Error finding user.", http.StatusInternalServerError)
 		return
 	}
+
 	if user == nil {
 		http.Error(w, "Invalid email or password!", http.StatusUnauthorized)
 		return
 	}
+
 	// Verify the password
 	if !helpers.CheckPasswordHash(payload.Password, user.Password) {
 		http.Error(w, "Invalid email or password!", http.StatusUnauthorized)
@@ -90,11 +92,16 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Push the audit log entry to the cache
 	app.Cache.RPush("audit-logs", auditLogEntry)
 
-	settings, _ := app.Cache.HGetAll("app:settings")
+	settings, err := app.Cache.HGetAll("app:settings")
+
+	if err != nil {
+		helpers.RespondWithError(w, err, "Failed to retrieve application settings.", http.StatusInternalServerError)
+		return
+	}
 
 	// Respond with the token and user data
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	err = json.NewEncoder(w).Encode(map[string]interface{}{
 		"token": token,
 		"user": map[string]interface{}{
 			"id":           user.ID,
@@ -105,6 +112,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		},
 		"settings": settings,
 	})
+
+	if err != nil {
+		helpers.RespondWithError(w, err, "Failed to encode response.", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {

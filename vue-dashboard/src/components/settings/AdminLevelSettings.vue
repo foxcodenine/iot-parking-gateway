@@ -28,7 +28,7 @@
             </div>
         </div>
 
-        <button  class="bbtn bbtn--red mt-8"  @click.prevent="initUpdateSettings()">
+        <button  class="bbtn bbtn--red mt-14"  @click.prevent="initUpdateSettings()">
             Update Settings
         </button>
     </form>
@@ -95,9 +95,40 @@ function initUpdateSettings () {
     adminModalOn.value = true;
 }
 
-function updateSettings () {
+async function updateSettings(payload) {
+    adminModalOn.value = false;
+    try {
+        payload.admin_password = payload.adminPassword;
+        delete payload.adminPassword;
 
+
+        payload.default_latitude = String(default_latitude.value);
+        payload.default_longitude = String(default_longitude.value);
+  
+
+        const response = await appStore.updateSettings(payload);
+
+        if (response?.status == 200) {
+            const msg = response.data?.message ?? "Settings updated successfully.";
+            messageStore.setFlashMessages([msg], "flash-message--green");
+     
+            // update settings
+
+        }
+
+    } catch (error) {
+        console.error("! RootLevelSettings.updateSettings !\n", error);
+        const errMsg = error.response?.data ?? "Failed to update settings"
+        messageStore.setFlashMessages([errMsg], "flash-message--red");
+
+    } finally {
+
+    }
 }
+
+(()=>{
+    clearMessage();
+})();
 
 </script>
 

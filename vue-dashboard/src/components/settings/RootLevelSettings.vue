@@ -1,5 +1,8 @@
 <template>
     <form class="fform" autocomplete="off">
+
+        <p class="flash-message flash-message--zinc mt-10"><i>"Updating these settings will log out all users to apply the new configuration."</i></p>
+
         <transition name="modal" appear>
             <AdminConfirmationModal v-if="adminModalOn" 
                 @emitCancel="adminModalOn = false" 
@@ -9,7 +12,7 @@
             </AdminConfirmationModal>
         </transition>
 
-        <div class="fform__row mt-20 " @click="clearMessage" :class="{ 'fform__disabled': edit_key != 'google_api_key' }">
+        <div class="fform__row mt-10 " @click="clearMessage" :class="{ 'fform__disabled': edit_key != 'google_api_key' }">
             <div class="fform__description"><b>google_api_key</b> &nbsp API key used for accessing Google services like Maps and Places.</div>
             <div class="fform__group ">
                 <input class="fform__input " :class="{'fform__input--active':edit_key=='google_api_key'}" id="google_api_key" type="text" @blur="edit_key=null" 
@@ -50,7 +53,7 @@
             </div>
         </div>
 
-        <button  class="bbtn bbtn--red mt-8"  @click.prevent="initUpdateSettings()">
+        <button  class="bbtn bbtn--red mt-14"  @click.prevent="initUpdateSettings()">
             Update Settings
         </button>
     </form>
@@ -126,8 +129,38 @@ function initUpdateSettings () {
     adminModalOn.value = true;
 }
 
-function updateSettings () {
+async function updateSettings(payload) {
+    adminModalOn.value = false;
+    try {
+        payload.admin_password = payload.adminPassword;
+        delete payload.adminPassword;
 
+        if (google_api_key.value !== null && google_api_key.value.trim() !== '') {
+            payload.google_api_key = google_api_key.value;
+        }
+
+        payload.jwt_expiration_seconds = String(jwt_expiration_seconds.value);
+        payload.redis_ttl_seconds = String(redis_ttl_seconds.value);
+        payload.device_access_mode = device_access_mode.value;
+
+        const response = await appStore.updateSettings(payload);
+
+        if (response?.status == 200) {
+            const msg = response.data?.message ?? "Settings updated successfully.";
+            messageStore.setFlashMessages([msg], "flash-message--green");
+     
+            // update settings
+
+        }
+
+    } catch (error) {
+        console.error("! RootLevelSettings.updateSettings !\n", error);
+        const errMsg = error.response?.data ?? "Failed to update settings"
+        messageStore.setFlashMessages([errMsg], "flash-message--red");
+
+    } finally {
+
+    }
 }
 
 onMounted(()=>{
