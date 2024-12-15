@@ -77,6 +77,9 @@ func initializeAppConfig() {
 	app.ErrorLog = helpers.GetErrorLog()
 	app.FatalLog = helpers.GetFatalLog()
 
+	var deviceAccessMode = os.Getenv("DEVICE_ACCESS_MODE")
+	app.DeviceAccessMode = &deviceAccessMode
+
 	// Load environment and configuration
 	if err := loadEnv(); err != nil {
 		app.ErrorLog.Fatalf("Error loading environment variables: %v\n", err)
@@ -116,6 +119,7 @@ func initializeAppConfig() {
 		app.MQProducer,
 		app.Cache,
 		app.Service,
+		app.DeviceAccessMode,
 	)
 
 	// Initialize and assign a cron scheduler instance to the app

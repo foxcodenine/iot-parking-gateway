@@ -253,6 +253,17 @@ func (d *Device) Create(newDevice *Device) (*Device, error) {
 		helpers.LogError(err, "failed to delete devices from cache")
 	}
 
+	// Convert the newDevice struct to a map
+	deviceData, err := helpers.StructToMap(newDevice)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert device data: %w", err)
+	}
+
+	// Save the device data to the cache
+	if err := cache.AppCache.SaveDeviceData(newDevice.DeviceID, deviceData); err != nil {
+		return nil, fmt.Errorf("failed to cache device data: %w", err)
+	}
+
 	return newDevice, nil
 }
 
@@ -306,8 +317,25 @@ func (d *Device) Upsert(device *Device) (*Device, error) {
 		helpers.LogError(err, "failed to delete devices from cache")
 	}
 
-	// Return the updated device
-	return d.GetByID(device.DeviceID)
+	// Fetch the updated device from the database
+	upsertDevice, err := d.GetByID(device.DeviceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch updated device: %w", err)
+	}
+
+	// Convert the updated device struct to a map
+	deviceData, err := helpers.StructToMap(upsertDevice)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert device data: %w", err)
+	}
+
+	// Save the device data to the cache
+	if err := cache.AppCache.SaveDeviceData(upsertDevice.DeviceID, deviceData); err != nil {
+		return nil, fmt.Errorf("failed to cache device data: %w", err)
+	}
+
+	return upsertDevice, nil
+
 }
 
 // -----------------------------------------------------------------------------
@@ -344,6 +372,11 @@ func (d *Device) UpdateByID(id string, updatedFields map[string]interface{}) (*D
 		return nil, fmt.Errorf("error updating device: %w", err)
 	}
 
+	// Update the device data to the cache
+	if err := cache.AppCache.UpdateDeviceFields(id, updatedFields); err != nil {
+		return nil, fmt.Errorf("failed to update device data in cache: %w", err)
+	}
+
 	return d.GetByID(id) // return the updated device
 }
 
@@ -371,6 +404,11 @@ func (d *Device) DeleteByID(id string) error {
 	// Proceed with deletion since the device exists
 	if err := res.Delete(); err != nil {
 		return fmt.Errorf("failed to delete device: %w", err)
+	}
+
+	// Delete the device data from cache
+	if err := cache.AppCache.DeleteDevice(id); err != nil {
+		return fmt.Errorf("failed to delete device data from cache: %w", err)
 	}
 
 	return nil // Successful deletion
@@ -409,6 +447,10 @@ func (d *Device) SoftDeleteByID(id string) error {
 	err = res.Update(updatedFields)
 	if err != nil {
 		return fmt.Errorf("error soft-deleting device: %w", err)
+	}
+
+	if err := cache.AppCache.UpdateDeviceFields(id, updatedFields); err != nil {
+		return fmt.Errorf("failed to soft delete device data in cache: %w", err)
 	}
 
 	return nil // Successful soft deletion

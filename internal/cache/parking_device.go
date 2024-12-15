@@ -8,6 +8,10 @@ import (
 
 // SaveDeviceData saves device data to a Redis hash with a key structured as parking:device:<device_id>.
 func (rc *RedisCache) SaveDeviceData(deviceID string, data map[string]any) error {
+
+	delete(data, "beacons_json")
+	data["delete_at"] = nil
+
 	conn := rc.Conn.Get()
 	defer conn.Close()
 
@@ -31,6 +35,10 @@ func (rc *RedisCache) SaveDeviceData(deviceID string, data map[string]any) error
 
 // UpdateDeviceFields updates multiple key-value pairs in the Redis hash for a device.
 func (rc *RedisCache) UpdateDeviceFields(deviceID string, fields map[string]any) error {
+
+	delete(fields, "beacons_json")
+	fields["delete_at"] = nil
+
 	conn := rc.Conn.Get()
 	defer conn.Close()
 
@@ -145,6 +153,9 @@ func (rc *RedisCache) SaveMultipleDevices(devices map[string]map[string]any) err
 	defer conn.Close()
 
 	for deviceID, fields := range devices {
+		delete(fields, "beacons_json")
+		fields["delete_at"] = nil
+
 		// Construct the Redis hash key
 		hashKey := fmt.Sprintf("%s%s:%s", rc.Prefix, "parking:device", deviceID)
 

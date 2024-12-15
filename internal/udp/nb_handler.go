@@ -49,8 +49,6 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		return
 	}
 
-	// TODO:  Implement checks against a blacklist or whitelist for the device ID.
-
 	// Check if the device ID is already in the Bloom Filter
 	deviceIdentifierKey := fmt.Sprintf("NB-IoT %d", deviceID)
 	isDeviceRegistered, err := s.cache.CheckItemInBloomFilter("registered-devices", deviceIdentifierKey)

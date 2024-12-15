@@ -20,18 +20,19 @@ import (
 )
 
 type App struct {
-	AppURL     string
-	HttpPort   string
-	InfoLog    *log.Logger
-	ErrorLog   *log.Logger
-	FatalLog   *log.Logger
-	DB         *pgxpool.Pool
-	Models     models.Models
-	MQProducer *mq.RabbitMQProducer
-	Cache      *cache.RedisCache
-	Cron       *cron.Cron
-	UdpServer  *udp.UDPServer
-	Service    *services.Service
+	AppURL           string
+	HttpPort         string
+	InfoLog          *log.Logger
+	ErrorLog         *log.Logger
+	FatalLog         *log.Logger
+	DB               *pgxpool.Pool
+	Models           models.Models
+	MQProducer       *mq.RabbitMQProducer
+	Cache            *cache.RedisCache
+	Cron             *cron.Cron
+	UdpServer        *udp.UDPServer
+	Service          *services.Service
+	DeviceAccessMode *string
 }
 
 func (app *App) GetUserFromContext(ctx context.Context) (*apptypes.UserClaims, error) {

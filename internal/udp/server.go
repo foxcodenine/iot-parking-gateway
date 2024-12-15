@@ -11,25 +11,26 @@ import (
 
 // UDPServer represents a UDP server.
 type UDPServer struct {
-	Addr           string
-	Connection     *net.UDPConn
-	mqProducer     *mq.RabbitMQProducer
-	cache          *cache.RedisCache
-	services       *services.Service
-	shutdownCh     chan struct{} // Shutdown channel to signal the listening loop to stop
-	isShuttingDown bool          // Flag to indicate the server is intentionally shutting down
-
+	Addr             string
+	Connection       *net.UDPConn
+	mqProducer       *mq.RabbitMQProducer
+	cache            *cache.RedisCache
+	services         *services.Service
+	shutdownCh       chan struct{} // Shutdown channel to signal the listening loop to stop
+	isShuttingDown   bool          // Flag to indicate the server is intentionally shutting down
+	deviceAccessMode *string
 }
 
 // NewServer initializes a new UDP server.
-func NewServer(addr string, mq *mq.RabbitMQProducer, c *cache.RedisCache, s *services.Service) *UDPServer {
+func NewServer(addr string, mq *mq.RabbitMQProducer, c *cache.RedisCache, s *services.Service, dam *string) *UDPServer {
 	return &UDPServer{
-		Addr:           addr,
-		mqProducer:     mq,
-		cache:          c,
-		services:       s,
-		shutdownCh:     make(chan struct{}),
-		isShuttingDown: false,
+		Addr:             addr,
+		mqProducer:       mq,
+		cache:            c,
+		services:         s,
+		shutdownCh:       make(chan struct{}),
+		isShuttingDown:   false,
+		deviceAccessMode: dam,
 	}
 }
 
