@@ -68,6 +68,27 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		if _, err := s.cache.AddItemToBloomFilter("registered-devices", deviceIdentifierKey); err != nil {
 			helpers.LogError(err, "Failed to add device ID to the 'registered-devices' Bloom Filter")
 		}
+	} else {
+		dd, _ := s.cache.GetDevice(fmt.Sprintf("%d", deviceID))
+
+		// Retrieve the device data from the cache
+		deviceData, err := s.cache.GetDevice(fmt.Sprintf("%d", deviceID))
+		if err != nil {
+			helpers.LogError(err, "Failed to retrieve device data from cache")
+			sendResponse(conn, addr, reply)
+			return
+		}
+
+		// Check if the device is soft deleted
+		if deletedAt, exists := deviceData["deleted_at"]; exists && deletedAt != nil && deletedAt != "0001-01-01T00:00:00Z" {
+			helpers.LogInfo("Device %d is soft deleted", deviceID)
+			sendResponse(conn, addr, reply)
+			return
+		}
+
+		// TODO:  Checks against a blacklist or whitelist for the device ID
+
+		fmt.Println(">>", dd["happened_at"] == "0001-01-01T00:00:00Z")
 	}
 
 	// Generate a new UUID for the RawDataLog entry
