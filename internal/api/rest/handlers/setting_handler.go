@@ -360,5 +360,5 @@ func auditLogSettingUpdate(userData *apptypes.UserClaims, r *http.Request, key, 
 	}
 
 	// Push the audit log entry to the cache
-	return app.Cache.RPush("audit-logs", auditLogEntry)
+	return app.Cache.RPush("logs:audit-logs", auditLogEntry)
 }

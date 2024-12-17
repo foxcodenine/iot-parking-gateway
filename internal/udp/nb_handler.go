@@ -83,7 +83,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		}
 
 		// Check if the device is soft deleted
-		if deletedAt, exists := deviceData["deleted_at"]; exists && deletedAt != nil && deletedAt != "0001-01-01T00:00:00Z" {
+		if deletedAt, exists := deviceData["deleted_at"]; exists && deletedAt != nil && deletedAt != "0001-01-01T00:00:00.000000000Z" {
 			helpers.LogInfo("Device %d is marked as soft deleted. Request ignored.", deviceID)
 			sendResponse(conn, addr, reply)
 			return
@@ -135,7 +135,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	}
 
 	// Push the raw data log entry to Redis
-	err = s.cache.RPush("raw-data-logs", rawDataLog)
+	err = s.cache.RPush("logs:raw-data-logs", rawDataLog)
 	if err != nil {
 		handleErrorSendResponse(err, "Failed to push raw data log to Redis", conn, addr, reply)
 		return
@@ -165,12 +165,13 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 
 	// -----------------------------------------------------------------
 
-	// TODO here i updated the device cache if it exist and the new date happent_at is grater then the cached and also send the data with sochet io
-
+	// Attempt to update device cache and broadcast the changes.
 	err = s.updateDeviceCacheAndBroadcast(parsedData)
 
+	// Check for errors in the update process.
 	if err != nil {
-		helpers.LogError(err, "???????")
+		// Log the error with additional context for better troubleshooting.
+		helpers.LogError(err, fmt.Sprintf("Failed to update device cache and broadcast changes: %v", err))
 	}
 
 	// Push parsed parking data packages to Redis.
@@ -184,7 +185,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 
 		// socketserver.IOService.SocketServer.BroadcastToNamespace("/", "update", i)
 
-		err := s.cache.RPush("nb-activity-logs", i)
+		err := s.cache.RPush("logs:nb-activity-logs", i)
 		if err != nil {
 			helpers.LogError(err, "Failed to push parking package data log to Redis")
 		}
@@ -205,7 +206,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		i["event_id"] = 6
 		i["network_type"] = "NB-IoT"
 
-		err := s.cache.RPush("nb-keepalive-logs", i)
+		err := s.cache.RPush("logs:nb-keepalive-logs", i)
 		if err != nil {
 			helpers.LogError(err, "Failed to push keepalive package data log to Redis")
 		}
@@ -228,7 +229,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		i["network_type"] = "NB-IoT"
 
 		// Push the package to Redis
-		err := s.cache.RPush("nb-setting-logs", i)
+		err := s.cache.RPush("logs:nb-setting-logs", i)
 		if err != nil {
 			helpers.LogError(err, "Failed to push setting package data log to Redis")
 		}
@@ -243,7 +244,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 
 	// time.Sleep(1 * time.Second)
 	// s.services.RegisterNewDevices()
-	// s.services.SyncActivityLogsAndDevices()
+	// s.services.SyncActivityLogs()
 	// s.services.SyncNBIoTKeepaliveLogs()
 	// s.services.SyncNBIoTSettingLogs()
 
@@ -268,8 +269,11 @@ func handleErrorSendResponse(err error, message string, conn *net.UDPConn, addr 
 
 func (s *UDPServer) updateDeviceCacheAndBroadcast(parsedData map[string]any) error {
 	latestParkingPackage, ok := parsedData["parking_packages"].([]map[string]any)
-	if !ok || len(latestParkingPackage) == 0 {
+	if !ok {
 		return errors.New("invalid or missing parking_packages data")
+	}
+	if len(latestParkingPackage) == 0 {
+		return nil
 	}
 
 	timestamp, ok := latestParkingPackage[0]["timestamp"].(int)
@@ -278,7 +282,7 @@ func (s *UDPServer) updateDeviceCacheAndBroadcast(parsedData map[string]any) err
 	}
 
 	timestampTime := time.Unix(int64(timestamp), 0)
-	happenedAt := timestampTime.UTC().Format("2006-01-02T15:04:05.0000000Z")
+	happenedAt := timestampTime.UTC().Format("2006-01-02T15:04:05.000000000Z")
 	deviceId := fmt.Sprintf("%d", parsedData["device_id"])
 	cachedDevice, err := s.cache.GetDevice(deviceId)
 	if err != nil {
@@ -292,18 +296,18 @@ func (s *UDPServer) updateDeviceCacheAndBroadcast(parsedData map[string]any) err
 			return errors.New("cached happened_at is not a string")
 		}
 
-		cachedHappenedAt, err := time.Parse("2006-01-02T15:04:05.00Z", cachedHappenedAtStr)
+		cachedHappenedAt, err := time.Parse("2006-01-02T15:04:05.000000000Z", cachedHappenedAtStr)
 		if err != nil {
 			return fmt.Errorf("error parsing cached happened_at time: %v", err)
 		}
 
-		newHappenedAt, err := time.Parse("2006-01-02T15:04:05.00Z", happenedAt)
+		newHappenedAt, err := time.Parse("2006-01-02T15:04:05.000000000Z", happenedAt)
 		if err != nil {
 			return fmt.Errorf("error parsing new happened_at time: %v", err)
 		}
 
 		if newHappenedAt.After(cachedHappenedAt) {
-			helpers.PrettyPrintJSON(parsedData)
+
 			firmwareVersionFloat, ok := parsedData["firmware_version"].(float64)
 			if !ok {
 				return errors.New("firmware_version missing or not a string")
@@ -315,11 +319,29 @@ func (s *UDPServer) updateDeviceCacheAndBroadcast(parsedData map[string]any) err
 			}
 			isOccupied := (latestParkingPackage[0]["is_occupied"].(int)) == 1
 
+			// Update cache parking:device:<id>
+
 			err := s.cache.ProcessParkingEventData(deviceId, firmwareVersion, beacons, happenedAt, isOccupied)
 			if err != nil {
 				helpers.LogError(err, "Failed to update device cache")
 				return err
 			}
+
+			// Update cache logs:device-update-logs
+
+			var payload = make(map[string]any)
+			payload["firmware_version"] = firmwareVersion
+			payload["device_id"] = deviceId
+			payload["happened_at"] = happenedAt
+			payload["is_occupied"] = isOccupied
+			payload["beacons"] = beacons
+
+			err = s.cache.RPush("logs:device-update-logs", payload)
+			if err != nil {
+				helpers.LogError(err, "Failed to push to Redis logs:device-update-logs")
+			}
+
+			// TODO:  send data tp client through socket io
 
 			// Uncomment the following line if your broadcasting infrastructure is ready
 			// socketserver.IOService.SocketServer.BroadcastToNamespace("/", "update", latestParkingPackage[0])

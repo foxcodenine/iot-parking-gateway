@@ -90,7 +90,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Push the audit log entry to the cache
-	app.Cache.RPush("audit-logs", auditLogEntry)
+	app.Cache.RPush("logs:audit-logs", auditLogEntry)
 
 	settings, err := app.Cache.HGetAll("app:settings")
 
@@ -139,5 +139,5 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Push the audit log entry to the cache
-	app.Cache.RPush("audit-logs", auditLogEntry)
+	app.Cache.RPush("logs:audit-logs", auditLogEntry)
 }

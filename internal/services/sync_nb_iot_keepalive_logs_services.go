@@ -10,10 +10,10 @@ import (
 func (s *Service) SyncNBIoTKeepaliveLogs() {
 	// Retrieve keepalive log data from Redis and delete the key.
 
-	items, err := s.cache.LRangeAndDelete("nb-keepalive-logs")
+	items, err := s.cache.LRangeAndDelete("logs:nb-keepalive-logs")
 	if err != nil {
 		// Log error if Redis operations fail.
-		s.errorLog.Printf("Error retrieving nb-keepalive-logs from Redis: %v", err)
+		s.errorLog.Printf("Error retrieving logs:nb-keepalive-logs from Redis: %v", err)
 		return
 	}
 

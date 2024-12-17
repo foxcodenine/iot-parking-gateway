@@ -459,7 +459,7 @@ func (d *Device) SoftDeleteByID(id string) error {
 // -----------------------------------------------------------------------------
 
 // BulkUpdateDevices updates multiple device records based on their device IDs.
-func (d *Device) BulkUpdateDevices(deviceData []ActivityLog) error {
+func (d *Device) BulkUpdateDevices(deviceData []Device) error {
 
 	if len(deviceData) == 0 {
 		return nil // No data to update

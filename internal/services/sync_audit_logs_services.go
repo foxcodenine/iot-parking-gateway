@@ -9,11 +9,11 @@ import (
 
 func (s *Service) SyncAuditLogs() {
 
-	items, err := s.cache.LRangeAndDelete("audit-logs")
+	items, err := s.cache.LRangeAndDelete("logs:audit-logs")
 
 	if err != nil {
 		// Log error if Redis operations fail.
-		s.errorLog.Printf("Error retrieving audit-logs from Redis: %v", err)
+		s.errorLog.Printf("Error retrieving logs:audit-logs from Redis: %v", err)
 		return
 	}
 

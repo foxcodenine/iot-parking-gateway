@@ -54,7 +54,8 @@ func main() {
 	app.Cron.AddFunc("0,20,40 * * * * *", func() {
 		app.Service.SyncRawLogs()
 		app.Service.RegisterNewDevices()
-		app.Service.SyncActivityLogsAndDevices()
+		app.Service.SyncActivityLogs()
+		app.Service.SyncDevices()
 		app.Service.SyncNBIoTKeepaliveLogs()
 		app.Service.SyncNBIoTSettingLogs()
 		app.Service.SyncAuditLogs()

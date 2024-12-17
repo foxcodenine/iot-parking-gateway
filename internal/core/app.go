@@ -66,7 +66,7 @@ func (app *App) PushAuditToCache(
 	}
 
 	// Push the audit log entry to the cache
-	app.Cache.RPush("audit-logs", auditLogEntry)
+	app.Cache.RPush("logs:audit-logs", auditLogEntry)
 }
 
 // Helper function to get client IP

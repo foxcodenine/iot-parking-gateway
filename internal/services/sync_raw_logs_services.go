@@ -10,7 +10,7 @@ import (
 // SyncRawLogs processes and synchronizes raw logs from Redis to PostgreSQL.
 func (s *Service) SyncRawLogs() {
 
-	items, err := s.cache.LRangeAndDelete("raw-data-logs")
+	items, err := s.cache.LRangeAndDelete("logs:raw-data-logs")
 	if err != nil {
 		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
 		return

@@ -10,8 +10,12 @@ import (
 // SaveDeviceData saves device data to a Redis hash with a key structured as parking:device:<device_id>.
 func (rc *RedisCache) SaveDeviceData(deviceID string, data map[string]any) error {
 
-	delete(data, "beacons_json")
-	data["delete_at"] = nil
+	if data["happened_at"] == "0001-01-01T00:00:00Z" {
+		data["happened_at"] = "0001-01-01T00:00:00.000000000Z"
+	}
+	if data["deleted_at"] == "0001-01-01T00:00:00Z" {
+		data["deleted_at"] = "0001-01-01T00:00:00.000000000Z"
+	}
 
 	conn := rc.Conn.Get()
 	defer conn.Close()
@@ -37,8 +41,12 @@ func (rc *RedisCache) SaveDeviceData(deviceID string, data map[string]any) error
 // UpdateDeviceFields updates multiple key-value pairs in the Redis hash for a device.
 func (rc *RedisCache) UpdateDeviceFields(deviceID string, fields map[string]any) error {
 
-	delete(fields, "beacons_json")
-	fields["delete_at"] = nil
+	if fields["happened_at"] == "0001-01-01T00:00:00Z" {
+		fields["happened_at"] = "0001-01-01T00:00:00.000000000Z"
+	}
+	if fields["deleted_at"] == "0001-01-01T00:00:00Z" {
+		fields["deleted_at"] = "0001-01-01T00:00:00.000000000Z"
+	}
 
 	conn := rc.Conn.Get()
 	defer conn.Close()
@@ -160,8 +168,13 @@ func (rc *RedisCache) SaveMultipleDevices(devices map[string]map[string]any) err
 	defer conn.Close()
 
 	for deviceID, fields := range devices {
-		delete(fields, "beacons_json")
-		fields["delete_at"] = nil
+
+		if fields["happened_at"] == "0001-01-01T00:00:00Z" {
+			fields["happened_at"] = "0001-01-01T00:00:00.000000000Z"
+		}
+		if fields["deleted_at"] == "0001-01-01T00:00:00Z" {
+			fields["deleted_at"] = "0001-01-01T00:00:00.000000000Z"
+		}
 
 		// Construct the Redis hash key
 		hashKey := fmt.Sprintf("%s%s:%s", rc.Prefix, "parking:device", deviceID)
@@ -191,6 +204,10 @@ func (rc *RedisCache) SaveMultipleDevices(devices map[string]map[string]any) err
 func (rc *RedisCache) ProcessParkingEventData(deviceID string, firmwareVersion string, beacons any, happenedAt string, isOccupied bool) error {
 	conn := rc.Conn.Get()
 	defer conn.Close()
+
+	if happenedAt == "0001-01-01T00:00:00Z" {
+		happenedAt = "0001-01-01T00:00:00.000000000Z"
+	}
 
 	// Construct the Redis hash key
 	hashKey := fmt.Sprintf("%s%s:%s", rc.Prefix, "parking:device", deviceID)
