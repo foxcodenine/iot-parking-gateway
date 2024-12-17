@@ -76,6 +76,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 
 		// Retrieve the device data from the cache
 		deviceData, err := s.cache.GetDevice(fmt.Sprintf("%d", deviceID))
+
 		if err != nil {
 			helpers.LogError(err, "Failed to retrieve device data from cache.")
 			sendResponse(conn, addr, reply)
@@ -163,14 +164,25 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		return
 	}
 
-	// -----------------------------------------------------------------
+	latestParkingPackage := parsedData["parking_packages"].([]map[string]any)[0]
 
-	// TODO here i updated the device cache if it exist and the new date happent_at is grater then the cached and also send the data with sochet io
+	// Format time to string with the specified format and UTC timezone
+	timestamp := latestParkingPackage["timestamp"].(int)
+	timestampTime := time.Unix(int64(timestamp), 0)
+	happenedAt := timestampTime.UTC().Format("2006-01-02T15:04:05.0000000Z")
 
-	err = s.updateDeviceCacheAndBroadcast(parsedData)
+	deviceId := fmt.Sprintf("%d", parsedData["device_id"])
 
-	if err != nil {
-		helpers.LogError(err, "???????")
+	cachedDevice, err := s.cache.GetDevice(deviceId)
+
+	if isDeviceRegistered && cachedDevice != nil && happenedAt > cachedDevice["happened_at"].(string) {
+
+		beacons := latestParkingPackage["beacons"].([]map[string]any) // Assuming beacons is a slice of any type
+		isOccupied := latestParkingPackage["is_occupied"].(int)
+
+		s.cache.ProcessParkingEventData(deviceId, fmt.Sprintf("%.2f", firmwareVersion), beacons, happenedAt, isOccupied == 1)
+	} else {
+		fmt.Println("smaller")
 	}
 
 	// Push parsed parking data packages to Redis.
@@ -196,6 +208,8 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		}
 		s.mqProducer.SendMessage("nb_iot_event_logs_exchange", "nb_iot_event_logs_queue", string(messageData))
 	}
+
+	fmt.Println("-----------------------------------------------------")
 
 	// Push parsed keepalive data to Redis.
 	for _, i := range parsedData["keep_alive_packages"].([]map[string]any) {
@@ -264,66 +278,4 @@ func sendResponse(conn *net.UDPConn, addr *net.UDPAddr, reply []string) {
 func handleErrorSendResponse(err error, message string, conn *net.UDPConn, addr *net.UDPAddr, reply []string) {
 	helpers.LogError(err, message, 3)
 	sendResponse(conn, addr, reply)
-}
-
-func (s *UDPServer) updateDeviceCacheAndBroadcast(parsedData map[string]any) error {
-	latestParkingPackage, ok := parsedData["parking_packages"].([]map[string]any)
-	if !ok || len(latestParkingPackage) == 0 {
-		return errors.New("invalid or missing parking_packages data")
-	}
-
-	timestamp, ok := latestParkingPackage[0]["timestamp"].(int)
-	if !ok {
-		return errors.New("timestamp missing or not an integer")
-	}
-
-	timestampTime := time.Unix(int64(timestamp), 0)
-	happenedAt := timestampTime.UTC().Format("2006-01-02T15:04:05.0000000Z")
-	deviceId := fmt.Sprintf("%d", parsedData["device_id"])
-	cachedDevice, err := s.cache.GetDevice(deviceId)
-	if err != nil {
-		helpers.LogError(err, "Error retrieving device from cache")
-		return err
-	}
-
-	if cachedDevice != nil {
-		cachedHappenedAtStr, ok := cachedDevice["happened_at"].(string)
-		if !ok {
-			return errors.New("cached happened_at is not a string")
-		}
-
-		cachedHappenedAt, err := time.Parse("2006-01-02T15:04:05.00Z", cachedHappenedAtStr)
-		if err != nil {
-			return fmt.Errorf("error parsing cached happened_at time: %v", err)
-		}
-
-		newHappenedAt, err := time.Parse("2006-01-02T15:04:05.00Z", happenedAt)
-		if err != nil {
-			return fmt.Errorf("error parsing new happened_at time: %v", err)
-		}
-
-		if newHappenedAt.After(cachedHappenedAt) {
-			helpers.PrettyPrintJSON(parsedData)
-			firmwareVersionFloat, ok := parsedData["firmware_version"].(float64)
-			if !ok {
-				return errors.New("firmware_version missing or not a string")
-			}
-			firmwareVersion := fmt.Sprintf("%.2f", firmwareVersionFloat)
-			beacons, ok := latestParkingPackage[0]["beacons"].([]map[string]any)
-			if !ok {
-				return errors.New("beacons missing or not in the expected format")
-			}
-			isOccupied := (latestParkingPackage[0]["is_occupied"].(int)) == 1
-
-			err := s.cache.ProcessParkingEventData(deviceId, firmwareVersion, beacons, happenedAt, isOccupied)
-			if err != nil {
-				helpers.LogError(err, "Failed to update device cache")
-				return err
-			}
-
-			// Uncomment the following line if your broadcasting infrastructure is ready
-			// socketserver.IOService.SocketServer.BroadcastToNamespace("/", "update", latestParkingPackage[0])
-		}
-	}
-	return nil
 }

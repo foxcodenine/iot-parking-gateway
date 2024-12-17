@@ -3,6 +3,7 @@ package cache
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/gomodule/redigo/redis"
 )
 
@@ -80,14 +81,20 @@ func (rc *RedisCache) GetDevice(deviceID string) (map[string]any, error) {
 		return nil, fmt.Errorf("failed to retrieve device data for %s: %w", deviceID, err)
 	}
 
-	// Deserialize JSON strings back to their original types.
+	if len(data) == 0 {
+		return nil, nil // Return nil if no data exists for the device
+	}
+
+	// Prepare the device data map
 	deviceData := make(map[string]any)
-	for key, jsonValue := range data {
-		var value any
-		if err := json.Unmarshal([]byte(jsonValue), &value); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal value for key %s: %v", key, err)
+	for key, rawValue := range data {
+		// Attempt to unmarshal JSON-encoded fields; otherwise, keep as string
+		var parsedValue any
+		if err := json.Unmarshal([]byte(rawValue), &parsedValue); err != nil {
+			// If unmarshaling fails, keep the raw value as string
+			parsedValue = rawValue
 		}
-		deviceData[key] = value
+		deviceData[key] = parsedValue
 	}
 
 	return deviceData, nil
