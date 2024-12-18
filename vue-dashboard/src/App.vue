@@ -23,6 +23,8 @@
 
     </main>
 
+    
+
 </template>
 
 <!-- --------------------------------------------------------------- -->
@@ -82,6 +84,7 @@ function closeUserMenuOnClickOutside() {
 
 onMounted(() => {
     closeUserMenuOnClickOutside();
+    
 });
 
 </script>

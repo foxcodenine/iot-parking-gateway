@@ -11,6 +11,7 @@ export const useUserStore = defineStore("userStore", () => {
 
     // - State ---------------------------------------------------------
     const usersList = ref([]);
+    const usersFetched = ref(false)
 
     // - Getters -------------------------------------------------------
 
@@ -22,12 +23,14 @@ export const useUserStore = defineStore("userStore", () => {
     };
 
     // - Actions -------------------------------------------------------
-    async function fetchUsers() {
+    async function fetchUsers(force=false) {
+        if (usersFetched.value && !force) return
         useDashboardStore().setIsLoading(true);
         try {
             const response =  await axios.get(useAppStore().getAppUrl + '/api/user');
             if (response?.status == 200 && response.data?.users) {
                 usersList.value = response.data.users;
+                usersFetched.value = true
                 return usersList.value;
             }
         } catch (error) {

@@ -11,6 +11,7 @@ export const useDeviceStore = defineStore("deviceStore", () => {
 
     // - State ---------------------------------------------------------
     const devicesList = ref([]);
+    const devicesFetched = ref(false)
 
     // - Getters -------------------------------------------------------
     const getDevicesList = computed(() => devicesList.value );
@@ -20,12 +21,15 @@ export const useDeviceStore = defineStore("deviceStore", () => {
     function reset() {
     }    
 
-    async function fetchDevices() {
+    async function fetchDevices(forced=false) {
+        if (devicesFetched.value && !forced ) return;
+
         useDashboardStore().setIsLoading(true);
         try {
             const response =  await axios.get(useAppStore().getAppUrl + '/api/device');
             if (response?.status == 200 && response.data?.devices) {
                 devicesList.value = response.data.devices;
+                devicesFetched.value = true;
                 return devicesList.value;
             }
         } catch (error) {
