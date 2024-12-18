@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
+	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 )
 
@@ -133,4 +134,35 @@ func (s *Service) PopulateDeviceBloomFilter() {
 
 	// Add all composite keys to the Bloom Filter named "registered-devices".
 	s.cache.AddItemsToBloomFilter("registered-devices", keyStrings)
+}
+
+func (s *Service) PopulateDeviceCache() {
+	// Step 1: Clear the device cache
+	if err := s.cache.DeleteAllDevices(); err != nil {
+		helpers.LogError(err, "Failed to clear device cache")
+		return
+	}
+	helpers.LogInfo("Device cache cleared successfully.")
+
+	// Step 2: Retrieve all devices from the database
+	allDevices, err := s.models.Device.GetAll()
+	if err != nil {
+		helpers.LogError(err, "Failed to retrieve devices from database")
+		return
+	}
+	helpers.LogInfo("Retrieved %d devices from database.", len(allDevices))
+
+	// Step 3: Convert the slice of devices to []map[string]any
+	deviceMaps, err := helpers.StructSliceToMapSlice(allDevices)
+	if err != nil {
+		helpers.LogError(err, "Failed to convert devices to map slice")
+		return
+	}
+
+	// Step 4: Save all devices to the cache
+	if err := s.cache.SaveMultipleDevices(deviceMaps); err != nil {
+		helpers.LogError(err, "Failed to save devices to cache")
+		return
+	}
+	helpers.LogInfo("Device cache populated successfully with %d devices.", len(allDevices))
 }

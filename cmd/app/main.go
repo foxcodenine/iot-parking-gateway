@@ -49,6 +49,7 @@ func main() {
 	// // Initialize and Populate a Bloom Filter in Redis to efficiently check the existence of device IDs.
 	app.Cache.CreateBloomFilter("registered-devices", 0.00001, 100000)
 	app.Service.PopulateDeviceBloomFilter()
+	app.Service.PopulateDeviceCache()
 
 	// Start cron
 	app.Cron.AddFunc("0,20,40 * * * * *", func() {

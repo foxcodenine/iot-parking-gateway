@@ -83,7 +83,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		}
 
 		// Check if the device is soft deleted
-		if deletedAt, exists := deviceData["deleted_at"]; exists && deletedAt != nil && deletedAt != "0001-01-01T00:00:00.000000000Z" {
+		if deletedAt, exists := deviceData["deleted_at"]; exists && deletedAt != nil && deletedAt != "0001-01-01T00:00:00Z" {
 			helpers.LogInfo("Device %d is marked as soft deleted. Request ignored.", deviceID)
 			sendResponse(conn, addr, reply)
 			return
@@ -109,7 +109,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		// Check access based on blacklist mode
 		if deviceAccessMode == "black_list" {
 			if isBlocked, ok := deviceData["is_blocked"].(bool); ok && isBlocked {
-				helpers.LogInfo("Device %d is marked blocked. Request denied.", deviceID)
+				helpers.LogInfo("Device %d is marked blocked. Request ignored.", deviceID)
 				sendResponse(conn, addr, reply)
 				return
 			}
@@ -267,68 +267,83 @@ func handleErrorSendResponse(err error, message string, conn *net.UDPConn, addr 
 	sendResponse(conn, addr, reply)
 }
 
+// updateDeviceCacheAndBroadcast updates the device data cache and broadcasts changes if the incoming data is newer than what's in the cache.
 func (s *UDPServer) updateDeviceCacheAndBroadcast(parsedData map[string]any) error {
+	// Extract the list of parking packages from the parsed data.
 	latestParkingPackage, ok := parsedData["parking_packages"].([]map[string]any)
 	if !ok {
 		return errors.New("invalid or missing parking_packages data")
 	}
+	// Return early if there are no parking packages.
 	if len(latestParkingPackage) == 0 {
 		return nil
 	}
 
+	// Retrieve the timestamp from the first parking package.
 	timestamp, ok := latestParkingPackage[0]["timestamp"].(int)
 	if !ok {
 		return errors.New("timestamp missing or not an integer")
 	}
 
+	// Convert the timestamp to a UTC time string.
 	timestampTime := time.Unix(int64(timestamp), 0)
-	happenedAt := timestampTime.UTC().Format("2006-01-02T15:04:05.000000000Z")
+	happenedAt := timestampTime.UTC().Format("2006-01-02T15:04:05Z")
 	deviceId := fmt.Sprintf("%d", parsedData["device_id"])
+
+	// Retrieve cached device data.
 	cachedDevice, err := s.cache.GetDevice(deviceId)
 	if err != nil {
 		helpers.LogError(err, "Error retrieving device from cache")
 		return err
 	}
 
+	// Check if there is cached data and the new data is more recent.
 	if cachedDevice != nil {
 		cachedHappenedAtStr, ok := cachedDevice["happened_at"].(string)
 		if !ok {
 			return errors.New("cached happened_at is not a string")
 		}
 
-		cachedHappenedAt, err := time.Parse("2006-01-02T15:04:05.000000000Z", cachedHappenedAtStr)
+		cachedHappenedAt, err := time.Parse("2006-01-02T15:04:05Z", cachedHappenedAtStr)
 		if err != nil {
 			return fmt.Errorf("error parsing cached happened_at time: %v", err)
 		}
 
-		newHappenedAt, err := time.Parse("2006-01-02T15:04:05.000000000Z", happenedAt)
+		newHappenedAt, err := time.Parse("2006-01-02T15:04:05Z", happenedAt)
 		if err != nil {
 			return fmt.Errorf("error parsing new happened_at time: %v", err)
 		}
 
+		// Proceed with update if the new data is more recent.
 		if newHappenedAt.After(cachedHappenedAt) {
 
+			// Extract the firmware version as a float64
 			firmwareVersionFloat, ok := parsedData["firmware_version"].(float64)
 			if !ok {
-				return errors.New("firmware_version missing or not a string")
+				return errors.New("firmware_version missing or not a float64")
 			}
+
+			// Format the firmware version as a string
 			firmwareVersion := fmt.Sprintf("%.2f", firmwareVersionFloat)
+
+			// Extract the beacons data from the parking package
 			beacons, ok := latestParkingPackage[0]["beacons"].([]map[string]any)
 			if !ok {
 				return errors.New("beacons missing or not in the expected format")
 			}
+
+			// Determine if the parking spot is occupied
 			isOccupied := (latestParkingPackage[0]["is_occupied"].(int)) == 1
 
-			// Update cache parking:device:<id>
-
+			// --- Update the device cache ( parking:device:<id> )
 			err := s.cache.ProcessParkingEventData(deviceId, firmwareVersion, beacons, happenedAt, isOccupied)
 			if err != nil {
 				helpers.LogError(err, "Failed to update device cache")
 				return err
 			}
 
-			// Update cache logs:device-update-logs
-
+			// --- Log updates for PostgreSQL synchronization ( logs:device-update-logs )
+			// Create a payload for logging the update
 			var payload = make(map[string]any)
 			payload["firmware_version"] = firmwareVersion
 			payload["device_id"] = deviceId
@@ -336,13 +351,13 @@ func (s *UDPServer) updateDeviceCacheAndBroadcast(parsedData map[string]any) err
 			payload["is_occupied"] = isOccupied
 			payload["beacons"] = beacons
 
+			// Push the log entry to Redis for PostgreSQL update processing
 			err = s.cache.RPush("logs:device-update-logs", payload)
 			if err != nil {
 				helpers.LogError(err, "Failed to push to Redis logs:device-update-logs")
 			}
 
-			// TODO:  send data tp client through socket io
-
+			// TODO: Broadcast the update to clients using socket.io.
 			// Uncomment the following line if your broadcasting infrastructure is ready
 			// socketserver.IOService.SocketServer.BroadcastToNamespace("/", "update", latestParkingPackage[0])
 		}

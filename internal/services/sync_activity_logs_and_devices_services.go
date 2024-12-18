@@ -99,7 +99,7 @@ func (s *Service) SyncDevices() {
 			continue
 		}
 
-		newHappenedAt, err := time.Parse("2006-01-02T15:04:05.000000000Z", itemMap["happened_at"].(string))
+		newHappenedAt, err := time.Parse("2006-01-02T15:04:05Z", itemMap["happened_at"].(string))
 		if err != nil {
 			helpers.LogError(err, "error parsing new happened_at time")
 			continue

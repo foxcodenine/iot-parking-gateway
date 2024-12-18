@@ -8,8 +8,6 @@
     d. Clear cashed users and devices
 
 
-
-
 3. Sigfox: 
         a. Create router for Sigfox integration.
         b. Develop handler for processing Sigfox data.
@@ -20,9 +18,6 @@
 
 4. UDP:
     a. Implement whitelist and blacklist functionality.
-
- 
-
 
 6. Device API:
     a. Add authentication and check user access_level.

@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"reflect"
 )
 
 func GenerateJWTSecretKey(length int) (string, error) {
@@ -31,6 +32,31 @@ func StructToMap(v any) (map[string]any, error) {
 	var result map[string]any
 	if err := json.Unmarshal(jsonData, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON into map: %v", err)
+	}
+
+	return result, nil
+}
+
+// StructSliceToMapSlice converts a slice of structs into a slice of map[string]any.
+func StructSliceToMapSlice(slice any) ([]map[string]any, error) {
+	// Ensure input is a slice
+	sliceValue := reflect.ValueOf(slice)
+	if sliceValue.Kind() != reflect.Slice {
+		return nil, fmt.Errorf("input must be a slice of structs")
+	}
+
+	// Resultant slice of maps
+	var result []map[string]any
+
+	// Iterate over the slice
+	for i := 0; i < sliceValue.Len(); i++ {
+		// Convert each struct to map
+		item := sliceValue.Index(i).Interface()
+		structMap, err := StructToMap(item)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert struct at index %d: %v", i, err)
+		}
+		result = append(result, structMap)
 	}
 
 	return result, nil
