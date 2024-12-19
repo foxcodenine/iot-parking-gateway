@@ -53,3 +53,37 @@ body {
     left: 13rem !important;
     bottom: 1rem !important;
 }
+
+.gm-style-iw-chr {
+  display:none;
+}
+
+.gm-style-iw, .gm-style-iw-chr  {
+  display: none;
+}
+.gm-style-iw-c {
+display: none;
+}
+
+.gm-style .gm-style-iw {   
+
+    background-color: #27272a !important;
+    color: #f9fafb;
+    width: max-content !important;
+    overflow: hidden;
+    overflow: hidden !important;
+    padding: 5px !important;
+    opacity: .95;
+    transform: translate3d(-50%, -100%, 0)translateY(-10px);
+    width: min-content !important;
+
+
+    & > * {
+        overflow:hidden!important;
+    }
+ }
+
+ .gm-style .gm-style-iw-tc::after {
+  display: none;
+
+}
