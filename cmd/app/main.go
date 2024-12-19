@@ -248,20 +248,6 @@ func initializeAppSettings() {
 			UpdatedBy:   0,
 		},
 		{
-			Key:         "device_access_mode",
-			Val:         os.Getenv("DEVICE_ACCESS_MODE"),
-			Description: "Defines the access control mode for devices, determining whether they are managed via a blacklist or whitelist approach.",
-			AccessLevel: 1, // Administrator access level
-			UpdatedBy:   0,
-		},
-		{
-			Key:         "default_latitude",
-			Val:         os.Getenv("DEFAULT_LATITUDE"),
-			Description: "Default latitude for map centering and initial device placement on the map.",
-			AccessLevel: 1, // Administrator access level
-			UpdatedBy:   0,
-		},
-		{
 			Key:         "default_longitude",
 			Val:         os.Getenv("DEFAULT_LONGITUDE"),
 			Description: "Default longitude for map centering and initial device placement on the map.",
@@ -278,8 +264,29 @@ func initializeAppSettings() {
 		{
 			Key:         "redis_ttl_seconds",
 			Val:         os.Getenv("REDIS_DEFAULT_TTL"),
-			Description: "Default time-to-live (TTL) in seconds for items stored in the Redis cache, impacting how long user and device data are cached.",
+			Description: "Default time-to-live (TTL) in seconds for items stored in the Redis cache.",
 			AccessLevel: 0, // Root access level
+			UpdatedBy:   0,
+		},
+		{
+			Key:         "device_access_mode",
+			Val:         os.Getenv("DEVICE_ACCESS_MODE"),
+			Description: "Defines the access control mode for devices, determining whether they are managed via a blacklist or whitelist approach.",
+			AccessLevel: 1, // Administrator access level
+			UpdatedBy:   0,
+		},
+		{
+			Key:         "default_latitude",
+			Val:         os.Getenv("DEFAULT_LATITUDE"),
+			Description: "Default latitude for map centering and initial device placement on the map.",
+			AccessLevel: 1, // Administrator access level
+			UpdatedBy:   0,
+		},
+		{
+			Key:         "google_map_id",
+			Val:         os.Getenv("GOOGLE_MAP_ID"),
+			Description: "The Google Map ID used to customize and embed Google Maps in the application.",
+			AccessLevel: 1, // Administrator access level
 			UpdatedBy:   0,
 		},
 	}

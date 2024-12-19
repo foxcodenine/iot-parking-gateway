@@ -1,11 +1,8 @@
 <template>
     <div class="the-map">
         <GoogleMap v-if="apiKey" 
-        :api-key="apiKey" 
-        map-id="9e8ca8994cbac798" 
-        style="width: 100%; height: 100vh" :center="getMapCenter" :zoom="17" @zoom_changed="zoomChanged" ref="mapRef">
-
-
+            :api-key="apiKey"  :map-id="getMapId" style="width: 100%; height: 100vh" 
+            :center="getMapCenter"  :zoom="17" @zoom_changed="zoomChanged"  ref="mapRef">
 
             <CustomMarker v-for="device in getDevicesList"  @zoom_changed="zoomChanged" :style="markerStyle()"
                 @click="aaa(device)"
@@ -55,6 +52,7 @@ const getMapCenter = computed(() => {
     return { lat, lng };
 });
 
+const getMapId = computed(() => { return appStore.getAppSettings.google_map_id ?? ""; });
 
 function zoomChanged() {
     mapZoom.value = mapRef.value.map.getZoom()

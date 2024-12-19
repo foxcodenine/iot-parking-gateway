@@ -3,7 +3,7 @@
         <div id="create-asset-modal-background" class="my-modal__background" @click="closeModal"></div>
         <div class="my-modal__wrapper">
             <div id="create-asset-modal-map" class="my-modal__map">
-                <GoogleMap v-if="apiKey" :api-key="apiKey" class="map" :zoom="mapZoom" :center="mapCenter" @click="updatedMarkerLocation">
+                <GoogleMap v-if="apiKey" :api-key="apiKey" :map-id="getMapId" class="map" :zoom="mapZoom" :center="mapCenter" @click="updatedMarkerLocation">
                     <Marker :options="{ position: markerPosition }"></Marker>
                 </GoogleMap>
             </div>
@@ -24,6 +24,7 @@ import { onMounted } from 'vue';
 
 const appStore = useAppStore();
 
+
 // - Props -------------------------------------------------------------
 
 const props = defineProps({
@@ -41,7 +42,11 @@ const props = defineProps({
 
 const apiKey = ref(null);
 const mapZoom = ref(15);
+
+// - Computed ----------------------------------------------------------
+
 const mapCenter = computed(() => props.markerPosition);
+const getMapId = computed(() => { return appStore.getAppSettings.google_map_id ?? ""; });
 
 // - Hooks -------------------------------------------------------------
 

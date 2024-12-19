@@ -263,11 +263,11 @@ func (h *SettingHandler) Update(w http.ResponseWriter, r *http.Request) {
 				helpers.RespondWithError(w, err, "Failed to update settings.", http.StatusInternalServerError)
 				return
 			}
-		}
 
-		err = auditLogSettingUpdate(userData, r, "default_latitude", default_latitude)
-		if err != nil {
-			helpers.LogError(err, "Failed to create an audit log entry for updating the 'default_latitude' setting.")
+			err = auditLogSettingUpdate(userData, r, "default_latitude", default_latitude)
+			if err != nil {
+				helpers.LogError(err, "Failed to create an audit log entry for updating the 'default_latitude' setting.")
+			}
 		}
 	}
 
@@ -306,14 +306,53 @@ func (h *SettingHandler) Update(w http.ResponseWriter, r *http.Request) {
 				helpers.RespondWithError(w, err, "Failed to update settings.", http.StatusInternalServerError)
 				return
 			}
-		}
-
-		err = auditLogSettingUpdate(userData, r, "default_longitude", default_longitude)
-		if err != nil {
-			helpers.LogError(err, "Failed to create an audit log entry for updating the 'default_longitude' setting.")
+			err = auditLogSettingUpdate(userData, r, "default_longitude", default_longitude)
+			if err != nil {
+				helpers.LogError(err, "Failed to create an audit log entry for updating the 'default_longitude' setting.")
+			}
 		}
 	}
 
+	// -----------------------------------------------------------------
+	google_map_id, ok := updatedFields["google_map_id"]
+	if ok {
+		if userData.AccessLevel > 1 {
+			http.Error(w, "Permission denied.", http.StatusForbidden)
+			return
+		}
+
+		// Fetch the cached value
+		cachedVal, err := cache.AppCache.HGet("app:settings", "google_map_id")
+		if err != nil {
+			helpers.RespondWithError(w, err, "Failed to fetch cached setting value.", http.StatusInternalServerError)
+			return
+		}
+
+		// Check if the value is the same
+		if cachedVal.(string) != google_map_id {
+			// Validate that the string represents a valid Google Map ID pattern
+			mapIDPattern := `^[A-Za-z0-9_-]{10,}$` // Placeholder pattern; adjust as per actual requirements
+			matched, err := regexp.MatchString(mapIDPattern, google_map_id)
+			if err != nil || !matched {
+				http.Error(w, "Invalid Google Map ID format.", http.StatusBadRequest)
+				return
+			}
+
+			val := map[string]interface{}{"val": google_map_id}
+
+			// Proceed to update the setting
+			_, err = app.Models.Setting.UpdateByKey("google_map_id", val)
+			if err != nil {
+				helpers.RespondWithError(w, err, "Failed to update the 'google_map_id' setting.", http.StatusInternalServerError)
+				return
+			}
+
+			err = auditLogSettingUpdate(userData, r, "google_map_id", google_map_id)
+			if err != nil {
+				helpers.LogError(err, "Failed to create an audit log entry for updating the 'google_map_id' setting.")
+			}
+		}
+	}
 	// -----------------------------------------------------------------
 
 	var message = "Settings updated. Changes will take effect upon next login."
