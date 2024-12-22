@@ -60,7 +60,18 @@ const relocateMarker = ref(null);
 
 
 
-const getMapId = computed(() => { return appStore.getAppSettings.google_map_id ?? ""; });
+const getMapId = computed(() => { 
+    try {
+        return appStore.getAppSettings.google_map_id ?? "";
+    } catch (error) {
+        // Ignore the specific error you need to suppress
+        if (error.message.includes("Cannot read properties of null (reading 'google_map_id')")) {
+            return ""; // Return a default value if needed
+        }
+        // Log other errors
+        console.error('! TheMap.getMapId !\n', error);
+    }
+});
 
 // - Watchers ----------------------------------------------------------
 
