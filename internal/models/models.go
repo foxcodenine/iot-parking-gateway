@@ -24,6 +24,8 @@ type Models struct {
 	User                User
 }
 
+var AppModels Models
+
 // New initializes the Models struct and sets up the Upper ORM session.
 func New(conn *pgxpool.Pool) (Models, error) {
 
@@ -47,5 +49,6 @@ func New(conn *pgxpool.Pool) (Models, error) {
 	dbSession = upperSession
 
 	// Return an initialized Models struct with model references.
-	return Models{}, nil
+	AppModels = Models{}
+	return AppModels, nil
 }

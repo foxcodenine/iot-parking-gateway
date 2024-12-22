@@ -1,25 +1,63 @@
 <template>
-    <InfoWindow v-if="activeWindow==device.device_id" :options="{ position: { lat: device.latitude, lng: device.longitude }, anchorPoint: 'CENTER' }">
+    <InfoWindow v-if="activeWindow == device.device_id"
+        :options="{ position: { lat: device.latitude, lng: device.longitude }, anchorPoint: 'CENTER' }">
         <div class="info-window">
+            <div class="info-window__close" @click="closeWindow">&times;</div>
+
             <div class="info-window__header">
                 <h3>{{ device.name }}</h3>
-           
             </div>
-            <div class="info-window__content mt-2">
-                <span>id:</span>
-                <p>{{ device.device_id }}</p>
+
+            <div class="info-window__body mt-2 ">
+                <div class="info-window__content">
+                    <span>Device ID</span>
+                    <p>{{ device.device_id }}</p>
+                </div>
+                <div class="info-window__content">
+                    <span>Network</span>
+                    <p>{{ device.network_type }}</p>
+                </div>
+                <div class="info-window__content">
+                    <span>Firmware</span>
+                    <p>{{ device.firmware_version }}</p>
+                </div>
+                <div class="info-window__content" v-if="formatToLocalDateTime(device.happened_at)">
+                    <span>Status</span>
+                    <p class="vacant" :class="{ 'occupied': device.is_occupied }">{{ device.is_occupied ? 'Occupied' :
+                        'Vacant' }}</p>
+                </div>
+                <div class="info-window__content" v-else>
+                    <span>Status</span>
+                    <p class="inactive">Inactive</p>
+                </div>
+                <div class="info-window__content">
+                    <span>Last Event</span>
+                    <p>{{ timeSinceParked }}</p>
+                </div>
+                <div class="info-window__content mb-1" v-if="formatToLocalDateTime(device.happened_at)">
+                    <span></span>
+                    <p>{{ formatToLocalDateTime(device.happened_at) }}</p>
+                </div>
             </div>
-            <div class="info-window__content">
-                <span>nw:</span>
-                <p>{{ device.network_type }}</p>
+
+            <div class="info-window__footer mt-2 mb-1">
+                <svg class="info-window__svg" >
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-star"></use>
+                </svg>
+                <svg class="info-window__svg" @click="updatedMarkerLocation">
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-map-8"></use>
+                </svg> 
+                <svg class="info-window__svg" @click="navigateToDevice()">
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-route-start"></use>
+                </svg>                
+                <svg class="info-window__svg" style="padding: .2rem;" @click="editDevice(device.device_id)">
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-pencil-9"></use>
+                </svg>
+                <svg class="info-window__svg" style="padding: .4rem;">
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-bug"></use>
+                </svg>
             </div>
-            <div class="info-window__content">
-                <span>fw:</span>
-                <p>{{ device.firmware_version }}</p>
-            </div>
-            <div class="info-window-footer">
-                <button class="action-btn" @click="onAction">More Info</button>
-            </div>
+
         </div>
     </InfoWindow>
 </template>
@@ -27,20 +65,74 @@
 <!-- --------------------------------------------------------------- -->
 
 <script setup>
-import { ref } from 'vue';
+import { formatToLocalDateTime, timeElapsed } from '@/utils/utils';
+import { ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { InfoWindow } from 'vue3-google-map';
 
-const props = defineProps({
+const route = useRoute();
+const router = useRouter();
 
+const emit = defineEmits(['emitCloseWindow', 'emitUpdatedMarkerLocation'])
+
+// - Props -------------------------------------------------------------
+const props = defineProps({
     device: {
         type: Object,
-        required: true,  
+        required: true,
     },
     activeWindow: {
         type: [Number, null, String],
-        required: true,  
+        required: true,
     }
 });
+
+// - Data --------------------------------------------------------------
+const timeSinceParked = ref('n/a');
+
+// - Methods -----------------------------------------------------------
+
+function closeWindow() {
+    emit('emitCloseWindow');
+}
+
+function updatedMarkerLocation() {
+    emit('emitUpdatedMarkerLocation', props.device.device_id)
+}
+
+function navigateToDevice() {
+
+    const lat = props.device.latitude;
+    const lng = props.device.longitude;
+    const formattedCoordinates = `${lat},${lng}`;
+
+    // Construct the Google Maps URL
+    const googleMapsURL = `https://www.google.com/maps/place/${encodeURIComponent(formattedCoordinates)}/@${formattedCoordinates},17z/data=!3m1!4b1!4m4!3m3!8m2!3d${lat}!4d${lng}?entry=ttu`;
+    
+    window.open(googleMapsURL, '_blank');
+}
+
+function editDevice(deviceID) {
+    closeWindow();
+    router.push({
+        name: 'deviceEditView',
+        params: { deviceID },
+    });
+}
+
+// - Hooks -------------------------------------------------------------
+
+(() => {
+    timeSinceParked.value = timeElapsed(props.device.happened_at);
+})();
+
+setInterval(() => {
+    timeSinceParked.value = timeElapsed(props.device.happened_at);
+}, 5000);
+
+
+
+
 </script>
 
 <!-- --------------------------------------------------------------- -->
@@ -52,7 +144,19 @@ const props = defineProps({
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     min-width: 200px;
-    
+
+    &__close {
+        cursor: pointer;
+        position: absolute;
+        font-size: 1.5rem;
+        top: .0rem;
+        right: .5rem;
+        transition: all .1s ease;
+
+        &:hover {
+            color: $col-red-400;
+        }
+    }
 
 
     &__header {
@@ -66,7 +170,7 @@ const props = defineProps({
         h3 {
             margin: 0;
             font-size: 1rem;
-            font-weight: bold;         
+            font-weight: bold;
         }
 
         .close-btn {
@@ -76,48 +180,68 @@ const props = defineProps({
             font-size: 1.4rem;
             font-weight: 100;
             cursor: pointer;
+
             &:hover {
                 color: $col-red-400;
             }
         }
     }
 
+    &__body {
+        border-bottom: 1px solid $col-zinc-700;
+    }
+
     &__content {
         padding: 3px 10px;
-        font-size: 1rem;
-        display: grid;      
-        grid-template-columns: 2rem 1fr; 
+        font-size: .9rem;
+        display: grid;
+        grid-template-columns: 5.5rem 1fr;
         align-items: center;
         width: max-content !important;
+        font-weight: 500;
+        font-family: $font-action;
 
         span {
-            font-family: $font-display;;
+            // font-family: $font-display;;
+            font-weight: 300;
         }
     }
 
-    &__icon {
+    &__svg {
         fill: currentColor;
-        width: 1rem;
-        height: 1rem;
-    }
+        width: 1.8rem;
+        height: 1.8rem;
+        padding: .3rem;
+        border: .5px solid currentColor;
+        border-radius: 2px;
+        cursor: pointer;
+        flex: 1;
 
-    &-footer {
-        padding: 5px 10px;
-        text-align: right;
-
-        .action-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            cursor: pointer;
-
-            &:hover {
-                background-color: #0056b3;
-            }
+        &:hover {
+            color: $col-lime-400;
         }
     }
+
+    &__footer {
+        padding: 5px 10px;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        gap: .5rem;
+
+  
+    }
+}
+
+.vacant {
+    color: $col-lime-500;
+}
+
+.occupied {
+    color: $col-red-500;
+}
+
+.inactive {
+    color: $col-indigo-500;
 }
 </style>

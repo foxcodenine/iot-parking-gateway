@@ -7,6 +7,7 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/mq"
 	"github.com/foxcodenine/iot-parking-gateway/internal/services"
+	socketio "github.com/googollee/go-socket.io"
 )
 
 // UDPServer represents a UDP server.
@@ -19,6 +20,7 @@ type UDPServer struct {
 	shutdownCh       chan struct{} // Shutdown channel to signal the listening loop to stop
 	isShuttingDown   bool          // Flag to indicate the server is intentionally shutting down
 	deviceAccessMode *string
+	SocketIO         *socketio.Server
 }
 
 // NewServer initializes a new UDP server.

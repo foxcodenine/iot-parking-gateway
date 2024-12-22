@@ -29,9 +29,15 @@ type Server struct {
 	Port         string
 }
 
+var allowedOrigins = map[string]bool{
+	"https://yourdomain.com":    true,
+	"https://anotherdomain.com": true,
+	"http://localhost:5173":     true,
+}
+
 // allowOriginFunc allows all origins; used to configure CORS in the transports.
 var allowOriginFunc = func(r *http.Request) bool {
-	return true
+	return allowedOrigins[r.Header.Get("Origin")]
 }
 
 var IOService *Server
@@ -39,41 +45,7 @@ var IOService *Server
 // NewServer initializes a new HTTP server on the specified port with routes configured.
 func NewServer(port string) *Server {
 
-	socketServer := socketio.NewServer(&engineio.Options{
-		Transports: []transport.Transport{
-			&polling.Transport{
-				CheckOrigin: allowOriginFunc,
-			},
-			&websocket.Transport{
-				CheckOrigin: allowOriginFunc,
-			},
-		},
-	})
-
-	socketServer.OnConnect("/", func(s socketio.Conn) error {
-		helpers.LogInfo("Connected ID: %s", s.ID())
-		return nil
-	})
-
-	socketServer.OnEvent("/", "update", func(s socketio.Conn, msg string) {
-		helpers.LogInfo("Received update: %s", msg)
-	})
-
-	socketServer.OnDisconnect("/", func(s socketio.Conn, reason string) {
-		helpers.LogInfo("Disconnected ID: %s, Reason: %s", s.ID(), reason)
-	})
-
-	socketServer.OnError("/", func(s socketio.Conn, err error) {
-		// Handle WebSocket-specific errors using gorillaWebSocket package
-		if websocketErr, ok := err.(*gorillaWebSocket.CloseError); ok {
-			switch websocketErr.Code {
-			case gorillaWebSocket.CloseGoingAway, gorillaWebSocket.CloseNormalClosure:
-				helpers.LogInfo("Normal disconnect by client ID: %s, Code: %d", s.ID(), websocketErr.Code)
-				return
-			}
-		}
-		helpers.LogError(err, "Socket.IO error")
-	})
+	socketServer := createSocketServer()
 
 	mux := http.NewServeMux()
 	mux.Handle("/socket.io/", socketServer)
@@ -100,12 +72,86 @@ func (s *Server) Start() {
 			helpers.LogError(err, "Error starting the server: %v\n")
 		}
 	}()
+
+	s.registerSocketHandlers()
+
 	go func() {
 		if err := s.SocketServer.Serve(); err != nil {
 			helpers.LogError(err, "Error starting Socket.IO server")
 		}
 	}()
 
+}
+
+func (s *Server) RestartSocketServer() {
+	helpers.LogInfo("Restarting Socket.IO server...")
+
+	// Close the existing Socket.IO server to disconnect all clients.
+	if err := s.SocketServer.Close(); err != nil {
+		helpers.LogError(err, "Error closing Socket.IO server")
+	}
+
+	// Reinitialize the Socket.IO server
+	s.SocketServer = createSocketServer()
+
+	s.registerSocketHandlers()
+
+	// Restart Socket.IO server serve
+	go func() {
+		if err := s.SocketServer.Serve(); err != nil {
+			helpers.LogError(err, "Error starting Socket.IO server after restart")
+		}
+	}()
+	helpers.LogInfo("Socket.IO server restarted successfully.")
+}
+
+func (s *Server) registerSocketHandlers() {
+
+	// Gracefully handles panics during socket handler registration,
+	// logging the error without crashing the server.
+	defer func() {
+		if r := recover(); r != nil {
+			helpers.LogError(fmt.Errorf("panic in socket handler registration: %v", r), "Handler registration failed")
+		}
+	}()
+
+	s.SocketServer.OnConnect("/", func(s socketio.Conn) error {
+		helpers.LogInfo("Connected ID: %s", s.ID())
+		return nil
+	})
+
+	s.SocketServer.OnEvent("/", "update", func(s socketio.Conn, msg string) {
+		helpers.LogInfo("Received update: %s", msg)
+	})
+
+	s.SocketServer.OnDisconnect("/", func(s socketio.Conn, reason string) {
+		helpers.LogInfo("Disconnected ID: %s, Reason: %s", s.ID(), reason)
+	})
+
+	s.SocketServer.OnError("/", func(s socketio.Conn, err error) {
+		// Handle WebSocket-specific errors using gorillaWebSocket package
+		if websocketErr, ok := err.(*gorillaWebSocket.CloseError); ok {
+			switch websocketErr.Code {
+			case gorillaWebSocket.CloseGoingAway, gorillaWebSocket.CloseNormalClosure:
+				helpers.LogInfo("Normal disconnect by client ID: %s, Code: %d", s.ID(), websocketErr.Code)
+				return
+			}
+		}
+		helpers.LogError(err, "Socket.IO error")
+	})
+}
+
+func createSocketServer() *socketio.Server {
+	return socketio.NewServer(&engineio.Options{
+		Transports: []transport.Transport{
+			&polling.Transport{
+				CheckOrigin: allowOriginFunc,
+			},
+			&websocket.Transport{
+				CheckOrigin: allowOriginFunc,
+			},
+		},
+	})
 }
 
 // Shutdown gracefully shuts down the server without interrupting any active connections.

@@ -1,7 +1,7 @@
 <template>
     <main class="dashboard" :class="{ 'no-side-bar': !showSideBar }" >
 
-        <SockerioClient></SockerioClient>
+        <SockerioClient v-if="isAuthenticated"></SockerioClient>
 
         <VueLoadingOverlay :active="getIsLoading" :is-full-page="true" :lock-scroll="true" :width="128" :height="128"
             transition="fade" :opacity="0.0" />
@@ -17,7 +17,9 @@
 
         <section class="page" >
             <router-view v-slot="{ Component }">
-                <component :is="Component" />
+                <KeepAlive>
+                    <component :is="Component" />
+                </KeepAlive>
             </router-view>
         </section>
 
@@ -41,12 +43,16 @@ import { useDashboardStore } from './stores/dashboardStore';
 import { storeToRefs } from 'pinia';
 import { useScrollLock } from '@vueuse/core'
 import { useAppStore } from './stores/appStore';
+import { useAuthStore } from './stores/authStore';
 
 // - Store -------------------------------------------------------------
 
 const dashboardStore = useDashboardStore();
 const appStore = useAppStore();
 const { getPageScrollDisabled } = storeToRefs(appStore);
+
+const authStore = useAuthStore();
+const {isAuthenticated} = storeToRefs(authStore);
 
 // - Routes ------------------------------------------------------------
 

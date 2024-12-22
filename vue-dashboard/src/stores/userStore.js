@@ -23,8 +23,8 @@ export const useUserStore = defineStore("userStore", () => {
     };
 
     // - Actions -------------------------------------------------------
-    async function fetchUsers(force=false) {
-        if (usersFetched.value && !force) return
+    async function fetchUsers() {
+ 
         useDashboardStore().setIsLoading(true);
         try {
             const response =  await axios.get(useAppStore().getAppUrl + '/api/user');

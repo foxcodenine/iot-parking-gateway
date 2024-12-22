@@ -15,28 +15,52 @@ import (
 type DeviceHandler struct {
 }
 
+// CreateDeviceMap converts a slice of Device structs into a map with DeviceID as the key.
+func CreateDeviceMap(devices []*models.Device) map[string]*models.Device {
+	deviceMap := make(map[string]*models.Device)
+	for _, device := range devices {
+		deviceMap[device.DeviceID] = device
+	}
+	return deviceMap
+}
+
 func (h *DeviceHandler) Index(w http.ResponseWriter, r *http.Request) {
 
+	// Retrieve devices from the database
 	devices, err := app.Models.Device.GetAll()
-
 	if err != nil {
 		helpers.RespondWithError(w, err, "Failed to retrieve devices", http.StatusInternalServerError)
 		return
 	}
 
-	// Response structure with a success message and user data
-	response := map[string]interface{}{
-		"message": "Devices retrieved successfully.",
-		"devices": devices,
+	// Check query parameters
+	queryParams := r.URL.Query()
+	returnAsMap := queryParams.Get("map")
+
+	var response map[string]interface{}
+
+	if returnAsMap == "true" {
+		// Convert the devices slice to a map
+		deviceMap := CreateDeviceMap(devices)
+
+		// Prepare the response structure
+		response = map[string]interface{}{
+			"message": "Devices retrieved successfully.",
+			"devices": deviceMap,
+		}
+	} else {
+		// Prepare the response with the slice
+		response = map[string]interface{}{
+			"message": "Devices retrieved successfully.",
+			"devices": devices,
+		}
 	}
 
 	// Set the response header to JSON
 	w.Header().Set("Content-Type", "application/json")
 
-	// Encode the devices slice to JSON and write it to the response
-
+	// Encode the response to JSON and write it to the response
 	err = json.NewEncoder(w).Encode(response)
-
 	if err != nil {
 		helpers.RespondWithError(w, err, "Failed to encode response.", http.StatusInternalServerError)
 		return

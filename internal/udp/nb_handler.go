@@ -12,6 +12,7 @@ import (
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/firmware"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
+
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/google/uuid"
 )
@@ -359,7 +360,9 @@ func (s *UDPServer) updateDeviceCacheAndBroadcast(parsedData map[string]any) err
 
 			// TODO: Broadcast the update to clients using socket.io.
 			// Uncomment the following line if your broadcasting infrastructure is ready
-			// socketserver.IOService.SocketServer.BroadcastToNamespace("/", "update", latestParkingPackage[0])
+
+			s.SocketIO.BroadcastToNamespace("/", "parking-event", payload)
+			fmt.Println(1)
 		}
 	}
 	return nil

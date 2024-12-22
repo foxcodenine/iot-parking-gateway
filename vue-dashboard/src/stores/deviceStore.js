@@ -10,23 +10,24 @@ import { useDashboardStore } from './dashboardStore';
 export const useDeviceStore = defineStore("deviceStore", () => {
 
     // - State ---------------------------------------------------------
-    const devicesList = ref([]);
+    const devicesList = ref({});
     const devicesFetched = ref(false)
 
     // - Getters -------------------------------------------------------
-    const getDevicesList = computed(() => devicesList.value );
+    const getDevicesList = computed(() => {
+         return devicesList.value;
+    } );
 
     // - Actions -------------------------------------------------------
 
     function reset() {
     }    
 
-    async function fetchDevices(forced=false) {
-        if (devicesFetched.value && !forced ) return;
-
+    async function fetchDevices() {
+  
         useDashboardStore().setIsLoading(true);
         try {
-            const response =  await axios.get(useAppStore().getAppUrl + '/api/device');
+            const response =  await axios.get(useAppStore().getAppUrl + '/api/device?map=true');
             if (response?.status == 200 && response.data?.devices) {
                 devicesList.value = response.data.devices;
                 devicesFetched.value = true;
@@ -104,26 +105,31 @@ export const useDeviceStore = defineStore("deviceStore", () => {
     }
 
     function pushDeviceToList(device) {
-        if (device && device.device_id) {
-            devicesList.value.push(device);
+        
+        if (device && device.device_id) {           
+            devicesList.value[device.device_id] = device;
         }  
     }
 
     function updateDeviceInList (device) {
         if (device && device.device_id) {
-            const index = devicesList.value.findIndex(d => d.device_id == device.device_id)
-            if (index == -1) { return }
-            devicesList.value[index] = {...device};
+            devicesList.value[device.device_id] = device;
         }
     }
 
     function removeDeviceFromList (deviceID) {
         if (deviceID) {
-            const index = devicesList.value.findIndex(d => d.device_id == deviceID)
-            if (index == -1) { return }
-
-            devicesList.value.splice(index, 1)
+            delete devicesList.value[deviceID]
         }
+    }
+
+    function onParkingEvent(payload) {
+  
+        if (!devicesList.value[payload.device_id]) return
+       devicesList.value[payload.device_id].is_occupied = payload.is_occupied;
+       devicesList.value[payload.device_id].happened_at = payload.happened_at;
+       devicesList.value[payload.device_id].firmware_version = payload.firmware_version;
+       devicesList.value[payload.device_id].beacons = payload.beacons;
     }
 
     // - Expose --------------------------------------------------------
@@ -138,5 +144,6 @@ export const useDeviceStore = defineStore("deviceStore", () => {
         removeDeviceFromList,
         createDevice,
         pushDeviceToList,
+        onParkingEvent
     }
 });

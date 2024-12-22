@@ -108,10 +108,10 @@
             <tbody>
 
 
-                <tr v-for="device in getDevicesList"
+                <tr  v-for="( device, _ ) in getDevicesList"
                     :class="{ 'bg-lime-200': selectedDevice.device_id == device.device_id }">
 
-                    <td>{{ device.device_id }}</td>
+                    <td :id="`col-${device.device_id}`">{{ device.device_id }}</td>
 
                     <td v-if="action == 'edit' && selectedDevice.device_id == device.device_id">
                         <input class="ttable__input w-48" type="text" v-model="selectedDevice.name">
@@ -249,14 +249,15 @@ import { vTooltip } from 'floating-vue'
 import 'floating-vue/dist/style.css';
 
 import { onMounted, ref, reactive, watch, computed } from 'vue';
-import { asyncComputed } from '@vueuse/core';
 import { useAppStore } from '@/stores/appStore';
 import { formatDateUtil } from '@/utils/utils';
 
 import LocationModal from '../commen/LocationModal.vue';
+import { useRouter } from 'vue-router';
 
+
+const router = useRouter();
 // - Store -------------------------------------------------------------
-
 const messageStore = useMessageStore();
 
 const deviceStore = useDeviceStore();
@@ -266,6 +267,17 @@ const { getUserAccessLevel } = storeToRefs(authStore)
 
 const appStore = useAppStore();
 const { getAppSettings } = storeToRefs(appStore);
+
+// - Props -------------------------------------------------------------
+
+const props = defineProps({
+    deviceID: {
+        type: String,
+        required: false,
+    }
+});
+
+
 
 // -- Data -------------------------------------------------------------
 
@@ -291,10 +303,15 @@ const sortBy = ref('created_at');
 const sortDesc = ref('true');
 const searchTerm = ref("");
 
+
+
+
+
+
 // -- Computed ---------------------------------------------------------
 
 const getDevicesList = computed(() => {
-    let list = [...deviceStore.getDevicesList];
+    let list = [...Object.values(deviceStore.getDevicesList)];
 
     list = list.filter(item => {
         return (
@@ -322,6 +339,44 @@ const getDevicesList = computed(() => {
 
 watch(locationModalOpen, (val) => {
     appStore.setPageScrollDisabled(val);
+});
+
+
+/**
+ * Watches the `deviceID` prop for changes and performs the following actions:
+ * 
+ * - If `deviceID` is valid:
+ *   1. Waits for a brief delay (250ms) to ensure the DOM is updated.
+ *   2. Fetches the device data from the store and initializes the edit process (`initEditDevice`).
+ *   3. Scrolls smoothly to the element with the corresponding `id` (`col-${deviceID}`).
+ * 
+ * - Navigates to the 'deviceView' route using Vue Router, ensuring the user is redirected to the device management view.
+ * 
+ * This implementation serves as a workaround for scenarios where clicking "Edit" on a device's InfoWindow
+ * in the MapView does not correctly select the device to edit, but updates the URL to reflect the device being edited.
+ * By selecting the device to edit from the `deviceID` in the URL, updating the view from `deviceEditView` to `deviceView`,
+ * and scrolling to the target element, this ensures a seamless user experience.
+ * 
+ * Note: The 250ms timeout ensures that DOM changes (e.g., list rendering) are complete before scrolling.
+ */
+watch(() => props.deviceID, async (deviceID) => {
+    if (!deviceID) return
+
+    setTimeout(() => {
+        const device = deviceStore.getDevicesList[deviceID];
+        // Select Device to edit
+        initEditDevice(device);
+        // Scroll to the element 
+        const element = document.getElementById(`col-${deviceID}`);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, 250)
+
+    router.push({ name: 'deviceView' });
+
+}, {
+    immediate: true
 });
 
 // - Methods -----------------------------------------------------------

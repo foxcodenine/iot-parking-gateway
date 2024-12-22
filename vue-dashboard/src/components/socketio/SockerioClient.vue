@@ -11,8 +11,12 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import socketIOClient from 'socket.io-client';
 import { useAppStore } from '@/stores/appStore';
+import { useDeviceStore } from '@/stores/deviceStore';
 
 const socket = ref(null);
+
+const deviceStore = useDeviceStore();
+
 
 // Function to send data to the server
 const sendData = () => {
@@ -42,6 +46,10 @@ onMounted(() => {
 
   socket.value.on('update', (data) => {
       console.log(data);
+  });
+
+  socket.value.on('parking-event', (data) => {
+      deviceStore.onParkingEvent(data);
   });
 
   // Handle disconnection

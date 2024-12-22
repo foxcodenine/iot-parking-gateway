@@ -67,6 +67,8 @@ func main() {
 	httpServer := httpserver.NewServer(os.Getenv("HTTP_PORT"))
 	httpServer.Start()
 	defer httpServer.Shutdown()
+
+	app.UdpServer.SocketIO = httpServer.SocketServer
 }
 
 // ---------------------------------------------------------------------

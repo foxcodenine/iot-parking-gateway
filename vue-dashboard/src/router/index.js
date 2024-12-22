@@ -19,6 +19,7 @@ const router = createRouter({
 		{ path: '/user', name: 'userView', component: UserView, },
 		{ path: '/user/:userID', name: 'userEditView', component: UserView, props: true},
 		{ path: '/device', name: 'deviceView', component: DeviceView, },
+		{ path: '/device/:deviceID', name: 'deviceEditView', component: DeviceView, props: true},
 		{ path: '/login', name: 'loginView', component: AuthView, },
 		{ path: '/forgot-password', name: 'forgotPasswordView', component: AuthView, },
 		{ path: '/logout', name: 'logoutView', component: LogoutView },

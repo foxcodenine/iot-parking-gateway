@@ -9,7 +9,7 @@
             <DeviceForm  v-if="getUserAccessLevel <= 2"></DeviceForm>
 
             <div class="heading--4 mt-8">Devices list</div>
-            <DeviceTable></DeviceTable>
+            <DeviceTable :device-i-d="deviceID"></DeviceTable>
             
         </section>
     </main>
@@ -33,6 +33,14 @@ const authStore = useAuthStore();
 const deviceStore = useDeviceStore();
 
 const { getUserAccessLevel } = storeToRefs(authStore)
+
+
+const props = defineProps({
+    deviceID: {
+        type: String,
+        required: false,
+    }
+});
 
 // - Hooks -------------------------------------------------------------
 

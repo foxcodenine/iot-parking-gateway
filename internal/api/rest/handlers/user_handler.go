@@ -18,7 +18,7 @@ type UserHandler struct {
 }
 
 func (u *UserHandler) Index(w http.ResponseWriter, r *http.Request) {
-	users, err := app.Models.User.GetAll()
+	users, err := models.AppModels.User.GetAll()
 
 	if err != nil {
 		// Log the error and send an HTTP 500 Internal Server Error response
@@ -202,14 +202,14 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify admin password
-	adminUser, err := app.Models.User.FindUserByID(userData.UserID)
+	adminUser, err := models.AppModels.User.FindUserByID(userData.UserID)
 	if err != nil || !helpers.CheckPasswordHash(req.AdminPassword, adminUser.Password) {
 		http.Error(w, "Authentication failed: incorrect admin credentials.", http.StatusForbidden)
 		return
 	}
 
 	// Find the user to update
-	user, err := app.Models.User.FindUserByID(userID)
+	user, err := models.AppModels.User.FindUserByID(userID)
 	if user == nil || err != nil {
 		http.Error(w, "User not found.", http.StatusNotFound)
 		return
@@ -311,7 +311,7 @@ func (u *UserHandler) Destroy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify admin password
-	adminUser, err := app.Models.User.FindUserByID(userData.UserID)
+	adminUser, err := models.AppModels.User.FindUserByID(userData.UserID)
 	if err != nil {
 		helpers.RespondWithError(w, err, "Failed to retrieve admin user for verification.", http.StatusInternalServerError)
 		return
@@ -323,7 +323,7 @@ func (u *UserHandler) Destroy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Retrieve the user to delete
-	user, err := app.Models.User.FindUserByID(userID)
+	user, err := models.AppModels.User.FindUserByID(userID)
 	if err != nil {
 		helpers.RespondWithError(w, err, fmt.Sprintf("Failed to retrieve user with ID %d.", userID), http.StatusInternalServerError)
 		return
@@ -335,7 +335,7 @@ func (u *UserHandler) Destroy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Attempt to delete the user
-	err = app.Models.User.Delete(userID)
+	err = models.AppModels.User.Delete(userID)
 	if err != nil {
 		helpers.RespondWithError(w, err, fmt.Sprintf("Failed to delete user with ID %d.", userID), http.StatusInternalServerError)
 		return
