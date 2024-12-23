@@ -28,3 +28,11 @@
 8. Map:
     a. Begin by loading devices onto the map.
     b. Update device data dynamically using Socket.IO.
+
+9. 
+    a. Save authUser data during login.
+    b. Implement favorites functionality in the map's info window and backend.
+    c. Add functionality for users to change their passwords.
+    d. Implement "Forgot Password" functionality.
+    e. Add the ability to hide devices from the map and device views/page.
+    f. Include a sidebar in the map view for better navigation and control.

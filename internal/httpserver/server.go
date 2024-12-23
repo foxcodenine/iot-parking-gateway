@@ -33,10 +33,12 @@ var allowedOrigins = map[string]bool{
 	"https://yourdomain.com":    true,
 	"https://anotherdomain.com": true,
 	"http://localhost:5173":     true,
+	"http://127.0.0.1:5173":     true,
 }
 
 // allowOriginFunc allows all origins; used to configure CORS in the transports.
 var allowOriginFunc = func(r *http.Request) bool {
+	// return true
 	return allowedOrigins[r.Header.Get("Origin")]
 }
 

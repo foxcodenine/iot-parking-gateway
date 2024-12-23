@@ -43,6 +43,7 @@ func Routes() http.Handler {
 		r.Mount("/device", DeviceRoutes())
 		r.Mount("/user", UserRoutes())
 		r.Mount("/auth", AuthRoutes())
+		r.Mount("/favorite", FavoriteRoutes())
 		r.Mount("/setting", SettingRoutes())
 	})
 

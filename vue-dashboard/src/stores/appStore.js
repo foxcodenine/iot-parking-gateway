@@ -20,6 +20,12 @@ export const useAppStore = defineStore("appStore", () => {
     });
 
     const googleApiKey = ref(null);
+
+    const authUserStorage = useAuthStore().getRemeberMe ? useLocalStorage('authUser', null) : useSessionStorage('authUser', null);
+    const authUser = computed({
+        get: () => authUserStorage.value,
+        set: (val) => authUserStorage.value = val
+    });
     
 
     // - Getters -------------------------------------------------------
@@ -31,6 +37,13 @@ export const useAppStore = defineStore("appStore", () => {
     const getAppSettings = computed(() => {
         if (appSettings.value) {
             return JSON.parse(appSettings.value)
+        }
+        return null;
+    });    
+
+    const getAuthUser = computed(() => {
+        if (authUser.value) {
+            return JSON.parse(authUser.value)
         }
         return null;
     });    
@@ -52,9 +65,9 @@ export const useAppStore = defineStore("appStore", () => {
         }
     }
 
-
     function resetAppStore() {
         appSettings.value = null;
+        authUser.value = null;
         googleApiKey.value = null;
     }
 
@@ -64,6 +77,10 @@ export const useAppStore = defineStore("appStore", () => {
 
     function setAppSettings(newSettings) {
         appSettings.value = JSON.stringify(newSettings)
+    }
+
+    function setAuthUser(newAuthUser) {
+        authUser.value = JSON.stringify(newAuthUser)
     }
 
     async function getGoogleApiKey() {
@@ -84,5 +101,7 @@ export const useAppStore = defineStore("appStore", () => {
         setPageScrollDisabled,
         getAppSettings, setAppSettings,
         updateSettings,
+        getAuthUser,
+        setAuthUser,
     };
 });
