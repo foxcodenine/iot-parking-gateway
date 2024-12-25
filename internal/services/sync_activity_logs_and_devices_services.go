@@ -68,7 +68,7 @@ func (s *Service) SyncActivityLogs() {
 func (s *Service) SyncDevices() {
 
 	// Retrieve activity log data from Redis and delete the key.
-	items, err := s.cache.LRangeAndDelete("logs:device-update-logs")
+	items, err := s.cache.LRangeAndDelete("logs:device-update")
 	if err != nil {
 		// Log error if Redis operations fail.
 		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
@@ -137,4 +137,80 @@ func (s *Service) SyncDevices() {
 		s.infoLog.Printf("Successfully updated %d device records into PostgreSQL", len(deviceUpdateLogs))
 	}
 
+}
+
+// SyncDevicesKeepalive processes and synchronizes device keepalive updates from Redis to PostgreSQL.
+func (s *Service) SyncDevicesKeepalive() {
+
+	// Retrieve keepalive log data from Redis and delete the key.
+	items, err := s.cache.LRangeAndDelete("logs:device-update-keepalive")
+	if err != nil {
+		// Log an error if Redis operations fail and return early.
+		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
+		return
+	}
+
+	// Prepare a slice to hold the converted keepalive log entries.
+	deviceUpdateLogs := make([]models.Device, 0, len(items))
+
+	// Iterate through each item retrieved from Redis.
+	for _, item := range items {
+
+		// Attempt to assert the item type to a map[string]any (JSON-like structure).
+		itemMap, ok := item.(map[string]any)
+		if !ok {
+			s.errorLog.Println("Invalid item type: expected map[string]any")
+			continue
+		}
+
+		// Ensure the `device_id` field exists and is a string.
+		deviceID, ok := itemMap["device_id"].(string)
+		if !ok || deviceID == "" {
+			s.errorLog.Println("Missing or invalid device_id in item map")
+			continue
+		}
+
+		// Ensure the `keepalive_at` field exists and is a valid timestamp.
+		keepaliveAtStr, ok := itemMap["keepalive_at"].(string)
+		if !ok || keepaliveAtStr == "" {
+			s.errorLog.Printf("Missing or invalid keepalive_at for device %s", deviceID)
+			continue
+		}
+
+		// Parse the `keepalive_at` timestamp.
+		newKeepaliveAt, err := time.Parse("2006-01-02T15:04:05Z", keepaliveAtStr)
+		if err != nil {
+			helpers.LogError(err, "Error parsing keepalive_at timestamp")
+			continue
+		}
+
+		// Create a Device struct for this keepalive log entry.
+		device := models.Device{
+			DeviceID:    deviceID,
+			KeepaliveAt: newKeepaliveAt,
+		}
+
+		// Append the device to the slice for batch processing.
+		deviceUpdateLogs = append(deviceUpdateLogs, device)
+	}
+
+	// Sort the keepalive logs by the KeepaliveAt field.
+	sort.Slice(deviceUpdateLogs, func(i, j int) bool {
+		return deviceUpdateLogs[i].KeepaliveAt.Before(deviceUpdateLogs[j].KeepaliveAt)
+	})
+
+	// If there are no valid entries, return early.
+	if len(deviceUpdateLogs) == 0 {
+		// s.infoLog.Println("No valid keepalive logs to process")
+		return
+	}
+
+	// Attempt to bulk update the keepalive timestamps in PostgreSQL.
+	if err := s.models.Device.BulkUpdateDevicesKeepalive(deviceUpdateLogs); err != nil {
+		s.errorLog.Printf("Failed to bulk update keepalive timestamps for devices: %v", err)
+		return
+	}
+
+	// Log the successful update.
+	s.infoLog.Printf("Successfully updated keepalive timestamps for %d devices in PostgreSQL", len(deviceUpdateLogs))
 }

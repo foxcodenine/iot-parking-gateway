@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
@@ -38,7 +39,7 @@ func (h *FavoriteHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = cache.AppCache.HSet("app:user:favorites", userData.ID, req.DeviceIDs)
+	err = cache.AppCache.HSet("app:user:favorites", fmt.Sprintf("%d", userData.UserID), req.DeviceIDs)
 	if err != nil {
 		helpers.RespondWithError(w, err, "Failed to update favorites in Redis.", http.StatusInternalServerError)
 		return

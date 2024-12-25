@@ -17,17 +17,17 @@
         f. Save data to Redis and PostgreSQL.
 
 4. UDP:
-    a. Implement whitelist and blacklist functionality.
+    a. Implement hidden functionality, in map view and device view.
 
-6. Device API:
-    a. Add authentication and check user access_level.
+6. Keepalive:
+    a. Save last keeapalive happened_at in device.
 
-7. Socket.IO:
-    a. Start implementing from both the backend and client side.
+7. Truncate db:
+    a. Add auto db truncate in postgress.
 
 8. Map:
-    a. Begin by loading devices onto the map.
-    b. Update device data dynamically using Socket.IO.
+    a. Add side bar
+    
 
 9. 
     a. Save authUser data during login.

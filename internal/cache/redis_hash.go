@@ -35,7 +35,7 @@ func (rc *RedisCache) HGet(mapKey string, fieldKey string) (any, error) {
 	item, err := redis.String(conn.Do("HGET", prefixedMapKey, fieldKey))
 	if err != nil {
 		if err == redis.ErrNil {
-			return nil, fmt.Errorf("field %s not found in map", fieldKey)
+			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to retrieve item from Redis hash map: %v", err)
 	}

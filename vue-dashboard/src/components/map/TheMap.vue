@@ -17,6 +17,8 @@
                     @emitUpdatedMarkerLocation="initUpdatedMarkerLocation"
                 ></ParkingInfoWindow>
 
+                <InfoPanel></InfoPanel>
+
             <!-- <Marker v-for="device in getDevicesList"
             :options="{ position: { lat: device.latitude, lng: device.longitude } }" /> -->
 
@@ -36,6 +38,7 @@ import { GoogleMap, Marker, CustomMarker } from 'vue3-google-map';
 import ParkingMarker from './ParkingMarker.vue';
 import ParkingInfoWindow from './ParkingInfoWindow.vue';
 import { useMapStore } from '@/stores/mapStore';
+import InfoPanel from './InfoPanel.vue';
 
 // - Store -------------------------------------------------------------
 
@@ -138,10 +141,6 @@ async function updatedMarkerLocation(e) {
 }
 
 
-
-
-
-
 // - Hooks -------------------------------------------------------------
 (async () => {
     try {
@@ -153,6 +152,8 @@ async function updatedMarkerLocation(e) {
 
 onMounted(async () => {
     apiKey.value = await appStore.getGoogleApiKey();
+
+    appStore.getUserFavorites
 });
 
 // ---------------------------------------------------------------------

@@ -8,6 +8,7 @@ CREATE TABLE parking.devices (
     longitude DECIMAL(9, 6) DEFAULT 0,   -- Longitude for geographic location.
     beacons JSONB,                       -- JSONB data type for beacon information.
     happened_at TIMESTAMP NULL,          -- Timestamp of the device data capture.
+    keepalive_at TIMESTAMP NULL,          -- Timestamp of the device data capture.
     is_occupied BOOLEAN NULL,      -- Whether the space is occupied.
     is_allowed BOOLEAN DEFAULT FALSE,      -- Indicates if the device is allowed.
     is_blocked BOOLEAN DEFAULT FALSE,      -- Indicates if the device is blocked.

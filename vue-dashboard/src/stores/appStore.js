@@ -48,6 +48,10 @@ export const useAppStore = defineStore("appStore", () => {
         return null;
     });    
 
+    const getUserFavorites = computed(() => {
+        return getAuthUser?.value?.favorites ?? [];       
+    })
+
     // - Actions -------------------------------------------------------
 
     async function updateSettings(payload) {
@@ -83,6 +87,37 @@ export const useAppStore = defineStore("appStore", () => {
         authUser.value = JSON.stringify(newAuthUser)
     }
 
+    function toggleDeviceInFavorites(deviceID) {
+        let authUserData = getAuthUser.value;
+        if (!authUserData || !authUserData.favorites) return;
+    
+        const index = authUserData.favorites.findIndex(item => item == deviceID);
+        if (index === -1) {
+            authUserData.favorites.push(deviceID);
+        } else {
+            authUserData.favorites.splice(index, 1);
+        }
+        setAuthUser(authUserData); // Update the authUser ref to trigger reactivity
+    }
+
+    async function updateUpdateFavorites() {
+        try {            
+            let authUserData = getAuthUser.value;
+            if (!authUserData || !authUserData.favorites) return;
+
+            const payload = {
+                "device_ids": authUserData.favorites
+            };
+
+            return await axios.put(`${useAppStore().getAppUrl}/api/favorite`, payload);
+            
+        } catch (error){
+            console.error('! appStore.updateUpdateFavorites !');
+            throw error;  
+        } 
+    }
+    
+
     async function getGoogleApiKey() {
         if (!googleApiKey.value) {
             const s = JSON.parse(appSettings.value); 
@@ -103,5 +138,8 @@ export const useAppStore = defineStore("appStore", () => {
         updateSettings,
         getAuthUser,
         setAuthUser,
+        getUserFavorites,
+        toggleDeviceInFavorites,
+        updateUpdateFavorites,
     };
 });

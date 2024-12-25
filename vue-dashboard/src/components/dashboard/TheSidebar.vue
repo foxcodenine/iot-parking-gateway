@@ -37,6 +37,26 @@
                 </div>
             </div>
 
+            <div class="sidebar__item" @click="goToView('deviceView')" >
+                <svg class="sidebar__svg ">
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-bug"></use>
+                </svg>
+                <div class="sidebar__text">
+                    <span>Debug</span>
+                </div>
+            </div>
+
+            <div class="sidebar__item" @click="goToView('deviceView')" >
+                <svg class="sidebar__svg ">
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-about
+
+"></use>
+                </svg>
+                <div class="sidebar__text">
+                    <span>About</span>
+                </div>
+            </div>
+
             <!-- <div class="sidebar__item" @click="goToView('viewHome')" >
                 <svg class="sidebar__svg ">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-gears-2"></use>

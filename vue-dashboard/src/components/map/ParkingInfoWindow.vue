@@ -41,8 +41,9 @@
             </div>
 
             <div class="info-window__footer mt-2 mb-1">
-                <svg class="info-window__svg" >
-                    <use xlink:href="@/assets/svg/sprite.svg#icon-star"></use>
+                <svg class="info-window__svg" @click="toggleDeviceInFavorites(device.device_id)">
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-star-2" v-if="isFavorite"></use>
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-star-1" v-else></use>
                 </svg>
                 <svg class="info-window__svg" @click="updatedMarkerLocation">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-map-8"></use>
@@ -65,13 +66,21 @@
 <!-- --------------------------------------------------------------- -->
 
 <script setup>
+import { useAppStore } from '@/stores/appStore';
 import { formatToLocalDateTime, timeElapsed } from '@/utils/utils';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { InfoWindow } from 'vue3-google-map';
 
-const route = useRoute();
+// - Store -------------------------------------------------------------
+
+const appStore = useAppStore();
+
+// - Router ------------------------------------------------------------
+
 const router = useRouter();
+
+// - Emit -------------------------------------------------------------
 
 const emit = defineEmits(['emitCloseWindow', 'emitUpdatedMarkerLocation'])
 
@@ -88,7 +97,16 @@ const props = defineProps({
 });
 
 // - Data --------------------------------------------------------------
+
 const timeSinceParked = ref('n/a');
+
+// - Computed ----------------------------------------------------------
+
+const isFavorite = computed(()=>{
+    return appStore.getUserFavorites.includes(props.device.device_id)
+})
+
+
 
 // - Methods -----------------------------------------------------------
 
@@ -96,20 +114,30 @@ function closeWindow() {
     emit('emitCloseWindow');
 }
 
+async function toggleDeviceInFavorites(deviceID) {
+    try {
+        appStore.toggleDeviceInFavorites(deviceID);
+        const res = await appStore.updateUpdateFavorites();    
+    } catch (error) {
+        console.error("! ParkingInfoWindow.toggleDeviceInFavorites !\n", error);
+    }
+}
+
 function updatedMarkerLocation() {
     emit('emitUpdatedMarkerLocation', props.device.device_id)
 }
 
+
 function navigateToDevice() {
 
-    const lat = props.device.latitude;
-    const lng = props.device.longitude;
-    const formattedCoordinates = `${lat},${lng}`;
+const lat = props.device.latitude;
+const lng = props.device.longitude;
+const formattedCoordinates = `${lat},${lng}`;
 
-    // Construct the Google Maps URL
-    const googleMapsURL = `https://www.google.com/maps/place/${encodeURIComponent(formattedCoordinates)}/@${formattedCoordinates},17z/data=!3m1!4b1!4m4!3m3!8m2!3d${lat}!4d${lng}?entry=ttu`;
-    
-    window.open(googleMapsURL, '_blank');
+// Construct the Google Maps URL
+const googleMapsURL = `https://www.google.com/maps/place/${encodeURIComponent(formattedCoordinates)}/@${formattedCoordinates},17z/data=!3m1!4b1!4m4!3m3!8m2!3d${lat}!4d${lng}?entry=ttu`;
+
+window.open(googleMapsURL, '_blank');
 }
 
 function editDevice(deviceID) {

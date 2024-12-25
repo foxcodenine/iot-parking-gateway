@@ -26,6 +26,7 @@ type Device struct {
 	BeaconsJSON     sql.NullString `db:"beacons,omitempty" json:"beacons_json"`
 	Beacons         []Beacon       `json:"beacons"`
 	HappenedAt      time.Time      `db:"happened_at" json:"happened_at"`
+	KeepaliveAt     time.Time      `db:"keepalive_at" json:"keepalive_at"` // New field for keepalive event
 	IsOccupied      bool           `db:"is_occupied" json:"is_occupied"`
 	IsAllowed       bool           `db:"is_allowed" json:"is_allowed"` // Indicates if the device is allowed
 	IsBlocked       bool           `db:"is_blocked" json:"is_blocked"` // Indicates if the device is blocked
@@ -376,4 +377,44 @@ func (d *Device) BulkUpdateDevices(deviceData []Device) error {
 	}
 
 	return nil
+}
+
+// BulkUpdateDevicesKeepalive updates the `keepalive_at` field for multiple devices in a single database query.
+// This method ensures efficient updates by batching updates into a single SQL statement.
+func (d *Device) BulkUpdateDevicesKeepalive(deviceData []Device) error {
+
+	// Return early if no data is provided to avoid unnecessary processing.
+	if len(deviceData) == 0 {
+		return nil // No data to update
+	}
+
+	var args []interface{}                        // Arguments to be passed to the query.
+	valuesList := make([]string, len(deviceData)) // List of value placeholders for SQL.
+
+	for i, data := range deviceData {
+		// Prepare a position offset for SQL placeholders based on the number of fields per device.
+		pos := i*2 + 1 // Each device requires 2 placeholders: `device_id` and `keepalive_at`.
+		valuesList[i] = fmt.Sprintf("($%d, $%d::timestamp)", pos, pos+1)
+		args = append(args, data.DeviceID, data.KeepaliveAt) // Add the actual values.
+	}
+
+	// Construct the SQL statement with explicit type casts to ensure proper data handling.
+	query := fmt.Sprintf(`
+		UPDATE parking.devices AS d
+		SET
+			keepalive_at = v.keepalive_at,
+			updated_at = NOW() 
+		FROM (VALUES
+			%s
+		) AS v(device_id, keepalive_at)
+		WHERE d.device_id = v.device_id
+	`, strings.Join(valuesList, ", "))
+
+	// Execute the constructed query with the arguments.
+	_, err := dbSession.SQL().Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to execute bulk update for keepalive_at field: %w", err)
+	}
+
+	return nil // Return nil if the operation was successful.
 }

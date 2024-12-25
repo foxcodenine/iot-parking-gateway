@@ -137,6 +137,32 @@ func (rc *RedisCache) ProcessParkingEventData(deviceID string, firmwareVersion s
 	return nil
 }
 
+func (rc *RedisCache) UpdateKeepaliveAt(deviceID, keepaliveAt, happenedAt string) error {
+	conn := rc.Conn.Get()
+	defer conn.Close()
+
+	const dateFormat = "2006-01-02T15:04:05Z" // Define the timestamp format.
+
+	updatedAt := time.Now().UTC().Format(dateFormat) // Format the current time.
+
+	// Construct the Redis hash key.
+	hashKey := fmt.Sprintf("%s%s:%s", rc.Prefix, "parking:device", deviceID)
+
+	args := []any{hashKey} // Prepare fields for update.
+
+	// Append key-value pairs for update.
+	args = append(args, "keepalive_at", keepaliveAt)
+	args = append(args, "happened_at", happenedAt)
+	args = append(args, "updated_at", updatedAt)
+
+	// Execute HMSET to update the fields.
+	if _, err := conn.Do("HMSET", args...); err != nil {
+		return fmt.Errorf("failed to update fields for device %s: %w", deviceID, err)
+	}
+
+	return nil
+}
+
 // SaveDeviceData saves device data to a Redis hash with a key structured as parking:device:<device_id>.
 // It formats date-time fields to ensure consistency across the database and cache.
 func (rc *RedisCache) SaveDeviceData(deviceID string, data map[string]any) error {

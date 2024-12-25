@@ -101,8 +101,8 @@ async function submitForm() {
             password.value = 'DevPass';
             authStore.setJwt(response.data.token);
             appStore.setAppSettings(response.data.settings)
-            console.log(response.data)
-        }
+            appStore.setAuthUser(response.data.user)
+         }
 
         
 

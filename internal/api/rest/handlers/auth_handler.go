@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 )
@@ -99,6 +100,27 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	favoritesData, err := cache.AppCache.HGet("app:user:favorites", fmt.Sprintf("%d", user.ID))
+	favoritesDeviceIDs := []string{}
+
+	if err != nil {
+		helpers.LogError(err, "Error fetching favorites from Redis")
+	} else if favoritesData != nil {
+
+		// Convert []interface{} to []string
+		if data, ok := favoritesData.([]interface{}); ok {
+			for _, v := range data {
+				if str, ok := v.(string); ok {
+					favoritesDeviceIDs = append(favoritesDeviceIDs, str)
+				} else {
+					helpers.LogError(fmt.Errorf("unexpected type in favorites data: %T", v), "Error converting favorite to string")
+				}
+			}
+		} else {
+			helpers.LogError(fmt.Errorf("unexpected type for favoritesData: %T", favoritesData), "Error converting favorites from Redis")
+		}
+	}
+
 	// Respond with the token and user data
 	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(map[string]interface{}{
@@ -109,6 +131,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 			"access_level": user.AccessLevel,
 			"enabled":      user.Enabled,
 			"created_at":   user.CreatedAt,
+			"favorites":    favoritesDeviceIDs,
 		},
 		"settings": settings,
 	})

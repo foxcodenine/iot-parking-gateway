@@ -68,7 +68,7 @@
                             <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
                         </svg>
                     </th>
-                    <th class="w-20" v-if="getAppSettings.device_access_mode != 'black_list'">
+                    <th class="w-20" v-if="getAppSettings?.device_access_mode != 'black_list'">
                         <span class="cursor-pointer" @click="sortTable('is_allowed')">
                             White List
                         </span>
@@ -159,7 +159,7 @@
                     </td>
 
                     <td @click="toggelAllowed(device)" class="ps-6"
-                        v-if="getAppSettings.device_access_mode != 'black_list'">
+                        v-if="getAppSettings?.device_access_mode != 'black_list'">
                         <div v-if="action == 'edit' && selectedDevice.device_id == device.device_id"
                             class="circle__outer circle__active"
                             :class="{ 'circle__allowed': selectedDevice.is_allowed }">
