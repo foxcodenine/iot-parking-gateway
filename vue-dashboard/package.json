@@ -9,6 +9,7 @@
     "preview": "VITE_VUE_ENV=production vite preview"
   },
   "dependencies": {
+    "@popperjs/core": "^2.11.8",
     "@vueuse/core": "^11.3.0",
     "axios": "^1.7.7",
     "crypto-js": "^4.2.0",
@@ -17,6 +18,7 @@
     "pinia": "^2.2.6",
     "sass-loader": "^16.0.3",
     "socket.io-client": "^2.4.0",
+    "v-calendar": "^3.1.2",
     "validator": "^13.12.0",
     "vue": "^3.5.12",
     "vue-loading-overlay": "^6.0.6",

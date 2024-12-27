@@ -1,3 +1,5 @@
+import { useAppStore } from "@/stores/appStore";
+
 function formatDateUtil(dateString) {
     // Parse the input date string into a Date object
     const date = new Date(dateString);
@@ -27,6 +29,8 @@ function getAccessLevelDescriptionUtil(accessLevel) {
 }
 
 function timeElapsed(utcDateString) {
+    const initial_parking_check_date = useAppStore().getAppSettings['initial_parking_check_date'];
+
     const parsedDate = new Date(utcDateString); // Parse the UTC date string
     const now = new Date(); // Get the current date and time
     const diffMs = now - parsedDate; // Calculate the difference in milliseconds
@@ -43,8 +47,8 @@ function timeElapsed(utcDateString) {
     const years = Math.floor(days / 365);
 
     // Handle special case for devices with no data for over 10 years
-    if (years > 10) {
-        return "Device has not sent any data";
+    if (initial_parking_check_date > utcDateString) {
+        return null;
     }
 
     const remainingWeeks = weeks % 52;
@@ -68,6 +72,7 @@ function timeElapsed(utcDateString) {
 
 function formatToLocalDateTime(utcDateString) {
     const parsedDate = new Date(utcDateString);
+    const initial_parking_check_date = useAppStore().getAppSettings['initial_parking_check_date'];
 
     if (isNaN(parsedDate)) {
         return null; // Invalid date, return null
@@ -77,8 +82,7 @@ function formatToLocalDateTime(utcDateString) {
     const diffMs = now - parsedDate;
 
     // Check if the elapsed time is more than 10 years
-    const tenYearsInMs = 10 * 365 * 24 * 60 * 60 * 1000; // Approximation for 10 years
-    if (diffMs > tenYearsInMs) {
+    if (initial_parking_check_date > utcDateString) {
         return null; // More than 10 years ago, return null
     }
 

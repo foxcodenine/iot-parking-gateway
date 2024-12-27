@@ -28,11 +28,11 @@
                 </div>
                 <div class="info-window__content" v-else>
                     <span>Status</span>
-                    <p class="inactive">Inactive</p>
+                    <p class="unknown">Unknown</p>
                 </div>
                 <div class="info-window__content">
                     <span>Last Event</span>
-                    <p>{{ timeSinceParked }}</p>
+                    <p v-html="timeSinceParked ?? 'Device has not reported <br />any parking activity yet.'"></p>
                 </div>
                 <div class="info-window__content mb-1" v-if="formatToLocalDateTime(device.happened_at)">
                     <span></span>
@@ -47,10 +47,10 @@
                 </svg>
                 <svg class="info-window__svg" @click="updatedMarkerLocation">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-map-8"></use>
-                </svg> 
+                </svg>
                 <svg class="info-window__svg" @click="navigateToDevice()">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-route-start"></use>
-                </svg>                
+                </svg>
                 <svg class="info-window__svg" style="padding: .2rem;" @click="editDevice(device.device_id)">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-pencil-9"></use>
                 </svg>
@@ -102,7 +102,7 @@ const timeSinceParked = ref('n/a');
 
 // - Computed ----------------------------------------------------------
 
-const isFavorite = computed(()=>{
+const isFavorite = computed(() => {
     return appStore.getUserFavorites.includes(props.device.device_id)
 })
 
@@ -117,7 +117,7 @@ function closeWindow() {
 async function toggleDeviceInFavorites(deviceID) {
     try {
         appStore.toggleDeviceInFavorites(deviceID);
-        const res = await appStore.updateUpdateFavorites();    
+        const res = await appStore.updateUpdateFavorites();
     } catch (error) {
         console.error("! ParkingInfoWindow.toggleDeviceInFavorites !\n", error);
     }
@@ -130,14 +130,14 @@ function updatedMarkerLocation() {
 
 function navigateToDevice() {
 
-const lat = props.device.latitude;
-const lng = props.device.longitude;
-const formattedCoordinates = `${lat},${lng}`;
+    const lat = props.device.latitude;
+    const lng = props.device.longitude;
+    const formattedCoordinates = `${lat},${lng}`;
 
-// Construct the Google Maps URL
-const googleMapsURL = `https://www.google.com/maps/place/${encodeURIComponent(formattedCoordinates)}/@${formattedCoordinates},17z/data=!3m1!4b1!4m4!3m3!8m2!3d${lat}!4d${lng}?entry=ttu`;
+    // Construct the Google Maps URL
+    const googleMapsURL = `https://www.google.com/maps/place/${encodeURIComponent(formattedCoordinates)}/@${formattedCoordinates},17z/data=!3m1!4b1!4m4!3m3!8m2!3d${lat}!4d${lng}?entry=ttu`;
 
-window.open(googleMapsURL, '_blank');
+    window.open(googleMapsURL, '_blank');
 }
 
 function editDevice(deviceID) {
@@ -166,6 +166,7 @@ setInterval(() => {
 <!-- --------------------------------------------------------------- -->
 
 <style lang="scss" scoped>
+
 .info-window {
 
     border-radius: 3px !important;
@@ -257,7 +258,7 @@ setInterval(() => {
         justify-content: center;
         gap: .5rem;
 
-  
+
     }
 }
 
@@ -269,7 +270,9 @@ setInterval(() => {
     color: $col-red-500;
 }
 
-.inactive {
+.unknown {
     color: $col-indigo-500;
 }
 </style>
+
+

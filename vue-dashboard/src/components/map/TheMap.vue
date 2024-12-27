@@ -4,16 +4,17 @@
             :api-key="apiKey"  :map-id="getMapId" style="width: 100%; height: 100vh" 
             :center="getMapCenter"  :zoom="getMapZoom" @zoom_changed="zoomChanged"  ref="mapRef">
 
-                <ParkingMarker v-for="( device, _ ) in getDevicesList" 
+                <ParkingMarker v-for="device in getfilteredDevices" 
+                    :activeWindow="getActiveWindow" 
                     :device="device" 
                     :mapZoom="mapZoom" 
-                    @click="activeWindow=device.device_id"                    
+                    @click="setActiveWindow(device.device_id)"                    
                 ></ParkingMarker>
 
-                <ParkingInfoWindow  v-for="( device, _ ) in getDevicesList" 
-                    :activeWindow="activeWindow"    
+                <ParkingInfoWindow  v-for="device in getfilteredDevices" 
+                    :activeWindow="getActiveWindow"    
                     :device="device"
-                    @emitCloseWindow="activeWindow = null"
+                    @emitCloseWindow="setActiveWindow(null)"
                     @emitUpdatedMarkerLocation="initUpdatedMarkerLocation"
                 ></ParkingInfoWindow>
 
@@ -45,10 +46,10 @@ import InfoPanel from './InfoPanel.vue';
 const appStore = useAppStore();
 
 const deviceStore = useDeviceStore();
-const { getDevicesList } = storeToRefs(deviceStore);
+const { getDevicesList, getfilteredDevices } = storeToRefs(deviceStore);
 
 const mapStore = useMapStore();
-const { getMapCenter, getMapZoom } = storeToRefs(mapStore)
+const { getMapCenter, getMapZoom, getActiveWindow } = storeToRefs(mapStore)
 
 // - Data --------------------------------------------------------------
 
@@ -56,8 +57,8 @@ const apiKey = ref(null);
 const mapZoom = ref(17)
 const mapRef = ref(null);
 
-const activeWindow = ref(null);
 const relocateMarker = ref(null);
+
 
 // - Computed ----------------------------------------------------------
 
@@ -81,6 +82,7 @@ const getMapId = computed(() => {
 watch(() => mapRef.value?.ready, (ready) => {
     if (!ready) return;
     adjustMapView();
+    disableDefaultInfoWindow();
 })
 
 // - Methods -----------------------------------------------------------
@@ -111,8 +113,16 @@ function adjustMapView() {
     }
 }
 
-function initUpdatedMarkerLocation(deviceID) {
-    activeWindow.value = null;
+function disableDefaultInfoWindow() {
+    mapRef.value.map.addListener("click", (event) => {
+        if (event.placeId) {
+            event.stop();
+        }
+    })
+}
+
+function initUpdatedMarkerLocation(deviceID) {    
+    setActiveWindow(null);
     relocateMarker.value = deviceID;
 
     mapRef.value.map.setOptions({draggableCursor:'crosshair'});
@@ -133,11 +143,15 @@ async function updatedMarkerLocation(e) {
         await deviceStore.updateDevice(device)
 
         mapRef.value.map.setOptions({ draggableCursor: 'url("https://maps.gstatic.com/mapfiles/openhand_8_8.cur"), default', });
-        relocateMarker.value = null;
-        activeWindow.value = markerID;
+        relocateMarker.value = null;        
+        setActiveWindow(markerID);
     } catch (error) {
         console.error("! TheMap.updatedMarkerLocation !\n", error);
     }
+}
+
+function setActiveWindow(id) {
+    mapStore.setActiveWindow(id)
 }
 
 
@@ -168,4 +182,6 @@ onMounted(async () => {
     // background-image: url("@/assets/images/map.jpg");
     // min-height: 100vh;
 }
+
+
 </style>

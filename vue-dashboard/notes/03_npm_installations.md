@@ -83,3 +83,17 @@ https://socket.io/docs/v4/client-initialization/
 
 Note: - Version 2.4.0 of the socket.io-client is used due to compatibility requirements with the
     existing Go backend (go-socket.io), which currently supports only up to Socket.IO protocol 1.4. 
+
+
+<!-- --------------------------------------------------------------- -->
+
+## VCalendar
+
+https://vcalendar.io/getting-started/installation.html
+https://vcalendar.io/
+
+    $ npm install v-calendar@next @popperjs/core
+
+import VCalendar from 'v-calendar';
+import 'v-calendar/style.css';
+

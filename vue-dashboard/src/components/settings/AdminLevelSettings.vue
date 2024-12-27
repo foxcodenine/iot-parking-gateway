@@ -29,14 +29,7 @@
         </div>
 
 
-        <div class="fform__row mt-10 " @click="clearMessage" :class="{ 'fform__disabled': edit_key != 'google_map_id' }">
-            <div class="fform__description"><b>google_map_id</b> &nbsp The Google Map ID used to customize and embed Google Maps in the application.</div>
-            <div class="fform__group ">
-                <input class="fform__input " :class="{'fform__input--active':edit_key=='google_map_id'}" id="google_map_id" type="text" @blur="edit_key=null" 
-                    v-model.trim="google_map_id" :disabled="edit_key != 'google_map_id'" placeholder="Enter new default longitude to change, else leave empty">
-                <svg @click="edit_key='google_map_id'" class="fform__icon" :class="{'fform__icon--active':edit_key=='google_map_id'}"> <use xlink:href="@/assets/svg/sprite.svg#icon-pencil"></use></svg>
-            </div>
-        </div>
+
 
         <button  class="bbtn bbtn--red mt-14"  @click.prevent="initUpdateSettings()">
             Update Settings
@@ -59,7 +52,7 @@ const adminModalOn = ref(false);
 const edit_key = ref(null);
 const default_latitude = ref(null);
 const default_longitude = ref(null);
-const google_map_id = ref(null);
+
 
 const appStore = useAppStore();
 const messageStore = useMessageStore();
@@ -137,8 +130,7 @@ async function updateSettings(payload) {
 onMounted(()=>{
     const settings = appStore.getAppSettings
     default_latitude.value = settings.default_latitude;
-    default_longitude.value = settings.default_longitude;
-    google_map_id.value = settings.google_map_id;
+    default_longitude.value = settings.default_longitude;    
 });
 (()=>{
     clearMessage();

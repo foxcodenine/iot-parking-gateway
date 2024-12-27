@@ -28,6 +28,10 @@ const props = defineProps({
     device: {
         type: Object,
         required: true,  
+    },
+    activeWindow: {
+        type: [Number, null, String],
+        required: true,
     }
 });
 // - Computed ----------------------------------------------------------
@@ -39,19 +43,33 @@ const markerSize = computed(() => {
 
 const markersClass = computed(()=>{
 
+    let c = '';
+
+    if (props.activeWindow == props.device.device_id) {
+        c += 'selected-device ';
+    }
+    
+
     if (formatToLocalDateTime(props.device.happened_at) == null) {
-        return 'inactive'
+        c += 'unknown'
+        return c;
     }
     if (props.device.is_occupied) {
-        return 'occupied'
+        c += 'occupied'
+        return c;
     } else {
-        return 'vacant'
+        c += 'vacant'
+        return c;
     }
+
+    // also i would like to add 
+
+
 })
 
 // - Methods -----------------------------------------------------------
 function markerStyle() {
-    return "opacity: 1;"
+    return "opacity: 1; "
 }
 
 
@@ -74,8 +92,30 @@ onMounted(()=>{
 .occupied {
     color: $col-red-500;
 }
-.inactive {
+.unknown {
     color: $col-indigo-500;
+}
+
+
+
+.selected-device {
+  display: inline-block;
+  background-color: inherit; // Choose a color that stands out
+//   padding: 10px;
+  border-radius: 50%;
+  animation: pulse-animation 2s infinite;
+  
+  @keyframes pulse-animation {
+    0% {
+      box-shadow: 0 0 0 0 currentColor;
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(52, 152, 219, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(52, 152, 219, 0);
+    }
+  }
 }
 
 

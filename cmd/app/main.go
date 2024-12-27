@@ -251,10 +251,10 @@ func initializeAppSettings() {
 			UpdatedBy:   0,
 		},
 		{
-			Key:         "default_longitude",
-			Val:         os.Getenv("DEFAULT_LONGITUDE"),
-			Description: "Default longitude for map centering and initial device placement on the map.",
-			AccessLevel: 1, // Administrator access level
+			Key:         "google_map_id",
+			Val:         os.Getenv("GOOGLE_MAP_ID"),
+			Description: "The Google Map ID used to customize and embed Google Maps in the application.",
+			AccessLevel: 0,
 			UpdatedBy:   0,
 		},
 		{
@@ -275,21 +275,35 @@ func initializeAppSettings() {
 			Key:         "device_access_mode",
 			Val:         os.Getenv("DEVICE_ACCESS_MODE"),
 			Description: "Defines the access control mode for devices, determining whether they are managed via a blacklist or whitelist approach.",
-			AccessLevel: 1, // Administrator access level
+			AccessLevel: 0,
+			UpdatedBy:   0,
+		},
+		{
+			Key:         "initial_parking_check_date",
+			Val:         "2014-12-21T15:35:24Z",
+			Description: "The reference date for checking parking events. Devices with no events after this date are considered newly installed or inactive, and their status is marked as unknown.",
+			AccessLevel: 0,
+			UpdatedBy:   0,
+		},
+		{
+			Key:         "cors_allowed_origins",
+			Val:         "*,http://localhost:5173,http://127.0.0.1:5173",
+			Description: "Specifies the domains that are permitted to access the API, including development hosts. Use '*' to allow all or specify domains individually, separated by a comma.",
+			AccessLevel: 0,
 			UpdatedBy:   0,
 		},
 		{
 			Key:         "default_latitude",
 			Val:         os.Getenv("DEFAULT_LATITUDE"),
 			Description: "Default latitude for map centering and initial device placement on the map.",
-			AccessLevel: 1, // Administrator access level
+			AccessLevel: 1,
 			UpdatedBy:   0,
 		},
 		{
-			Key:         "google_map_id",
-			Val:         os.Getenv("GOOGLE_MAP_ID"),
-			Description: "The Google Map ID used to customize and embed Google Maps in the application.",
-			AccessLevel: 1, // Administrator access level
+			Key:         "default_longitude",
+			Val:         os.Getenv("DEFAULT_LONGITUDE"),
+			Description: "Default longitude for map centering and initial device placement on the map.",
+			AccessLevel: 1,
 			UpdatedBy:   0,
 		},
 	}

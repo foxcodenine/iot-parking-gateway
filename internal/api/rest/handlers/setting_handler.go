@@ -314,9 +314,10 @@ func (h *SettingHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// -----------------------------------------------------------------
+
 	google_map_id, ok := updatedFields["google_map_id"]
 	if ok {
-		if userData.AccessLevel > 1 {
+		if userData.AccessLevel > 0 {
 			http.Error(w, "Permission denied.", http.StatusForbidden)
 			return
 		}
@@ -351,8 +352,96 @@ func (h *SettingHandler) Update(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				helpers.LogError(err, "Failed to create an audit log entry for updating the 'google_map_id' setting.")
 			}
+			rootLevelSettingsChange = true
 		}
 	}
+
+	// -----------------------------------------------------------------
+
+	cors_allowed_origins, ok := updatedFields["cors_allowed_origins"]
+	if ok {
+		if userData.AccessLevel > 0 {
+			http.Error(w, "Permission denied.", http.StatusForbidden)
+			return
+		}
+
+		// Fetch the cached value
+		cachedVal, err := cache.AppCache.HGet("app:settings", "cors_allowed_origins")
+		if err != nil {
+			helpers.RespondWithError(w, err, "Failed to fetch cached setting value.", http.StatusInternalServerError)
+			return
+		}
+
+		// Check if the value is the same
+		if cachedVal.(string) != cors_allowed_origins {
+			// Validate the value as a comma-separated list of domains or '*'
+			corsPattern := `^(\*,|https?://[\w.-]+(:\d+)?(,|$))*$`
+			matched, err := regexp.MatchString(corsPattern, cors_allowed_origins)
+			if err != nil || !matched {
+				http.Error(w, "Invalid CORS allowed origins format. Use '*' or a comma-separated list of valid URLs.", http.StatusBadRequest)
+				return
+			}
+
+			val := map[string]interface{}{"val": cors_allowed_origins}
+
+			// Proceed to update the setting
+			_, err = app.Models.Setting.UpdateByKey("cors_allowed_origins", val)
+			if err != nil {
+				helpers.RespondWithError(w, err, "Failed to update the 'cors_allowed_origins' setting.", http.StatusInternalServerError)
+				return
+			}
+
+			err = auditLogSettingUpdate(userData, r, "cors_allowed_origins", cors_allowed_origins)
+			if err != nil {
+				helpers.LogError(err, "Failed to create an audit log entry for updating the 'cors_allowed_origins' setting.")
+			}
+			rootLevelSettingsChange = true
+		}
+	}
+
+	// -----------------------------------------------------------------
+
+	initial_parking_check_date, ok := updatedFields["initial_parking_check_date"]
+	if ok {
+		if userData.AccessLevel > 1 {
+			http.Error(w, "Permission denied.", http.StatusForbidden)
+			return
+		}
+
+		// Fetch the cached value
+		cachedVal, err := cache.AppCache.HGet("app:settings", "initial_parking_check_date")
+		if err != nil {
+			helpers.RespondWithError(w, err, "Failed to fetch cached setting value.", http.StatusInternalServerError)
+			return
+		}
+
+		// Check if the value is the same
+		if cachedVal.(string) != initial_parking_check_date {
+			// Validate that the value is in ISO 8601 format (e.g., 2014-12-21T15:35:24Z)
+			datePattern := `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`
+			matched, err := regexp.MatchString(datePattern, initial_parking_check_date)
+			if err != nil || !matched {
+				http.Error(w, "Invalid initial parking check date format. It must be in ISO 8601 format (e.g., 2014-12-21T15:35:24Z).", http.StatusBadRequest)
+				return
+			}
+
+			val := map[string]interface{}{"val": initial_parking_check_date}
+
+			// Proceed to update the setting
+			_, err = app.Models.Setting.UpdateByKey("initial_parking_check_date", val)
+			if err != nil {
+				helpers.RespondWithError(w, err, "Failed to update the 'initial_parking_check_date' setting.", http.StatusInternalServerError)
+				return
+			}
+
+			err = auditLogSettingUpdate(userData, r, "initial_parking_check_date", initial_parking_check_date)
+			if err != nil {
+				helpers.LogError(err, "Failed to create an audit log entry for updating the 'initial_parking_check_date' setting.")
+			}
+			rootLevelSettingsChange = true
+		}
+	}
+
 	// -----------------------------------------------------------------
 
 	var message = "Settings updated. Changes will take effect upon next login."

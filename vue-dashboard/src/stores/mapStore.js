@@ -16,18 +16,21 @@ export const useMapStore = defineStore("mapStore", () => {
         lng: Number(appStore.getAppSettings.default_longitude)
     });
 
+    const activeWindow = ref(null);
+
 
     // - Getters -------------------------------------------------------
 
     const getMapCenter = computed(()=>{
-
         return mapCenter.value;
     });
 
     const getMapZoom = computed(()=>{
-
-
         return mapZoom.value;
+    })
+
+    const getActiveWindow = computed(()=>{
+        return activeWindow.value;
     })
 
 
@@ -42,6 +45,10 @@ export const useMapStore = defineStore("mapStore", () => {
     function setMapZoom(payload) {
         mapZoom.value = payload;
     }
+
+    function setActiveWindow(payload) {
+        activeWindow.value = payload;
+    }
     
 
     // - Expose --------------------------------------------------------
@@ -51,5 +58,7 @@ export const useMapStore = defineStore("mapStore", () => {
         getMapZoom,
         setMapCenter,
         setMapZoom,
+        getActiveWindow,
+        setActiveWindow,
     }
 });

@@ -10,6 +10,7 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
+	"github.com/go-faker/faker/v4"
 )
 
 type Service struct {
@@ -75,10 +76,11 @@ func (s *Service) RegisterNewDevices() {
 			longitude = 0
 		}
 
+		name := faker.Username()
 		// Define a new device model instance.
 		newDevice := models.Device{
 			DeviceID:        deviceID,
-			Name:            "new " + deviceID,
+			Name:            "__" + name,
 			NetworkType:     networkType,
 			Latitude:        latitude,
 			Longitude:       longitude,

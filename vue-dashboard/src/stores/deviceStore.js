@@ -11,17 +11,26 @@ export const useDeviceStore = defineStore("deviceStore", () => {
 
     // - State ---------------------------------------------------------
     const devicesList = ref({});
-    const devicesFetched = ref(false)
+    const devicesFetched = ref(false);
+
+    const filteredDevices = ref([]);
 
     // - Getters -------------------------------------------------------
     const getDevicesList = computed(() => {
          return devicesList.value;
     } );
+    const getfilteredDevices = computed(() => {
+         return filteredDevices.value;
+    } );
 
     // - Actions -------------------------------------------------------
 
     function reset() {
-    }    
+    } 
+    
+    function setFilteredDevices(payload) {
+        filteredDevices.value = payload;
+    }
 
     async function fetchDevices() {
   
@@ -144,6 +153,8 @@ export const useDeviceStore = defineStore("deviceStore", () => {
         removeDeviceFromList,
         createDevice,
         pushDeviceToList,
-        onParkingEvent
+        onParkingEvent,
+        getfilteredDevices,
+        setFilteredDevices
     }
 });

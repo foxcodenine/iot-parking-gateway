@@ -7,10 +7,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/routes"
+	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 
 	// "github.com/go-chi/chi/v5"
@@ -29,17 +31,29 @@ type Server struct {
 	Port         string
 }
 
-var allowedOrigins = map[string]bool{
-	"https://yourdomain.com":    true,
-	"https://anotherdomain.com": true,
-	"http://localhost:5173":     true,
-	"http://127.0.0.1:5173":     true,
-}
+// allowOriginFunc checks if the request's origin is allowed based on cached settings.
+func allowOriginFunc(r *http.Request) bool {
+	// Retrieve the list of allowed origins from the cache
+	cachedValue, err := cache.AppCache.HGet("app:settings", "cors_allowed_origins")
+	if err != nil {
+		helpers.LogError(err, "Failed to fetch 'cors_allowed_origins' from cache")
+		return false // Deny access if unable to fetch settings
+	}
 
-// allowOriginFunc allows all origins; used to configure CORS in the transports.
-var allowOriginFunc = func(r *http.Request) bool {
-	// return true
-	return allowedOrigins[r.Header.Get("Origin")]
+	// Convert the cached string of allowed origins into a slice
+	allowedOrigins := strings.Split(cachedValue.(string), ",")
+
+	// Obtain the origin from the incoming request
+	requestOrigin := r.Header.Get("Origin")
+
+	// Allow the request if the origin matches any in the allowed list or if '*' is present
+	for _, origin := range allowedOrigins {
+		if origin == "*" || origin == requestOrigin {
+			return true
+		}
+	}
+
+	return false // Deny access if no match found
 }
 
 var IOService *Server

@@ -21,6 +21,15 @@
             </div>
         </div>
 
+        <div class="fform__row mt-10 " @click="clearMessage" :class="{ 'fform__disabled': edit_key != 'google_map_id' }">
+            <div class="fform__description"><b>google_map_id</b> &nbsp The Google Map ID used to customize and embed Google Maps in the application.</div>
+            <div class="fform__group ">
+                <input class="fform__input " :class="{'fform__input--active':edit_key=='google_map_id'}" id="google_map_id" type="text" @blur="edit_key=null" 
+                    v-model.trim="google_map_id" :disabled="edit_key != 'google_map_id'" placeholder="Enter new default longitude to change, else leave empty">
+                <svg @click="edit_key='google_map_id'" class="fform__icon" :class="{'fform__icon--active':edit_key=='google_map_id'}"> <use xlink:href="@/assets/svg/sprite.svg#icon-pencil"></use></svg>
+            </div>
+        </div>
+
         <div class="fform__row mt-10 " @click="clearMessage" :class="{ 'fform__disabled': edit_key != 'jwt_expiration_seconds' }">
             <div class="fform__description"><b>jwt_expiration_seconds</b> &nbsp Duration in seconds for which a user's JSON Web Token (JWT) remains valid after login.</div>
             <div class="fform__group ">
@@ -53,6 +62,24 @@
             </div>
         </div>
 
+        <div class="fform__row mt-10 " @click="clearMessage" :class="{ 'fform__disabled': edit_key != 'initial_parking_check_date' }">
+            <div class="fform__description"><b>initial_parking_check_date</b> &nbsp The reference date for checking parking events. Devices with no events after this date are considered newly installed or inactive, and their status is marked as unknown.</div>
+            <div class="fform__group ">
+                <input class="fform__input " :class="{'fform__input--active':edit_key=='initial_parking_check_date'}" id="initial_parking_check_date" type="text" @blur="edit_key=null" 
+                    v-model.trim="initial_parking_check_date" :disabled="edit_key != 'initial_parking_check_date'" placeholder="Enter new default longitude to change, else leave empty">
+                <svg @click="edit_key='initial_parking_check_date'" class="fform__icon" :class="{'fform__icon--active':edit_key=='initial_parking_check_date'}"> <use xlink:href="@/assets/svg/sprite.svg#icon-pencil"></use></svg>
+            </div>
+        </div>
+
+        <div class="fform__row mt-10 " @click="clearMessage" :class="{ 'fform__disabled': edit_key != 'cors_allowed_origins' }">
+            <div class="fform__description"><b>cors_allowed_origins</b> &nbsp Specifies the domains that are permitted to access the API, including development hosts. Use '*' to allow all or specify domains individually, separated by a comma.</div>
+            <div class="fform__group ">
+                <input class="fform__input " :class="{'fform__input--active':edit_key=='cors_allowed_origins'}" id="cors_allowed_origins" type="text" @blur="edit_key=null" 
+                    v-model.trim="cors_allowed_origins" :disabled="edit_key != 'cors_allowed_origins'" placeholder="Enter new default longitude to change, else leave empty">
+                <svg @click="edit_key='cors_allowed_origins'" class="fform__icon" :class="{'fform__icon--active':edit_key=='cors_allowed_origins'}"> <use xlink:href="@/assets/svg/sprite.svg#icon-pencil"></use></svg>
+            </div>
+        </div>
+
         <button  class="bbtn bbtn--red mt-14"  @click.prevent="initUpdateSettings()">
             Update Settings
         </button>
@@ -71,9 +98,12 @@ import AdminConfirmationModal from '@/components/commen/AdminConfirmationModal.v
 const edit_key = ref(null);
 
 const google_api_key = ref('');
+const google_map_id = ref(null);
 const jwt_expiration_seconds = ref(null);
 const redis_ttl_seconds = ref(null);
 const device_access_mode = ref(null);
+const initial_parking_check_date = ref(null);
+const cors_allowed_origins = ref(null);
 
 const adminModalOn = ref(false);
 
@@ -90,7 +120,7 @@ function clearMessage() {
     messageStore.clearFlashMessage();
 }
 
-function initUpdateSettings () {
+function initUpdateSettings() {
     messageStore.clearFlashMessage();
     const message = []; // Clear previous messages
     let hasError = false;
@@ -113,12 +143,29 @@ function initUpdateSettings () {
         hasError = true;
     }
 
-    // Validate if google_api_key is null, empty, or a valid format
-    if (google_api_key.value !== null && google_api_key.value.trim() !== '' && !/^[A-Za-z0-9_\-]{20,}$/.test(google_api_key.value)) {
-        message.push("Google API key must be either empty or a valid key with at least 20 characters, containing letters, numbers, dashes, or underscores.");
+    // Validate if google_map_id is null, empty, or a valid format
+    if (google_map_id.value == null || google_map_id.value.trim() === '' || !/^[A-Za-z0-9_\-]{10,}$/.test(google_map_id.value)) {
+        message.push("Google Map ID must be at least 10 characters long, containing letters, numbers, dashes, or underscores.");
         hasError = true;
     }
 
+    // Validate if google_api_key is null, empty, or a valid format
+    if (google_map_id.value !== null && google_api_key.value.trim() !== '' && !/^[A-Za-z0-9_\-]{10,}$/.test(google_api_key.value)) {
+        message.push("Google MAP ID must be valid id with at least 20 characters, containing letters, numbers, dashes, or underscores.");
+        hasError = true;
+    }
+
+    // Validate initial_parking_check_date for a valid ISO 8601 date format
+    if (initial_parking_check_date.value && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(initial_parking_check_date.value)) {
+        message.push("Initial parking check date must be in ISO 8601 format (YYYY-MM-DDTHH:MM:SSZ).");
+        hasError = true;
+    }
+
+    // Validate CORS Allowed Origins
+    if (!cors_allowed_origins.value || !cors_allowed_origins.value.split(',').every(origin => /^(\*|https?:\/\/[\w\-\.]+(:\d+)?(\/)?)$/.test(origin.trim()))) {
+        message.push("CORS Allowed Origins must be a comma-separated list of valid URLs or '*'.");
+        hasError = true;
+    }
 
     if (hasError) {
         messageStore.setFlashMessages(message);
@@ -142,6 +189,9 @@ async function updateSettings(payload) {
         payload.jwt_expiration_seconds = String(jwt_expiration_seconds.value);
         payload.redis_ttl_seconds = String(redis_ttl_seconds.value);
         payload.device_access_mode = device_access_mode.value;
+        payload.google_map_id = google_map_id.value;
+        payload.initial_parking_check_date = initial_parking_check_date.value;
+        payload.cors_allowed_origins = cors_allowed_origins.value;
 
         const response = await appStore.updateSettings(payload);
 
@@ -165,9 +215,12 @@ async function updateSettings(payload) {
 
 onMounted(()=>{
     const settings = appStore.getAppSettings
+    google_map_id.value = settings.google_map_id;
     jwt_expiration_seconds.value = settings.jwt_expiration_seconds;
     redis_ttl_seconds.value = settings.redis_ttl_seconds;
     device_access_mode.value = settings.device_access_mode;
+    initial_parking_check_date.value = settings.initial_parking_check_date;
+    cors_allowed_origins.value = settings.cors_allowed_origins;
 });
 
 </script>
