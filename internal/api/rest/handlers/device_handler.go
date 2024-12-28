@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
@@ -112,7 +113,7 @@ func (h *DeviceHandler) Store(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newDevice := models.Device{
-		DeviceID:        payload.DeviceID,
+		DeviceID:        strings.ToUpper(payload.DeviceID),
 		NetworkType:     payload.NetworkType,
 		Name:            payload.Name,
 		FirmwareVersion: payload.FirmwareVersion,

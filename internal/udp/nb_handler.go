@@ -2,6 +2,8 @@ package udp
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,8 +27,19 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	hexTimestamp := helpers.GetCurrentTimestampHex()
 	reply = append(reply, hexTimestamp)
 
+	// -----------------------------------------------------------------
 	// Convert data to a string and trim any newlines
-	hexStr := string(bytes.TrimSpace(data))
+	// hexStr := string(bytes.TrimSpace(data))
+	// -----------------------------------------------------------------
+	base64Str := string(bytes.TrimSpace(data))
+	bufferBase64, err := base64.StdEncoding.DecodeString(base64Str)
+	if err != nil {
+		handleErrorSendResponse(err, "Error decoding base64", conn, addr, reply)
+		return
+	}
+	// Convert the decoded bytes to a hex string
+	hexStr := hex.EncodeToString(bufferBase64)
+	// -----------------------------------------------------------------
 
 	// Validate minimum hex string length
 	if len(hexStr) < 14 {
@@ -115,7 +128,6 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 				return
 			}
 		}
-
 	}
 
 	// Generate a new UUID for the RawDataLog entry
@@ -143,7 +155,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	}
 
 	// Debug output for parsed values
-	helpers.LogInfo("Firmware Version: %.2f Device ID: %d", firmwareVersion, deviceID)
+	helpers.LogInfo("Network: NB-IoT, Firmware: %.2f, Device ID: %d", firmwareVersion, deviceID)
 
 	// Process firmware-specific data parsing based on the firmware version.
 	var parsedData map[string]any

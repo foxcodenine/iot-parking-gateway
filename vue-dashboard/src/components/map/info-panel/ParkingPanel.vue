@@ -330,8 +330,6 @@ function getDateOffset(d) {
         cursor: pointer;
     }
 
-
-
     &__svg {
         width: 1.6rem;
         height: 1.6rem;
@@ -458,10 +456,12 @@ function getDateOffset(d) {
         font-size: 1rem;
         line-height: 1.1rem;
         text-transform: capitalize;
+        overflow: hidden;
     }
 
     &__name {
         font-size: 1rem;
+        overflow: hidden;
     }
 
     &__id {

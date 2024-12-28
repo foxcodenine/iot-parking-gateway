@@ -48,9 +48,16 @@
 
             <div class="sidebar__item" @click="goToView('deviceView')" >
                 <svg class="sidebar__svg ">
-                    <use xlink:href="@/assets/svg/sprite.svg#icon-about
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-docs"></use>
+                </svg>
+                <div class="sidebar__text">
+                    <span>Doc's</span>
+                </div>
+            </div>
 
-"></use>
+            <div class="sidebar__item" @click="goToView('deviceView')" >
+                <svg class="sidebar__svg ">
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-about"></use>
                 </svg>
                 <div class="sidebar__text">
                     <span>About</span>
