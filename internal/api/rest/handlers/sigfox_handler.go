@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
+	"github.com/foxcodenine/iot-parking-gateway/internal/firmware"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 
@@ -192,4 +193,29 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 
 	// Debug output for parsed values
 	helpers.LogInfo("Network: SigFox, Firmware: %.2f, Device ID: %s", firmwareVersion, deviceID)
+
+	// Process firmware-specific data parsing based on the firmware version.
+	var parsedData map[string]any
+	switch firmwareVersion {
+	case 6:
+		parsedData, err = firmware.Sigfox_60(hexStr)
+
+	default:
+
+		response := map[string]interface{}{
+			"status":  "unsupported_firmware",
+			"message": fmt.Sprintf("Device %s has an unsupported firmware version:  %.2f. Request ignored.", deviceID, firmwareVersion),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusSeeOther)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	if err != nil {
+		helpers.RespondWithError(w, err, fmt.Sprintf("Failed to parse data from Sigfox_%.0f firmware", firmwareVersion*10), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println(parsedData)
 }
