@@ -215,7 +215,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 			helpers.LogError(err, "Failed to serialize parsedData to JSON")
 			continue
 		}
-		s.mqProducer.SendMessage("nb_iot_event_logs_exchange", "nb_iot_event_logs_queue", string(messageData))
+		s.mqProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
 	}
 
 	// Push parsed keepalive data to Redis.
@@ -236,7 +236,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 			helpers.LogError(err, "Failed to serialize parsedData to JSON")
 			continue
 		}
-		s.mqProducer.SendMessage("nb_iot_event_logs_exchange", "nb_iot_event_logs_queue", string(messageData))
+		s.mqProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
 	}
 
 	// Push parsed settings data to Redis.
@@ -259,7 +259,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 			helpers.LogError(err, "Failed to serialize parsedData to JSON")
 			continue
 		}
-		s.mqProducer.SendMessage("nb_iot_event_logs_exchange", "nb_iot_event_logs_queue", string(messageData))
+		s.mqProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
 	}
 
 	// time.Sleep(1 * time.Second)

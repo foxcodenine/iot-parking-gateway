@@ -2,7 +2,6 @@ package firmware
 
 import (
 	"fmt"
-	"math/big"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 )
@@ -372,21 +371,137 @@ func parseSettingsPackage53(hexStr string, timestamp, offset int) (map[string]an
 	}
 	pkg["maximum_deep_sleep_time"] = pkg["maximum_deep_sleep_time"].(int) / 2
 
-	if pkg["ten_x_deep_sleep_time"], nextOffset, err = helpers.ParseHexSubstringBigInt(hexStr, nextOffset, 20); err != nil {
+	// --------------------
+	if pkg["deep_sleep_time_1"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
 		return nil, helpers.WrapError(err)
 	}
-	// Divide the big.Int value by 4
-	deepSleepTime := pkg["ten_x_deep_sleep_time"].(*big.Int)
-	divisionFactor := big.NewInt(4)
-	pkg["ten_x_deep_sleep_time"] = new(big.Int).Div(deepSleepTime, divisionFactor)
+	pkg["deep_sleep_time_1"] = pkg["deep_sleep_time_1"].(int) * 4
 
-	if pkg["ten_x_action_before"], nextOffset, err = helpers.ParseHexSubstringBigInt(hexStr, nextOffset, 10); err != nil {
+	if pkg["action_before_1"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)
 	}
 
-	if pkg["ten_x_action_after"], nextOffset, err = helpers.ParseHexSubstringBigInt(hexStr, nextOffset, 10); err != nil {
+	if pkg["action_after_1"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)
 	}
+
+	if pkg["deep_sleep_time_2"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	pkg["deep_sleep_time_2"] = pkg["deep_sleep_time_2"].(int) * 4
+
+	if pkg["action_before_2"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["action_after_2"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["deep_sleep_time_3"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	pkg["deep_sleep_time_3"] = pkg["deep_sleep_time_3"].(int) * 4
+
+	if pkg["action_before_3"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["action_after_3"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["deep_sleep_time_4"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	pkg["deep_sleep_time_4"] = pkg["deep_sleep_time_4"].(int) * 4
+
+	if pkg["action_before_4"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["action_after_4"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["deep_sleep_time_5"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	pkg["deep_sleep_time_5"] = pkg["deep_sleep_time_5"].(int) * 4
+
+	if pkg["action_before_5"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["action_after_5"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["deep_sleep_time_6"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	pkg["deep_sleep_time_6"] = pkg["deep_sleep_time_6"].(int) * 4
+
+	if pkg["action_before_6"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["action_after_6"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["deep_sleep_time_7"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	pkg["deep_sleep_time_7"] = pkg["deep_sleep_time_7"].(int) * 4
+
+	if pkg["action_before_7"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["action_after_7"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["deep_sleep_time_8"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	pkg["deep_sleep_time_8"] = pkg["deep_sleep_time_8"].(int) * 4
+
+	if pkg["action_before_8"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["action_after_8"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["deep_sleep_time_9"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	pkg["deep_sleep_time_9"] = pkg["deep_sleep_time_9"].(int) * 4
+
+	if pkg["action_before_9"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["action_after_9"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["deep_sleep_time_10"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	pkg["deep_sleep_time_10"] = pkg["deep_sleep_time_10"].(int) * 4
+
+	if pkg["action_before_10"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["action_after_10"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	// --------------------
 
 	if pkg["nb_iot_udp_ip_1"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)

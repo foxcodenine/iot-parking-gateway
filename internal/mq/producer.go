@@ -17,11 +17,15 @@ type RabbitMQProducer struct {
 	channel    *amqp.Channel
 }
 
+var AppRabbitMQProducer *RabbitMQProducer
+
 // NewRabbitMQProducer creates a new producer instance
 func NewRabbitMQProducer(config RabbitConfig) *RabbitMQProducer {
-	return &RabbitMQProducer{
+	AppRabbitMQProducer = &RabbitMQProducer{
 		config: config,
 	}
+
+	return AppRabbitMQProducer
 }
 
 // ---------------------------------------------------------------------

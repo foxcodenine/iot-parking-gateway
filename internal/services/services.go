@@ -95,7 +95,7 @@ func (s *Service) RegisterNewDevices() {
 		}
 
 		// If the network type is 'nb', attempts to create a new device settings record in the database.
-		if newDevice.NetworkType == "nb" {
+		if newDevice.NetworkType == "NB-IoT" {
 			newDeviceSetting := models.NbiotDeviceSettings{
 				DeviceID:    deviceID,
 				NetworkType: networkType,

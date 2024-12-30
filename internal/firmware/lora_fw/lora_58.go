@@ -50,6 +50,15 @@ func Lora_58(hexStr string) (map[string]any, error) {
 			}
 			parkingPackages = append(parkingPackages, pkg)
 			nextOffset1 = pkg["nextOffset"].(int)
+		case 10:
+			// settingsAmount++
+			// settingsAmount++
+			// pkg, err := parseSettingsPackage58(hexStr, timestamp, nextOffset1)
+			// if err != nil {
+			// 	return nil, err
+			// }
+			// settingsPackages = append(settingsPackages, pkg)
+			// nextOffset1 = pkg["nextOffset"].(int)
 		}
 
 		nextOffset = nextOffset1
@@ -120,6 +129,78 @@ func parseParkingPackage58(hexStr string, timestamp, offset int) (map[string]any
 	pkg["nextOffset"] = nextOffset
 	return pkg, nil
 }
+
+// func parseSettingsPackage58(hexStr string, timestamp, offset int) (map[string]any, error) {
+// 	pkg := map[string]any{"timestamp": timestamp}
+// 	var err error
+// 	var nextOffset int
+
+// 	if pkg["device_mode"], nextOffset, err = helpers.ParseHexSubstring(hexStr, offset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	if pkg["device_enable"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+
+// 	if pkg["radar_car_cal_lo_th"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	pkg["radar_car_cal_lo_th"] = pkg["radar_car_cal_lo_th"].(int) * 256
+
+// 	if pkg["radar_car_cal_hi_th"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	pkg["radar_car_cal_hi_th"] = pkg["radar_car_cal_hi_th"].(int) * 256
+
+// 	if pkg["radar_car_uncal_lo_th"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	pkg["radar_car_uncal_lo_th"] = pkg["radar_car_uncal_lo_th"].(int) * 256
+
+// 	if pkg["radar_car_uncal_hi_th"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	pkg["radar_car_uncal_hi_th"] = pkg["radar_car_uncal_hi_th"].(int) * 256
+
+// 	if pkg["radar_car_delta_th"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	pkg["radar_car_delta_th"] = pkg["radar_car_delta_th"].(int) * 256
+
+// 	if pkg["mag_car_lo"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	if pkg["mag_car_hi"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+
+// 	if pkg["debug_period"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	if pkg["debug_mode"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+
+// 	if pkg["logs_mode"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	if pkg["logs_amount"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+
+// 	if pkg["maximum_registration_time"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	pkg["maximum_registration_time"] = pkg["maximum_registration_time"].(int) / 4
+
+// 	if pkg["maximum_registration_attempts"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	if pkg["maximum_deep_sleep_time"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+// 		return nil, helpers.WrapError(err)
+// 	}
+// 	pkg["maximum_deep_sleep_time"] = pkg["maximum_deep_sleep_time"].(int) / 2
+// }
 
 // Validates event ID
 func isValidEventID(eventID int) bool {

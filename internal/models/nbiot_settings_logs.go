@@ -21,34 +21,63 @@ type NbiotSettingLog struct {
 	CreatedAt       time.Time `db:"created_at" json:"created_at"`             // Time when the record was created
 	Timestamp       int64     `db:"timestamp" json:"timestamp"`               // Event timestamp in UNIX format
 
-	DeviceMode                  int    `db:"device_mode" json:"device_mode"`
-	DeviceEnable                int    `db:"device_enable" json:"device_enable"`
-	RadarCarCalLoTh             int    `db:"radar_car_cal_lo_th" json:"radar_car_cal_lo_th"`
-	RadarCarCalHiTh             int    `db:"radar_car_cal_hi_th" json:"radar_car_cal_hi_th"`
-	RadarCarUncalLoTh           int    `db:"radar_car_uncal_lo_th" json:"radar_car_uncal_lo_th"`
-	RadarCarUncalHiTh           int    `db:"radar_car_uncal_hi_th" json:"radar_car_uncal_hi_th"`
-	RadarCarDeltaTh             int    `db:"radar_car_delta_th" json:"radar_car_delta_th"`
-	MagCarLo                    int    `db:"mag_car_lo" json:"mag_car_lo"`
-	MagCarHi                    int    `db:"mag_car_hi" json:"mag_car_hi"`
-	RadarTrailCalLoTh           int    `db:"radar_trail_cal_lo_th" json:"radar_trail_cal_lo_th"`
-	RadarTrailCalHiTh           int    `db:"radar_trail_cal_hi_th" json:"radar_trail_cal_hi_th"`
-	RadarTrailUncalLoTh         int    `db:"radar_trail_uncal_lo_th" json:"radar_trail_uncal_lo_th"`
-	RadarTrailUncalHiTh         int    `db:"radar_trail_uncal_hi_th" json:"radar_trail_uncal_hi_th"`
-	DebugPeriod                 int    `db:"debug_period" json:"debug_period"`
-	DebugMode                   int    `db:"debug_mode" json:"debug_mode"`
-	LogsMode                    int    `db:"logs_mode" json:"logs_mode"`
-	LogsAmount                  int    `db:"logs_amount" json:"logs_amount"`
-	MaximumRegistrationTime     int    `db:"maximum_registration_time" json:"maximum_registration_time"`
-	MaximumRegistrationAttempts int    `db:"maximum_registration_attempts" json:"maximum_registration_attempts"`
-	MaximumDeepSleepTime        int    `db:"maximum_deep_sleep_time" json:"maximum_deep_sleep_time"`
-	TenXDeepSleepTime           int64  `db:"ten_x_deep_sleep_time" json:"ten_x_deep_sleep_time"`
-	TenXActionBefore            int64  `db:"ten_x_action_before" json:"ten_x_action_before"`
-	TenXActionAfter             int64  `db:"ten_x_action_after" json:"ten_x_action_after"`
-	NBIoTUDPIP                  string `db:"nb_iot_udp_ip" json:"nb_iot_udp_ip"`
-	NBIoTUDPPort                int    `db:"nb_iot_udp_port" json:"nb_iot_udp_port"`
-	NBIoTAPNLength              int    `db:"nb_iot_apn_length" json:"nb_iot_apn_length"`
-	NBIoTAPN                    string `db:"nb_iot_apn" json:"nb_iot_apn"`
-	NBIoTIMSI                   string `db:"nb_iot_imsi" json:"nb_iot_imsi"`
+	DeviceMode                  int `db:"device_mode" json:"device_mode"`
+	DeviceEnable                int `db:"device_enable" json:"device_enable"`
+	RadarCarCalLoTh             int `db:"radar_car_cal_lo_th" json:"radar_car_cal_lo_th"`
+	RadarCarCalHiTh             int `db:"radar_car_cal_hi_th" json:"radar_car_cal_hi_th"`
+	RadarCarUncalLoTh           int `db:"radar_car_uncal_lo_th" json:"radar_car_uncal_lo_th"`
+	RadarCarUncalHiTh           int `db:"radar_car_uncal_hi_th" json:"radar_car_uncal_hi_th"`
+	RadarCarDeltaTh             int `db:"radar_car_delta_th" json:"radar_car_delta_th"`
+	MagCarLo                    int `db:"mag_car_lo" json:"mag_car_lo"`
+	MagCarHi                    int `db:"mag_car_hi" json:"mag_car_hi"`
+	RadarTrailCalLoTh           int `db:"radar_trail_cal_lo_th" json:"radar_trail_cal_lo_th"`
+	RadarTrailCalHiTh           int `db:"radar_trail_cal_hi_th" json:"radar_trail_cal_hi_th"`
+	RadarTrailUncalLoTh         int `db:"radar_trail_uncal_lo_th" json:"radar_trail_uncal_lo_th"`
+	RadarTrailUncalHiTh         int `db:"radar_trail_uncal_hi_th" json:"radar_trail_uncal_hi_th"`
+	DebugPeriod                 int `db:"debug_period" json:"debug_period"`
+	DebugMode                   int `db:"debug_mode" json:"debug_mode"`
+	LogsMode                    int `db:"logs_mode" json:"logs_mode"`
+	LogsAmount                  int `db:"logs_amount" json:"logs_amount"`
+	MaximumRegistrationTime     int `db:"maximum_registration_time" json:"maximum_registration_time"`
+	MaximumRegistrationAttempts int `db:"maximum_registration_attempts" json:"maximum_registration_attempts"`
+	MaximumDeepSleepTime        int `db:"maximum_deep_sleep_time" json:"maximum_deep_sleep_time"`
+
+	DeepSleepTime1  int64 `db:"deep_sleep_time_1" json:"deep_sleep_time_1"`
+	ActionBefore1   int64 `db:"action_before_1" json:"action_before_1"`
+	ActionAfter1    int64 `db:"action_after_1" json:"action_after_1"`
+	DeepSleepTime2  int64 `db:"deep_sleep_time_2" json:"deep_sleep_time_2"`
+	ActionBefore2   int64 `db:"action_before_2" json:"action_before_2"`
+	ActionAfter2    int64 `db:"action_after_2" json:"action_after_2"`
+	DeepSleepTime3  int64 `db:"deep_sleep_time_3" json:"deep_sleep_time_3"`
+	ActionBefore3   int64 `db:"action_before_3" json:"action_before_3"`
+	ActionAfter3    int64 `db:"action_after_3" json:"action_after_3"`
+	DeepSleepTime4  int64 `db:"deep_sleep_time_4" json:"deep_sleep_time_4"`
+	ActionBefore4   int64 `db:"action_before_4" json:"action_before_4"`
+	ActionAfter4    int64 `db:"action_after_4" json:"action_after_4"`
+	DeepSleepTime5  int64 `db:"deep_sleep_time_5" json:"deep_sleep_time_5"`
+	ActionBefore5   int64 `db:"action_before_5" json:"action_before_5"`
+	ActionAfter5    int64 `db:"action_after_5" json:"action_after_5"`
+	DeepSleepTime6  int64 `db:"deep_sleep_time_6" json:"deep_sleep_time_6"`
+	ActionBefore6   int64 `db:"action_before_6" json:"action_before_6"`
+	ActionAfter6    int64 `db:"action_after_6" json:"action_after_6"`
+	DeepSleepTime7  int64 `db:"deep_sleep_time_7" json:"deep_sleep_time_7"`
+	ActionBefore7   int64 `db:"action_before_7" json:"action_before_7"`
+	ActionAfter7    int64 `db:"action_after_7" json:"action_after_7"`
+	DeepSleepTime8  int64 `db:"deep_sleep_time_8" json:"deep_sleep_time_8"`
+	ActionBefore8   int64 `db:"action_before_8" json:"action_before_8"`
+	ActionAfter8    int64 `db:"action_after_8" json:"action_after_8"`
+	DeepSleepTime9  int64 `db:"deep_sleep_time_9" json:"deep_sleep_time_9"`
+	ActionBefore9   int64 `db:"action_before_9" json:"action_before_9"`
+	ActionAfter9    int64 `db:"action_after_9" json:"action_after_9"`
+	DeepSleepTime10 int64 `db:"deep_sleep_time_10" json:"deep_sleep_time_10"`
+	ActionBefore10  int64 `db:"action_before_10" json:"action_before_10"`
+	ActionAfter10   int64 `db:"action_after_10" json:"action_after_10"`
+
+	NBIoTUDPIP     string `db:"nb_iot_udp_ip" json:"nb_iot_udp_ip"`
+	NBIoTUDPPort   int    `db:"nb_iot_udp_port" json:"nb_iot_udp_port"`
+	NBIoTAPNLength int    `db:"nb_iot_apn_length" json:"nb_iot_apn_length"`
+	NBIoTAPN       string `db:"nb_iot_apn" json:"nb_iot_apn"`
+	NBIoTIMSI      string `db:"nb_iot_imsi" json:"nb_iot_imsi"`
 }
 
 // TableName returns the table name for the NbiotSettingLog model.
@@ -112,14 +141,52 @@ func NewNbiotSettingLog(pktData map[string]any) (*NbiotSettingLog, error) {
 		MaximumRegistrationTime:     int(pktData["maximum_registration_time"].(float64)),
 		MaximumRegistrationAttempts: int(pktData["maximum_registration_attempts"].(float64)),
 		MaximumDeepSleepTime:        int(pktData["maximum_deep_sleep_time"].(float64)),
-		TenXDeepSleepTime:           int64(pktData["ten_x_deep_sleep_time"].(float64)),
-		TenXActionBefore:            int64(pktData["ten_x_action_before"].(float64)),
-		TenXActionAfter:             int64(pktData["ten_x_action_after"].(float64)),
-		NBIoTUDPIP:                  pktData["nb_iot_udp_ip"].(string),
-		NBIoTUDPPort:                int(pktData["nb_iot_udp_port"].(float64)),
-		NBIoTAPNLength:              int(pktData["nb_iot_apn_length"].(float64)),
-		NBIoTAPN:                    pktData["nb_iot_apn"].(string),
-		NBIoTIMSI:                   fmt.Sprintf("%d", int64(pktData["nb_iot_imsi"].(float64))),
+
+		DeepSleepTime1: int64(pktData["deep_sleep_time_1"].(float64)),
+		ActionBefore1:  int64(pktData["action_before_1"].(float64)),
+		ActionAfter1:   int64(pktData["action_after_1"].(float64)),
+
+		DeepSleepTime2: int64(pktData["deep_sleep_time_2"].(float64)),
+		ActionBefore2:  int64(pktData["action_before_2"].(float64)),
+		ActionAfter2:   int64(pktData["action_after_2"].(float64)),
+
+		DeepSleepTime3: int64(pktData["deep_sleep_time_3"].(float64)),
+		ActionBefore3:  int64(pktData["action_before_3"].(float64)),
+		ActionAfter3:   int64(pktData["action_after_3"].(float64)),
+
+		DeepSleepTime4: int64(pktData["deep_sleep_time_4"].(float64)),
+		ActionBefore4:  int64(pktData["action_before_4"].(float64)),
+		ActionAfter4:   int64(pktData["action_after_4"].(float64)),
+
+		DeepSleepTime5: int64(pktData["deep_sleep_time_5"].(float64)),
+		ActionBefore5:  int64(pktData["action_before_5"].(float64)),
+		ActionAfter5:   int64(pktData["action_after_5"].(float64)),
+
+		DeepSleepTime6: int64(pktData["deep_sleep_time_6"].(float64)),
+		ActionBefore6:  int64(pktData["action_before_6"].(float64)),
+		ActionAfter6:   int64(pktData["action_after_6"].(float64)),
+
+		DeepSleepTime7: int64(pktData["deep_sleep_time_7"].(float64)),
+		ActionBefore7:  int64(pktData["action_before_7"].(float64)),
+		ActionAfter7:   int64(pktData["action_after_7"].(float64)),
+
+		DeepSleepTime8: int64(pktData["deep_sleep_time_8"].(float64)),
+		ActionBefore8:  int64(pktData["action_before_8"].(float64)),
+		ActionAfter8:   int64(pktData["action_after_8"].(float64)),
+
+		DeepSleepTime9: int64(pktData["deep_sleep_time_9"].(float64)),
+		ActionBefore9:  int64(pktData["action_before_9"].(float64)),
+		ActionAfter9:   int64(pktData["action_after_9"].(float64)),
+
+		DeepSleepTime10: int64(pktData["deep_sleep_time_10"].(float64)),
+		ActionBefore10:  int64(pktData["action_before_10"].(float64)),
+		ActionAfter10:   int64(pktData["action_after_10"].(float64)),
+
+		NBIoTUDPIP:     pktData["nb_iot_udp_ip"].(string),
+		NBIoTUDPPort:   int(pktData["nb_iot_udp_port"].(float64)),
+		NBIoTAPNLength: int(pktData["nb_iot_apn_length"].(float64)),
+		NBIoTAPN:       pktData["nb_iot_apn"].(string),
+		NBIoTIMSI:      fmt.Sprintf("%d", int64(pktData["nb_iot_imsi"].(float64))),
 	}
 
 	if pktData["radar_trail_cal_lo_th"] != nil {
@@ -146,7 +213,7 @@ func (n *NbiotSettingLog) BulkInsert(settingLogs []NbiotSettingLog) error {
 	}
 
 	// Determine the number of fields to be inserted for each log
-	numFields := 35 // Adjust this based on the actual number of columns you have in your table
+	numFields := 62 // Adjust this based on the actual number of columns you have in your table
 
 	// Prepare slices for SQL values and arguments.
 	values := make([]string, 0, len(settingLogs))
@@ -168,14 +235,24 @@ func (n *NbiotSettingLog) BulkInsert(settingLogs []NbiotSettingLog) error {
 			log.MagCarHi, log.RadarTrailCalLoTh, log.RadarTrailCalHiTh, log.RadarTrailUncalLoTh,
 			log.RadarTrailUncalHiTh, log.DebugPeriod, log.DebugMode, log.LogsMode, log.LogsAmount,
 			log.MaximumRegistrationTime, log.MaximumRegistrationAttempts, log.MaximumDeepSleepTime,
-			log.TenXDeepSleepTime, log.TenXActionBefore, log.TenXActionAfter, log.NBIoTUDPIP,
-			log.NBIoTUDPPort, log.NBIoTAPNLength, log.NBIoTAPN, log.NBIoTIMSI,
+
+			log.DeepSleepTime1, log.ActionBefore1, log.ActionAfter1,
+			log.DeepSleepTime2, log.ActionBefore2, log.ActionAfter2,
+			log.DeepSleepTime3, log.ActionBefore3, log.ActionAfter3,
+			log.DeepSleepTime4, log.ActionBefore4, log.ActionAfter4,
+			log.DeepSleepTime5, log.ActionBefore5, log.ActionAfter5,
+			log.DeepSleepTime6, log.ActionBefore6, log.ActionAfter6,
+			log.DeepSleepTime7, log.ActionBefore7, log.ActionAfter7,
+			log.DeepSleepTime8, log.ActionBefore8, log.ActionAfter8,
+			log.DeepSleepTime9, log.ActionBefore9, log.ActionAfter9,
+			log.DeepSleepTime10, log.ActionBefore10, log.ActionAfter10,
+
+			log.NBIoTUDPIP, log.NBIoTUDPPort, log.NBIoTAPNLength, log.NBIoTAPN, log.NBIoTIMSI,
 		)
 	}
 
 	// Construct the SQL statement by joining the placeholders for each record
-	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, created_at, timestamp, device_mode, device_enable, radar_car_cal_lo_th, radar_car_cal_hi_th, radar_car_uncal_lo_th, radar_car_uncal_hi_th, radar_car_delta_th, mag_car_lo, mag_car_hi, radar_trail_cal_lo_th, radar_trail_cal_hi_th, radar_trail_uncal_lo_th, radar_trail_uncal_hi_th, debug_period, debug_mode, logs_mode, logs_amount, maximum_registration_time, maximum_registration_attempts, maximum_deep_sleep_time, ten_x_deep_sleep_time, ten_x_action_before, ten_x_action_after, nb_iot_udp_ip, nb_iot_udp_port, nb_iot_apn_length, nb_iot_apn, nb_iot_imsi) VALUES %s",
-		n.TableName(), strings.Join(values, ", "))
+	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, created_at, timestamp, device_mode, device_enable, radar_car_cal_lo_th, radar_car_cal_hi_th, radar_car_uncal_lo_th, radar_car_uncal_hi_th, radar_car_delta_th, mag_car_lo, mag_car_hi, radar_trail_cal_lo_th, radar_trail_cal_hi_th, radar_trail_uncal_lo_th, radar_trail_uncal_hi_th, debug_period, debug_mode, logs_mode, logs_amount, maximum_registration_time, maximum_registration_attempts, maximum_deep_sleep_time, deep_sleep_time_1, action_before_1, action_after_1,	deep_sleep_time_2, action_before_2, action_after_2,	deep_sleep_time_3, action_before_3, action_after_3,	deep_sleep_time_4, action_before_4, action_after_4,	deep_sleep_time_5, action_before_5, action_after_5,	deep_sleep_time_6, action_before_6, action_after_6,	deep_sleep_time_7, action_before_7, action_after_7,	deep_sleep_time_8, action_before_8, action_after_8,	deep_sleep_time_9, action_before_9, action_after_9,	deep_sleep_time_10, action_before_10, action_after_10, nb_iot_udp_ip, nb_iot_udp_port, nb_iot_apn_length, nb_iot_apn, nb_iot_imsi) VALUES %s", n.TableName(), strings.Join(values, ", "))
 
 	// Execute the constructed query with the arguments
 	_, err := dbSession.SQL().Exec(query, args...)

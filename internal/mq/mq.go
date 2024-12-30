@@ -66,12 +66,12 @@ func SetupRabbitMQConfig() RabbitConfig {
 					{Name: "test_exchange"},
 				},
 			},
-			"nb_iot_event_logs_queue": {
-				Name:       "nb_iot_event_logs_queue",
-				RoutingKey: "nb_iot_event_logs_queue",
+			"event_logs_queue": {
+				Name:       "event_logs_queue",
+				RoutingKey: "event_logs_queue",
 				Durable:    true,
 				Exchanges: []Exchange{
-					{Name: "nb_iot_event_logs_exchange"},
+					{Name: "event_logs_exchange"},
 				},
 			},
 		},

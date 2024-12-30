@@ -13,6 +13,7 @@ import (
 	lorafw "github.com/foxcodenine/iot-parking-gateway/internal/firmware/lora_fw"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
+	"github.com/foxcodenine/iot-parking-gateway/internal/mq"
 
 	"github.com/google/uuid"
 )
@@ -234,11 +235,12 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 			helpers.LogError(err, "Failed to push parking package data log to Redis")
 		}
 
-		// messageData, err := json.Marshal(i)
-		// if err != nil {
-		// 	helpers.LogError(err, "Failed to serialize parsedData to JSON")
-		// 	continue
-		// }
-		// s.mqProducer.SendMessage("nb_iot_event_logs_exchange", "nb_iot_event_logs_queue", string(messageData))
+		messageData, err := json.Marshal(i)
+		if err != nil {
+			helpers.LogError(err, "Failed to serialize parsedData to JSON")
+			continue
+		}
+
+		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
 	}
 }
