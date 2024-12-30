@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
-	"github.com/foxcodenine/iot-parking-gateway/internal/firmware"
+	lorafw "github.com/foxcodenine/iot-parking-gateway/internal/firmware/lora_fw"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 
@@ -199,7 +199,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 
 	switch firmwareVersion {
 	case 5.8, 5.9:
-		parsedData, err = firmware.Lora_58(hexStr)
+		parsedData, err = lorafw.Lora_58(hexStr)
 
 	default:
 
@@ -218,5 +218,27 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(parsedData)
+	helpers.PrettyPrintJSON(parsedData)
+
+	// Push parsed parking data packages to Redis.
+	for _, i := range parsedData["parking_packages"].([]map[string]any) {
+
+		i["firmware_version"] = parsedData["firmware_version"]
+		i["device_id"] = deviceID
+		i["raw_id"] = rawUUID
+		i["event_id"] = 26
+		i["network_type"] = "LoRa"
+
+		err := cache.AppCache.RPush("logs:activity-logs", i)
+		if err != nil {
+			helpers.LogError(err, "Failed to push parking package data log to Redis")
+		}
+
+		// messageData, err := json.Marshal(i)
+		// if err != nil {
+		// 	helpers.LogError(err, "Failed to serialize parsedData to JSON")
+		// 	continue
+		// }
+		// s.mqProducer.SendMessage("nb_iot_event_logs_exchange", "nb_iot_event_logs_queue", string(messageData))
+	}
 }

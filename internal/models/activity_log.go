@@ -69,6 +69,11 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 		return nil, fmt.Errorf("invalid type for beacons: expected []interface{}")
 	}
 
+	networkType, ok := pktData["network_type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid type for network_type: expected string")
+	}
+
 	// Iterate over each beacon entry in the array.
 	for _, beaconItem := range beaconData {
 		// Assert that each beacon entry is a map with string keys and interface{} values.
@@ -93,36 +98,44 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 			return nil, fmt.Errorf("invalid type for minor")
 		}
 
-		rssi, ok := beaconMap["rssi"].(float64)
-		if !ok {
-			return nil, fmt.Errorf("invalid type for rssi")
-		}
-
 		// Append the beacon to the Beacons slice after converting values to int.
 		beacon := Beacon{
 			BeaconNumber: int(beaconNumber),
 			Major:        int(major),
 			Minor:        int(minor),
-			RSSI:         int(rssi),
 		}
-		beacons = append(beacons, beacon)
+
+		if networkType == "NB-Iot" || networkType == "LoRa" {
+			rssi, ok := beaconMap["rssi"].(float64)
+			if !ok {
+				return nil, fmt.Errorf("invalid type for rssi")
+			}
+
+			beacon.RSSI = int(rssi)
+			beacons = append(beacons, beacon)
+		}
 	}
 
 	// Construct and return the ActivityLog object with the parsed and converted data.
-	return &ActivityLog{
+	activityLog := &ActivityLog{
 		RawID:           rawUUID,
 		DeviceID:        pktData["device_id"].(string),
 		FirmwareVersion: pktData["firmware_version"].(float64),
-		NetworkType:     pktData["network_type"].(string),
+		NetworkType:     networkType,
 		HappenedAt:      happenedAt,
 		Timestamp:       timestampInt, // Store parsed timestamp as int64.
 		BeaconsAmount:   int(pktData["beacons_amount"].(float64)),
-		MagnetAbsTotal:  int(pktData["magnet_abs_total"].(float64)),
-		PeakDistanceCm:  int(pktData["peak_distance_cm"].(float64)),
 		RadarCumulative: int(pktData["radar_cumulative"].(float64)),
 		IsOccupied:      pktData["is_occupied"].(float64) != 0, // Convert to boolean.
 		Beacons:         beacons,                               // Attach the processed beacons.
-	}, nil
+	}
+
+	if networkType == "NB-Iot" || networkType == "LoRa" {
+		activityLog.MagnetAbsTotal = int(pktData["magnet_abs_total"].(float64))
+		activityLog.PeakDistanceCm = int(pktData["peak_distance_cm"].(float64))
+	}
+
+	return activityLog, nil
 }
 
 // BulkInsert inserts multiple ActivityLog records in a single operation.

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
-	"github.com/foxcodenine/iot-parking-gateway/internal/firmware"
+	sigfoxfw "github.com/foxcodenine/iot-parking-gateway/internal/firmware/sigfox_fw"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 
@@ -198,7 +198,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 	var parsedData map[string]any
 	switch firmwareVersion {
 	case 6:
-		parsedData, err = firmware.Sigfox_60(hexStr)
+		parsedData, err = sigfoxfw.Sigfox_60(hexStr, req.Timestamp)
 
 	default:
 
@@ -217,5 +217,27 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(parsedData)
+	helpers.PrettyPrintJSON(parsedData)
+
+	// Push parsed parking data packages to Redis.
+	for _, i := range parsedData["parking_packages"].([]map[string]any) {
+
+		i["firmware_version"] = parsedData["firmware_version"]
+		i["device_id"] = deviceID
+		i["raw_id"] = rawUUID
+		i["event_id"] = 26
+		i["network_type"] = "SigFox"
+
+		err := cache.AppCache.RPush("logs:activity-logs", i)
+		if err != nil {
+			helpers.LogError(err, "Failed to push parking package data log to Redis")
+		}
+
+		// messageData, err := json.Marshal(i)
+		// if err != nil {
+		// 	helpers.LogError(err, "Failed to serialize parsedData to JSON")
+		// 	continue
+		// }
+		// s.mqProducer.SendMessage("nb_iot_event_logs_exchange", "nb_iot_event_logs_queue", string(messageData))
+	}
 }

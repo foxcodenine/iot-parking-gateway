@@ -205,9 +205,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 		i["event_id"] = 26
 		i["network_type"] = "NB-IoT"
 
-		// socketserver.IOService.SocketServer.BroadcastToNamespace("/", "update", i)
-
-		err := s.cache.RPush("logs:nb-activity-logs", i)
+		err := s.cache.RPush("logs:activity-logs", i)
 		if err != nil {
 			helpers.LogError(err, "Failed to push parking package data log to Redis")
 		}

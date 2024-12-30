@@ -14,7 +14,7 @@ import (
 func (s *Service) SyncActivityLogs() {
 
 	// Retrieve activity log data from Redis and delete the key.
-	items, err := s.cache.LRangeAndDelete("logs:nb-activity-logs")
+	items, err := s.cache.LRangeAndDelete("logs:activity-logs")
 	if err != nil {
 		// Log error if Redis operations fail.
 		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
