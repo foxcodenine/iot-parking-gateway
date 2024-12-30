@@ -47,7 +47,7 @@ func NB_58(hexStr string) (map[string]any, error) {
 		pkgAmount++
 
 		switch eventID {
-		case 26, 31:
+		case 26:
 			parkingAmount++
 			pkg, err := parseParkingPackage58(hexStr, timestamp, nextOffset1)
 			if err != nil {
@@ -156,7 +156,7 @@ func parseKeepAlivePackage58(hexStr string, timestamp, offset int) (map[string]a
 	if pkg["idle_voltage"], nextOffset, err = helpers.ParseHexSubstring(hexStr, offset, 2); err != nil {
 		return nil, helpers.WrapError(err)
 	}
-	pkg["idle_voltage"] = int(math.Floor(float64(pkg["idle_voltage"].(int)) * 0.2197399744))
+	pkg["idle_voltage"] = int(math.Floor(float64(pkg["idle_voltage"].(int)) * 0.2197))
 
 	if pkg["battery_percentage"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)

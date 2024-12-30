@@ -36,3 +36,8 @@
     d. Implement "Forgot Password" functionality.
     e. Add the ability to hide devices from the map and device views/page.
     f. Include a sidebar in the map view for better navigation and control.
+
+
+10. NbiotDeviceSettings.BulkUpdate
+    a. add settings_at in device
+    b. update device setting only if there are more recent then device settings_at

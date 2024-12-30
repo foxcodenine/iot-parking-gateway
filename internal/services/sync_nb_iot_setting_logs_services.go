@@ -50,6 +50,7 @@ func (s *Service) SyncNBIoTSettingLogs() {
 			s.errorLog.Printf("Failed to insert setting logs to PostgreSQL: %v", err)
 			return
 		}
+		// TODO:  this need to be called better as keepalive_at is done not update with ever setting
 		err = s.models.NbiotDeviceSettings.BulkUpdate(nbIotSettingLogs)
 		if err != nil {
 			s.errorLog.Printf("Failed to update device setting to PostgreSQL: %v", err)

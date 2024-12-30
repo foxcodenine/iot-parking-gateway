@@ -1,9 +1,9 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: config/app/Dockerfile
-    # image: foxcodenine/iot-parking-gateway_app:latest
+    # build:
+    #   context: .
+    #   dockerfile: config/app/Dockerfile
+    image: foxcodenine/iot-parking-gateway_app:latest
     container_name: iot-parking-gateway_app
     ports:
       - "${HTTP_PORT_EX}:${HTTP_PORT}"   

@@ -81,8 +81,9 @@ const getMapId = computed(() => {
 
 watch(() => mapRef.value?.ready, (ready) => {
     if (!ready) return;
-    adjustMapView();
+    
     disableDefaultInfoWindow();
+    setTimeout(()=>{ adjustMapView(); }, 200);
 })
 
 // - Methods -----------------------------------------------------------

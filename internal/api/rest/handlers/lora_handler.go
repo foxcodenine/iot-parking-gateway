@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"encoding/base64"
-	"encoding/hex"
+	// "encoding/base64"
+	// "encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -49,21 +49,21 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	// -----------------------------------------------------------------
 
 	// Base64 encoded string
-	base64Str := req.Data
+	// base64Str := req.Data
 
-	// Decode the base64 string
-	bufferBase64, err := base64.StdEncoding.DecodeString(base64Str)
-	if err != nil {
-		helpers.RespondWithError(w, err, "Error decoding base64", http.StatusInternalServerError)
-		return
-	}
+	// // Decode the base64 string
+	// bufferBase64, err := base64.StdEncoding.DecodeString(base64Str)
+	// if err != nil {
+	// 	helpers.RespondWithError(w, err, "Error decoding base64", http.StatusInternalServerError)
+	// 	return
+	// }
 
-	// Convert the decoded bytes to a hex string
-	hexStr := hex.EncodeToString(bufferBase64)
+	// // Convert the decoded bytes to a hex string
+	// hexStr := hex.EncodeToString(bufferBase64)
 
 	// -----------------------------------------------------------------
 
-	// hexStr := req.Data
+	hexStr := req.Data
 
 	// -----------------------------------------------------------------
 
