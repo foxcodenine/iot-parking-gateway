@@ -23,8 +23,8 @@ type UDPServer struct {
 	SocketIO         *socketio.Server
 }
 
-// NewServer initializes a new UDP server.
-func NewServer(addr string, mq *mq.RabbitMQProducer, c *cache.RedisCache, s *services.Service, dam *string) *UDPServer {
+// NewUDPServer initializes a new UDP server.
+func NewUDPServer(addr string, mq *mq.RabbitMQProducer, c *cache.RedisCache, s *services.Service, dam *string) *UDPServer {
 	return &UDPServer{
 		Addr:             addr,
 		mqProducer:       mq,

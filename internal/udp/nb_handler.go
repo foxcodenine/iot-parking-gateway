@@ -469,9 +469,7 @@ func (s *UDPServer) updateDeviceCacheAndBroadcast(parsedData map[string]any) err
 				helpers.LogError(err, "Failed to push to Redis logs:device-update")
 			}
 
-			// TODO: Broadcast the update to clients using socket.io.
-			// Uncomment the following line if your broadcasting infrastructure is ready
-
+			// Broadcast the update to clients using socket.io.
 			s.SocketIO.BroadcastToNamespace("/", "parking-event", payload)
 
 		}

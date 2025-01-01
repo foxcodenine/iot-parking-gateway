@@ -56,10 +56,8 @@ func allowOriginFunc(r *http.Request) bool {
 	return false // Deny access if no match found
 }
 
-var IOService *Server
-
-// NewServer initializes a new HTTP server on the specified port with routes configured.
-func NewServer(port string) *Server {
+// NewHttpServer initializes a new HTTP server on the specified port with routes configured.
+func NewHttpServer(port string) *Server {
 
 	socketServer := createSocketServer()
 

@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	// "encoding/base64"
-	// "encoding/hex"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -40,29 +40,29 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// -----------------------------------------------------------------
-	/*
-		// Base64 encoded string
-		base64Str := req.Data
 
-		// Decode the base64 string
-		bufferBase64, err := base64.StdEncoding.DecodeString(base64Str)
-		if err != nil {
-			helpers.RespondWithError(w, err, "Error decoding base64", http.StatusInternalServerError)
-			return
-		}
+	// Base64 encoded string
+	base64Str := req.Data
 
-		// Convert the decoded bytes to a hex string
-		hexStr := hex.EncodeToString(bufferBase64)
+	// Decode the base64 string
+	bufferBase64, err := base64.StdEncoding.DecodeString(base64Str)
+	if err != nil {
+		helpers.RespondWithError(w, err, "Error decoding base64", http.StatusInternalServerError)
+		return
+	}
 
-		// Validate minimum hex string length
-		if len(hexStr) < 5 {
-			http.Error(w, "invalid message length, incoming data too short for parsing", http.StatusBadRequest)
-			return
-		}
-	*/
+	// Convert the decoded bytes to a hex string
+	hexStr := hex.EncodeToString(bufferBase64)
+
+	// Validate minimum hex string length
+	if len(hexStr) < 5 {
+		http.Error(w, "invalid message length, incoming data too short for parsing", http.StatusBadRequest)
+		return
+	}
+
 	// -----------------------------------------------------------------
 
-	hexStr := req.Data
+	// hexStr := req.Data
 
 	// -----------------------------------------------------------------
 

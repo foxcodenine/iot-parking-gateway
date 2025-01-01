@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	// "encoding/base64"
-	// "encoding/hex"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -49,21 +50,22 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	// -----------------------------------------------------------------
 
 	// Base64 encoded string
-	// base64Str := req.Data
+	base64Str := req.Data
 
-	// // Decode the base64 string
-	// bufferBase64, err := base64.StdEncoding.DecodeString(base64Str)
-	// if err != nil {
-	// 	helpers.RespondWithError(w, err, "Error decoding base64", http.StatusInternalServerError)
-	// 	return
-	// }
+	// Decode the base64 string
+	bufferBase64, err := base64.StdEncoding.DecodeString(base64Str)
+	if err != nil {
+		helpers.RespondWithError(w, err, "Error decoding base64", http.StatusInternalServerError)
+		return
+	}
 
-	// // Convert the decoded bytes to a hex string
-	// hexStr := hex.EncodeToString(bufferBase64)
+	// Convert the decoded bytes to a hex string
+	hexStr := hex.EncodeToString(bufferBase64)
+	fmt.Println(hexStr)
 
 	// -----------------------------------------------------------------
 
-	hexStr := req.Data
+	// hexStr := req.Data
 
 	// -----------------------------------------------------------------
 
@@ -219,6 +221,8 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.updateDeviceCacheAndBroadcast(parsedData, deviceID)
+
 	helpers.PrettyPrintJSON(parsedData)
 
 	// Push parsed parking data packages to Redis.
@@ -264,4 +268,103 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 		}
 		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
 	}
+}
+
+// updateDeviceCacheAndBroadcast updates the device data cache and broadcasts changes if the incoming data is newer than what's in the cache.
+func (h *LoraHandler) updateDeviceCacheAndBroadcast(parsedData map[string]any, deviceId string) error {
+	// Extract the list of parking packages from the parsed data.
+	latestParkingPackage, ok := parsedData["parking_packages"].([]map[string]any)
+	if !ok {
+		return errors.New("invalid or missing parking_packages data")
+	}
+	// Return early if there are no parking packages.
+	if len(latestParkingPackage) == 0 {
+		return nil
+	}
+
+	// Retrieve the timestamp from the first parking package.
+	timestamp, ok := latestParkingPackage[0]["timestamp"].(int)
+	if !ok {
+		return errors.New("timestamp missing or not an integer")
+	}
+
+	// Convert the timestamp to a UTC time string.
+	timestampTime := time.Unix(int64(timestamp), 0)
+	happenedAt := timestampTime.UTC().Format("2006-01-02T15:04:05Z")
+
+	fmt.Println(">", deviceId)
+
+	// Retrieve cached device data.
+	cachedDevice, err := cache.AppCache.GetDevice(deviceId)
+	if err != nil {
+		helpers.LogError(err, "Error retrieving device from cache")
+		return err
+	}
+
+	// Check if there is cached data and the new data is more recent.
+	if cachedDevice != nil {
+		cachedHappenedAtStr, ok := cachedDevice["happened_at"].(string)
+		if !ok {
+			return errors.New("cached happened_at is not a string")
+		}
+
+		cachedHappenedAt, err := time.Parse("2006-01-02T15:04:05Z", cachedHappenedAtStr)
+		if err != nil {
+			return fmt.Errorf("error parsing cached happened_at time: %v", err)
+		}
+
+		newHappenedAt, err := time.Parse("2006-01-02T15:04:05Z", happenedAt)
+		if err != nil {
+			return fmt.Errorf("error parsing new happened_at time: %v", err)
+		}
+
+		// Proceed with update if the new data is more recent.
+		if newHappenedAt.After(cachedHappenedAt) {
+
+			// Extract the firmware version as a float64
+			firmwareVersionFloat, ok := parsedData["firmware_version"].(float64)
+			if !ok {
+				return errors.New("firmware_version missing or not a float64")
+			}
+
+			// Format the firmware version as a string
+			firmwareVersion := fmt.Sprintf("%.2f", firmwareVersionFloat)
+
+			// Extract the beacons data from the parking package
+			beacons, ok := latestParkingPackage[0]["beacons"].([]map[string]any)
+			if !ok {
+				return errors.New("beacons missing or not in the expected format")
+			}
+
+			// Determine if the parking spot is occupied
+			isOccupied := (latestParkingPackage[0]["is_occupied"].(int)) == 1
+
+			// --- Update the device cache ( parking:device:<id> )
+			err := cache.AppCache.ProcessParkingEventData(deviceId, firmwareVersion, beacons, happenedAt, isOccupied)
+			if err != nil {
+				helpers.LogError(err, "Failed to update device cache")
+				return err
+			}
+
+			// --- Log updates for PostgreSQL synchronization ( logs:device-update )
+			// Create a payload for logging the update
+			var payload = make(map[string]any)
+			payload["firmware_version"] = firmwareVersion
+			payload["device_id"] = deviceId
+			payload["happened_at"] = happenedAt
+			payload["is_occupied"] = isOccupied
+			payload["beacons"] = beacons
+
+			// Push the log entry to Redis for PostgreSQL update processing
+			err = cache.AppCache.RPush("logs:device-update", payload)
+			if err != nil {
+				helpers.LogError(err, "Failed to push to Redis logs:device-update")
+			}
+
+			// Broadcast the update to clients using socket.io.
+			app.SocketIO.BroadcastToNamespace("/", "parking-event", payload)
+
+		}
+	}
+	return nil
 }

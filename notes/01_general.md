@@ -24,4 +24,6 @@ https://cloud.justinmind.com/usernote/prototype/e296f5f5a42b4a1e9810a58d49b79e97
 
 <!-- --------------------------------------------------------------- -->
 
+### useful Web Sites
 
+https://base64.guru/converter/encode/hex

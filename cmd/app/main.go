@@ -66,11 +66,12 @@ func main() {
 	app.Cron.Start()
 
 	// Create and start the the web server.
-	httpServer := httpserver.NewServer(os.Getenv("HTTP_PORT"))
+	httpServer := httpserver.NewHttpServer(os.Getenv("HTTP_PORT"))
 	httpServer.Start()
 	defer httpServer.Shutdown()
 
 	app.UdpServer.SocketIO = httpServer.SocketServer
+	app.SocketIO = httpServer.SocketServer
 }
 
 // ---------------------------------------------------------------------
@@ -120,7 +121,7 @@ func initializeAppConfig() {
 	app.MQProducer = mq.NewRabbitMQProducer(rabbitConfig)
 
 	// Set up the UDP server
-	app.UdpServer = udp.NewServer(
+	app.UdpServer = udp.NewUDPServer(
 		fmt.Sprintf(":%s", os.Getenv("UDP_PORT")),
 		app.MQProducer,
 		app.Cache,

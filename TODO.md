@@ -41,3 +41,8 @@
 10. NbiotDeviceSettings.BulkUpdate
     a. add settings_at in device
     b. update device setting only if there are more recent then device settings_at
+
+
+11. Next steps:
+
+    impliment updateDeviceKeepaliveInCacheAndBroadcast in lora handler

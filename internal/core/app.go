@@ -14,6 +14,7 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/mq"
 	"github.com/foxcodenine/iot-parking-gateway/internal/services"
 	"github.com/foxcodenine/iot-parking-gateway/internal/udp"
+	socketio "github.com/googollee/go-socket.io"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/robfig/cron/v3"
@@ -31,6 +32,7 @@ type App struct {
 	Cache      *cache.RedisCache
 	Cron       *cron.Cron
 	UdpServer  *udp.UDPServer
+	SocketIO   *socketio.Server
 
 	Service          *services.Service
 	DeviceAccessMode *string
