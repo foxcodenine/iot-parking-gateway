@@ -465,7 +465,7 @@ func parseSettingsPackage58(hexStr string, timestamp, offset int) (map[string]an
 		return nil, helpers.WrapError(err)
 	}
 
-	if pkg["retries"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+	if pkg["lora_retries"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)
 	}
 

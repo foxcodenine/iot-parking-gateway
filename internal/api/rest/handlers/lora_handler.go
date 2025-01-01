@@ -243,4 +243,25 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 
 		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
 	}
+
+	// Push parsed keepalive data to Redis.
+	for _, i := range parsedData["keep_alive_packages"].([]map[string]any) {
+		i["firmware_version"] = parsedData["firmware_version"]
+		i["device_id"] = deviceID
+		i["raw_id"] = rawUUID
+		i["event_id"] = 6
+		i["network_type"] = "LoRa"
+
+		err := cache.AppCache.RPush("logs:lora-keepalive-logs", i)
+		if err != nil {
+			helpers.LogError(err, "Failed to push keepalive package data log to Redis")
+		}
+
+		messageData, err := json.Marshal(i)
+		if err != nil {
+			helpers.LogError(err, "Failed to serialize parsedData to JSON")
+			continue
+		}
+		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
+	}
 }

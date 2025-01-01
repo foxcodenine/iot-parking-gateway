@@ -16,6 +16,7 @@ type Models struct {
 	ActivityLog         ActivityLog
 	AuditLog            AuditLog
 	Device              Device
+	LoraKeepaliveLog    LoraKeepaliveLog
 	NbiotDeviceSettings NbiotDeviceSettings
 	NbiotKeepaliveLog   NbiotKeepaliveLog
 	NbiotSettingLog     NbiotSettingLog
