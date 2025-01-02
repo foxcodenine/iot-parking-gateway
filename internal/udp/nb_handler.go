@@ -184,7 +184,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	// Check for errors in the update process.
 	if err != nil {
 		// Log the error with additional context for better troubleshooting.
-		helpers.LogError(err, fmt.Sprintf("Failed to update device cache and broadcast changes: %v", err))
+		helpers.LogError(err, "Failed to update device cache and broadcast changes")
 	}
 
 	// Attempt to update device keepalive_at in cache and broadcast the changes.
@@ -193,7 +193,7 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	// Check for errors in the update process.
 	if err != nil {
 		// Log the error with additional context for better troubleshooting.
-		helpers.LogError(err, fmt.Sprintf("Failed to update device keepalive_at in cache and broadcast changes: %v", err))
+		helpers.LogError(err, "Failed to update device keepalive_at in cache and broadcast changes")
 	}
 
 	// Push parsed parking data packages to Redis.

@@ -221,7 +221,22 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.updateDeviceCacheAndBroadcast(parsedData, deviceID)
+	err = h.updateDeviceCacheAndBroadcast(parsedData, deviceID)
+
+	// Check for errors in the update process.
+	if err != nil {
+		// Log the error with additional context for better troubleshooting.
+		helpers.LogError(err, "Failed to update device cache and broadcast changes")
+	}
+
+	// Attempt to update device keepalive_at in cache and broadcast the changes.
+	err = h.updateDeviceKeepaliveInCacheAndBroadcast(parsedData, deviceID)
+
+	// Check for errors in the update process.
+	if err != nil {
+		// Log the error with additional context for better troubleshooting.
+		helpers.LogError(err, "Failed to update device keepalive_at in cache and broadcast changes")
+	}
 
 	helpers.PrettyPrintJSON(parsedData)
 
@@ -270,6 +285,98 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// updateDeviceKeepaliveInCacheAndBroadcast updates the keepalive timestamp for a device in the cache and broadcasts changes.
+// If the new keepalive timestamp is more recent than the cached one, the cache and relevant logs are updated.
+func (h *LoraHandler) updateDeviceKeepaliveInCacheAndBroadcast(parsedData map[string]any, deviceID string) error {
+
+	// Extract the list of keepalive packages from the parsed data.
+	keepalivePackages, ok := parsedData["keep_alive_packages"].([]map[string]any)
+	if !ok {
+		return errors.New("invalid or missing keep_alive_packages data")
+	}
+
+	// Return early if there are no keepalive packages.
+	if len(keepalivePackages) == 0 {
+		return nil
+	}
+
+	// Retrieve the timestamp from the first keepalive package.
+	timestamp, ok := keepalivePackages[0]["timestamp"].(int)
+	if !ok {
+		return errors.New("timestamp missing or not an integer in keepalive package")
+	}
+
+	// Convert the timestamp to a UTC time string.
+	timestampTime := time.Unix(int64(timestamp), 0)
+	keepaliveAt := timestampTime.UTC().Format("2006-01-02T15:04:05Z")
+
+	// Retrieve cached device data.
+	cachedDevice, err := cache.AppCache.GetDevice(deviceID)
+	if err != nil {
+		helpers.LogError(err, "Error retrieving device from cache")
+		return err
+	}
+
+	var happenedAt string
+
+	// Check if there is cached data and the new data is more recent.
+	if cachedDevice != nil {
+		cachedKeepaliveAtStr, ok := cachedDevice["keepalive_at"].(string)
+		if !ok {
+			helpers.LogError(nil, "Cached keepalive_at is not a string or missing")
+			cachedKeepaliveAtStr = "0001-01-01T00:00:00Z" // Default to the earliest possible timestamp
+		}
+		happenedAt, ok = cachedDevice["happened_at"].(string)
+		if !ok {
+			return errors.New("cached happened_at is not a string")
+		}
+
+		cachedKeepaliveAt, err := time.Parse("2006-01-02T15:04:05Z", cachedKeepaliveAtStr)
+		if err != nil {
+			return fmt.Errorf("error parsing cached keepalive_at time: %v", err)
+		}
+
+		newKeepaliveAt, err := time.Parse("2006-01-02T15:04:05Z", keepaliveAt)
+		if err != nil {
+			return fmt.Errorf("error parsing new keepalive_at time: %v", err)
+		}
+
+		// Update only if the new keepalive timestamp is more recent.
+		if !newKeepaliveAt.After(cachedKeepaliveAt) {
+			helpers.LogInfo("No update needed. Cached keepalive_at is newer or equal.")
+			return nil
+		}
+
+	} else {
+		happenedAt = "0001-01-01T00:00:00Z"
+	}
+
+	// --- Update the device cache (e.g., parking:device:<id>)
+	err = cache.AppCache.UpdateKeepaliveAt(deviceID, keepaliveAt, happenedAt)
+	if err != nil {
+		helpers.LogError(err, "Failed to update device keepalive timestamp in cache")
+		return err
+	}
+
+	// --- Log updates for PostgreSQL synchronization (e.g., logs:device-update-keepalive)
+	logPayload := map[string]any{
+		"device_id":    deviceID,
+		"keepalive_at": keepaliveAt,
+	}
+
+	// Push the log entry to Redis for PostgreSQL update processing.
+	err = cache.AppCache.RPush("logs:device-update-keepalive", logPayload)
+	if err != nil {
+		helpers.LogError(err, "Failed to push keepalive update log to Redis")
+	}
+
+	// Broadcast the update to clients using Socket.IO.
+	app.SocketIO.BroadcastToNamespace("/", "keepalive-event", logPayload)
+	helpers.LogInfo("Broadcasted keepalive event for device %s", deviceID)
+
+	return nil
+}
+
 // updateDeviceCacheAndBroadcast updates the device data cache and broadcasts changes if the incoming data is newer than what's in the cache.
 func (h *LoraHandler) updateDeviceCacheAndBroadcast(parsedData map[string]any, deviceId string) error {
 	// Extract the list of parking packages from the parsed data.
@@ -291,8 +398,6 @@ func (h *LoraHandler) updateDeviceCacheAndBroadcast(parsedData map[string]any, d
 	// Convert the timestamp to a UTC time string.
 	timestampTime := time.Unix(int64(timestamp), 0)
 	happenedAt := timestampTime.UTC().Format("2006-01-02T15:04:05Z")
-
-	fmt.Println(">", deviceId)
 
 	// Retrieve cached device data.
 	cachedDevice, err := cache.AppCache.GetDevice(deviceId)
