@@ -283,6 +283,29 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 		}
 		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
 	}
+
+	// Push parsed settings data to Redis.
+	for _, i := range parsedData["settings_packages"].([]map[string]any) {
+		// Add common fields to each individual package
+		i["firmware_version"] = parsedData["firmware_version"]
+		i["device_id"] = deviceID
+		i["raw_id"] = rawUUID
+		i["event_id"] = 25 // Assuming 25 is the event ID for setting logs
+		i["network_type"] = "LoRa"
+
+		// Push the package to Redis
+		err := cache.AppCache.RPush("logs:lora-setting-logs", i)
+		if err != nil {
+			helpers.LogError(err, "Failed to push setting package data log to Redis")
+		}
+
+		messageData, err := json.Marshal(i)
+		if err != nil {
+			helpers.LogError(err, "Failed to serialize parsedData to JSON")
+			continue
+		}
+		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
+	}
 }
 
 // updateDeviceKeepaliveInCacheAndBroadcast updates the keepalive timestamp for a device in the cache and broadcasts changes.

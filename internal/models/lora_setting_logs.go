@@ -175,7 +175,7 @@ func (l *LoraSettingLog) BulkInsert(settingLogs []NbiotSettingLog) error {
 	}
 
 	// Determine the number of fields to be inserted for each log
-	numFields := 62 // Adjust this based on the actual number of columns you have in your table
+	numFields := 55 // Adjust this based on the actual number of columns you have in your table
 
 	// Prepare slices for SQL values and arguments.
 	values := make([]string, 0, len(settingLogs))
@@ -214,7 +214,7 @@ func (l *LoraSettingLog) BulkInsert(settingLogs []NbiotSettingLog) error {
 	}
 
 	// Construct the SQL statement by joining the placeholders for each record
-	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, created_at, timestamp, device_mode, device_enable, radar_car_cal_lo_th, radar_car_cal_hi_th, radar_car_uncal_lo_th, radar_car_uncal_hi_th, radar_car_delta_th, mag_car_lo, mag_car_hi, radar_trail_cal_lo_th, radar_trail_cal_hi_th, radar_trail_uncal_lo_th, radar_trail_uncal_hi_th, debug_period, debug_mode, logs_mode, logs_amount, maximum_registration_time, maximum_registration_attempts, maximum_deep_sleep_time, deep_sleep_time_1, action_before_1, action_after_1,	deep_sleep_time_2, action_before_2, action_after_2,	deep_sleep_time_3, action_before_3, action_after_3,	deep_sleep_time_4, action_before_4, action_after_4,	deep_sleep_time_5, action_before_5, action_after_5,	deep_sleep_time_6, action_before_6, action_after_6,	deep_sleep_time_7, action_before_7, action_after_7,	deep_sleep_time_8, action_before_8, action_after_8,	deep_sleep_time_9, action_before_9, action_after_9,	deep_sleep_time_10, action_before_10, action_after_10, nb_iot_udp_ip, nb_iot_udp_port, nb_iot_apn_length, nb_iot_apn, nb_iot_imsi) VALUES %s", l.TableName(), strings.Join(values, ", "))
+	query := fmt.Sprintf("INSERT INTO %s (raw_id, device_id, firmware_version, network_type, happened_at, created_at, timestamp, device_mode, device_enable, radar_car_cal_lo_th, radar_car_cal_hi_th, radar_car_uncal_lo_th, radar_car_uncal_hi_th, radar_car_delta_th, mag_car_lo, mag_car_hi, debug_period, debug_mode, logs_mode, logs_amount, maximum_registration_time, maximum_registration_attempts, maximum_deep_sleep_time, deep_sleep_time_1, action_before_1, action_after_1, deep_sleep_time_2, action_before_2, action_after_2, deep_sleep_time_3, action_before_3, action_after_3, deep_sleep_time_4, action_before_4, action_after_4, deep_sleep_time_5, action_before_5, action_after_5, deep_sleep_time_6, action_before_6, action_after_6, deep_sleep_time_7, action_before_7, action_after_7, deep_sleep_time_8, action_before_8, action_after_8, deep_sleep_time_9, action_before_9, action_after_9, deep_sleep_time_10, action_before_10, action_after_10, lora_data_rate, lora_retries) VALUES %s", l.TableName(), strings.Join(values, ", "))
 
 	// Execute the constructed query with the arguments
 	_, err := dbSession.SQL().Exec(query, args...)
