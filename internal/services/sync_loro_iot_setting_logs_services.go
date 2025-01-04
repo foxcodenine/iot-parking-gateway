@@ -27,10 +27,10 @@ func (s *Service) SyncLoraSettingLogs() {
 			continue
 		}
 
-		// Convert the map to an NbiotSettingLog struct.
-		settingLog, err := models.NewNbiotSettingLog(itemMap)
+		// Convert the map to an LoraSettingLog struct.
+		settingLog, err := models.NewLoraSettingLog(itemMap)
 		if err != nil {
-			s.errorLog.Printf("Error converting item to NbiotSettingLog: %v", err)
+			s.errorLog.Printf("Error converting item to LoraSettingLog: %v", err)
 			continue
 		}
 
@@ -45,17 +45,17 @@ func (s *Service) SyncLoraSettingLogs() {
 
 	if len(loraSettingLogs) > 0 {
 
-		err = s.models.NbiotSettingLog.BulkInsert(loraSettingLogs)
+		err = s.models.LoraSettingLog.BulkInsert(loraSettingLogs)
 		if err != nil {
 			s.errorLog.Printf("Failed to insert setting logs to PostgreSQL: %v", err)
 			return
 		}
-		// TODO:  this need to be called better as keepalive_at is done not update with ever setting
-		err = s.models.NbiotDeviceSettings.BulkUpdate(loraSettingLogs)
-		if err != nil {
-			s.errorLog.Printf("Failed to update device setting to PostgreSQL: %v", err)
-			return
-		}
+		// TODO:  to impliment and do better as keepalive
+		// err = s.models.LoraDeviceSettings.BulkUpdate(loraSettingLogs)
+		// if err != nil {
+		// 	s.errorLog.Printf("Failed to update device setting to PostgreSQL: %v", err)
+		// 	return
+		// }
 
 		s.infoLog.Printf("Successfully inserted and updated %d setting into PostgreSQL", len(loraSettingLogs))
 	}

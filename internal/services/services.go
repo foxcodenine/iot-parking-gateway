@@ -94,17 +94,26 @@ func (s *Service) RegisterNewDevices() {
 			continue // Proceed to the next ID instead of stopping.
 		}
 
-		// If the network type is 'nb', attempts to create a new device settings record in the database.
-		if newDevice.NetworkType == "NB-IoT" {
+		// Attempts to create a new device settings record in the database.
+		switch networkType {
+		case "NB-IoT":
 			newDeviceSetting := models.NbiotDeviceSettings{
 				DeviceID:    deviceID,
 				NetworkType: networkType,
 			}
 			_, err = s.models.NbiotDeviceSettings.Create(&newDeviceSetting)
-			if err != nil {
-				s.errorLog.Printf("Failed to create a new device settings record for ID %s: %v", deviceID, err)
-				continue // Proceed to the next ID instead of stopping.
+
+		case "LoRa":
+			newDeviceSetting := models.LoraDeviceSettings{
+				DeviceID:    deviceID,
+				NetworkType: networkType,
 			}
+			_, err = s.models.LoraDeviceSettings.Create(&newDeviceSetting)
+		}
+
+		if err != nil {
+			s.errorLog.Printf("Failed to create a new device settings record for ID %s: %v", deviceID, err)
+			continue // Proceed to the next ID instead of stopping.
 		}
 
 	}

@@ -58,6 +58,7 @@ func main() {
 		app.Service.SyncActivityLogs()
 		app.Service.SyncDevices()
 		app.Service.SyncLoraKeepaliveLogs()
+		app.Service.SyncLoraSettingLogs()
 		app.Service.SyncDevicesKeepalive()
 		app.Service.SyncNBIoTKeepaliveLogs()
 		app.Service.SyncNBIoTSettingLogs()

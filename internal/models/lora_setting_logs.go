@@ -167,8 +167,8 @@ func NewLoraSettingLog(pktData map[string]any) (*LoraSettingLog, error) {
 	return log, nil
 }
 
-// BulkInsert inserts multiple NbiotSettingLog records in a single operation.
-func (l *LoraSettingLog) BulkInsert(settingLogs []NbiotSettingLog) error {
+// BulkInsert inserts multiple LoraSettingLog records in a single operation.
+func (l *LoraSettingLog) BulkInsert(settingLogs []LoraSettingLog) error {
 	// Exit early if there are no records to insert
 	if len(settingLogs) == 0 {
 		return nil
@@ -194,8 +194,7 @@ func (l *LoraSettingLog) BulkInsert(settingLogs []NbiotSettingLog) error {
 			log.RawID, log.DeviceID, log.FirmwareVersion, log.NetworkType, log.HappenedAt, log.CreatedAt, log.Timestamp,
 			log.DeviceMode, log.DeviceEnable, log.RadarCarCalLoTh, log.RadarCarCalHiTh,
 			log.RadarCarUncalLoTh, log.RadarCarUncalHiTh, log.RadarCarDeltaTh, log.MagCarLo,
-			log.MagCarHi, log.RadarTrailCalLoTh, log.RadarTrailCalHiTh, log.RadarTrailUncalLoTh,
-			log.RadarTrailUncalHiTh, log.DebugPeriod, log.DebugMode, log.LogsMode, log.LogsAmount,
+			log.MagCarHi, log.DebugPeriod, log.DebugMode, log.LogsMode, log.LogsAmount,
 			log.MaximumRegistrationTime, log.MaximumRegistrationAttempts, log.MaximumDeepSleepTime,
 
 			log.DeepSleepTime1, log.ActionBefore1, log.ActionAfter1,
@@ -209,7 +208,7 @@ func (l *LoraSettingLog) BulkInsert(settingLogs []NbiotSettingLog) error {
 			log.DeepSleepTime9, log.ActionBefore9, log.ActionAfter9,
 			log.DeepSleepTime10, log.ActionBefore10, log.ActionAfter10,
 
-			log.NBIoTUDPIP, log.NBIoTUDPPort, log.NBIoTAPNLength, log.NBIoTAPN, log.NBIoTIMSI,
+			log.LoraDataRate, log.LoraRetries,
 		)
 	}
 

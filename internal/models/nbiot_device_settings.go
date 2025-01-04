@@ -94,7 +94,7 @@ func (n *NbiotDeviceSettings) Create(newSettings *NbiotDeviceSettings) (*NbiotDe
 	if err != nil {
 		// Check if the error is due to a duplicate key, which would imply a record with the same DeviceID already exists
 		if strings.Contains(err.Error(), "SQLSTATE 23505") {
-			return nil, errors.New("a device with this ID already exists")
+			return nil, errors.New("a device settings with this ID already exists")
 		}
 		// Return any other errors with additional context
 		return nil, fmt.Errorf("failed to create device settings: %w", err)
