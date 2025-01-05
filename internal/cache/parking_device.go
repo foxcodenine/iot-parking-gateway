@@ -101,13 +101,9 @@ func (rc *RedisCache) DeleteAllDevices() error {
 func (rc *RedisCache) ProcessParkingEventData(deviceID string, firmwareVersion string, beacons any, happenedAt string, isOccupied bool) error {
 	conn := rc.Conn.Get()
 	defer conn.Close()
+	// parking:device:
 
 	const dateFormat = "2006-01-02T15:04:05Z" // Define the timestamp format.
-
-	// Handle special cases for default timestamps.
-	if happenedAt == "0001-01-01T00:00:00Z" {
-		happenedAt = "0001-01-01T00:00:00Z"
-	}
 
 	updatedAt := time.Now().UTC().Format(dateFormat) // Format the current time.
 
@@ -129,6 +125,14 @@ func (rc *RedisCache) ProcessParkingEventData(deviceID string, firmwareVersion s
 	args = append(args, "is_occupied", isOccupied)
 	args = append(args, "updated_at", updatedAt)
 
+	redisKey := fmt.Sprintf("parking:device:%s", deviceID)
+
+	inCache, _ := rc.Exists(redisKey)
+	if !inCache {
+		args = append(args, "settings_at", "0001-01-01T00:00:00Z")
+		args = append(args, "keepalive_at", "0001-01-01T00:00:00Z")
+	}
+
 	// Execute HMSET to update the fields.
 	if _, err := conn.Do("HMSET", args...); err != nil {
 		return fmt.Errorf("failed to update fields for device %s: %w", deviceID, err)
@@ -137,7 +141,7 @@ func (rc *RedisCache) ProcessParkingEventData(deviceID string, firmwareVersion s
 	return nil
 }
 
-func (rc *RedisCache) UpdateKeepaliveAt(deviceID, keepaliveAt, happenedAt string) error {
+func (rc *RedisCache) UpdateKeepaliveAt(deviceID, keepaliveAt, happenedAt, settingsAt string) error {
 	conn := rc.Conn.Get()
 	defer conn.Close()
 
@@ -153,6 +157,34 @@ func (rc *RedisCache) UpdateKeepaliveAt(deviceID, keepaliveAt, happenedAt string
 	// Append key-value pairs for update.
 	args = append(args, "keepalive_at", keepaliveAt)
 	args = append(args, "happened_at", happenedAt)
+	args = append(args, "settings_at", settingsAt)
+	args = append(args, "updated_at", updatedAt)
+
+	// Execute HMSET to update the fields.
+	if _, err := conn.Do("HMSET", args...); err != nil {
+		return fmt.Errorf("failed to update fields for device %s: %w", deviceID, err)
+	}
+
+	return nil
+}
+
+func (rc *RedisCache) UpdateSettingsAt(deviceID, settingsAt, happenedAt, keepaliveAt string) error {
+	conn := rc.Conn.Get()
+	defer conn.Close()
+
+	const dateFormat = "2006-01-02T15:04:05Z" // Define the timestamp format.
+
+	updatedAt := time.Now().UTC().Format(dateFormat) // Format the current time.
+
+	// Construct the Redis hash key.
+	hashKey := fmt.Sprintf("%s%s:%s", rc.Prefix, "parking:device", deviceID)
+
+	args := []any{hashKey} // Prepare fields for update.
+
+	// Append key-value pairs for update.
+	args = append(args, "settings_at", settingsAt)
+	args = append(args, "happened_at", happenedAt)
+	args = append(args, "keepalive_at", keepaliveAt)
 	args = append(args, "updated_at", updatedAt)
 
 	// Execute HMSET to update the fields.

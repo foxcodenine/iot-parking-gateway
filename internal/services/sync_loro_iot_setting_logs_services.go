@@ -6,6 +6,7 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 )
 
+// TODO:  update as SyncNBIoTSettingLogs
 func (s *Service) SyncLoraSettingLogs() {
 	// Retrieve setting log data from Redis and delete the key.
 	items, err := s.cache.LRangeAndDelete("logs:lora-setting-logs")

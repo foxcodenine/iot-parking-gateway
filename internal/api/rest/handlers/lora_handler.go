@@ -61,7 +61,6 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 
 	// Convert the decoded bytes to a hex string
 	hexStr := hex.EncodeToString(bufferBase64)
-	fmt.Println(hexStr)
 
 	// -----------------------------------------------------------------
 
@@ -238,7 +237,14 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 		helpers.LogError(err, "Failed to update device keepalive_at in cache and broadcast changes")
 	}
 
-	helpers.PrettyPrintJSON(parsedData)
+	// Attempt to update device settings_at in cache, check if device_settings should be updated and broadcast settings_at.
+	updateDeviceSettings, err := h.updateDeviceSettingsInCacheAndBroadcast(parsedData, deviceID)
+
+	// Check for errors in the update process.
+	if err != nil {
+		// Log the error with additional context for better troubleshooting.
+		helpers.LogError(err, "Failed to update device settings_at in cache and broadcast it")
+	}
 
 	// Push parsed parking data packages to Redis.
 	for _, i := range parsedData["parking_packages"].([]map[string]any) {
@@ -285,7 +291,13 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Push parsed settings data to Redis.
-	for _, i := range parsedData["settings_packages"].([]map[string]any) {
+	for n, i := range parsedData["settings_packages"].([]map[string]any) {
+		if n == 0 && updateDeviceSettings {
+			i["update_device_settings"] = true
+		} else {
+			i["update_device_settings"] = false
+		}
+
 		// Add common fields to each individual package
 		i["firmware_version"] = parsedData["firmware_version"]
 		i["device_id"] = deviceID
@@ -341,6 +353,7 @@ func (h *LoraHandler) updateDeviceKeepaliveInCacheAndBroadcast(parsedData map[st
 	}
 
 	var happenedAt string
+	var settingsAt string
 
 	// Check if there is cached data and the new data is more recent.
 	if cachedDevice != nil {
@@ -352,6 +365,10 @@ func (h *LoraHandler) updateDeviceKeepaliveInCacheAndBroadcast(parsedData map[st
 		happenedAt, ok = cachedDevice["happened_at"].(string)
 		if !ok {
 			return errors.New("cached happened_at is not a string")
+		}
+		settingsAt, ok = cachedDevice["settings_at"].(string)
+		if !ok {
+			return errors.New("cached settings_at is not a string")
 		}
 
 		cachedKeepaliveAt, err := time.Parse("2006-01-02T15:04:05Z", cachedKeepaliveAtStr)
@@ -372,23 +389,24 @@ func (h *LoraHandler) updateDeviceKeepaliveInCacheAndBroadcast(parsedData map[st
 
 	} else {
 		happenedAt = "0001-01-01T00:00:00Z"
+		settingsAt = "0001-01-01T00:00:00Z"
 	}
 
 	// --- Update the device cache (e.g., parking:device:<id>)
-	err = cache.AppCache.UpdateKeepaliveAt(deviceID, keepaliveAt, happenedAt)
+	err = cache.AppCache.UpdateKeepaliveAt(deviceID, keepaliveAt, happenedAt, settingsAt)
 	if err != nil {
 		helpers.LogError(err, "Failed to update device keepalive timestamp in cache")
 		return err
 	}
 
-	// --- Log updates for PostgreSQL synchronization (e.g., logs:device-update-keepalive)
+	// --- Log updates for PostgreSQL synchronization (e.g., logs:device-keepalive-at)
 	logPayload := map[string]any{
 		"device_id":    deviceID,
 		"keepalive_at": keepaliveAt,
 	}
 
 	// Push the log entry to Redis for PostgreSQL update processing.
-	err = cache.AppCache.RPush("logs:device-update-keepalive", logPayload)
+	err = cache.AppCache.RPush("logs:device-keepalive-at", logPayload)
 	if err != nil {
 		helpers.LogError(err, "Failed to push keepalive update log to Redis")
 	}
@@ -400,36 +418,137 @@ func (h *LoraHandler) updateDeviceKeepaliveInCacheAndBroadcast(parsedData map[st
 	return nil
 }
 
+// updateDeviceSettingsInCacheAndBroadcast updates the settings timestamp for a device in the cache and broadcasts changes.
+// If the new settings timestamp is more recent than the cached one, the cache and relevant logs are updated.
+func (h *LoraHandler) updateDeviceSettingsInCacheAndBroadcast(parsedData map[string]any, deviceID string) (bool, error) {
+	// Extract the list of settings packages from the parsed data.
+	settingsPackages, ok := parsedData["settings_packages"].([]map[string]any)
+
+	if !ok {
+		return false, errors.New("invalid or missing settings_packages data")
+	}
+
+	// Return early if there are no settings packages.
+	if len(settingsPackages) == 0 {
+		return false, nil
+	}
+
+	// Retrieve the timestamp from the first settings package.
+	firstSettingsPakage := settingsPackages[0]
+	timestamp, ok := firstSettingsPakage["timestamp"].(int)
+	if !ok {
+		return false, errors.New("timestamp missing or not an integer in settings package")
+	}
+
+	// Convert the timestamp to a UTC time string.
+	timestampTime := time.Unix(int64(timestamp), 0)
+	settingsAt := timestampTime.UTC().Format("2006-01-02T15:04:05Z")
+
+	// Retrieve cached device data.
+	cachedDevice, err := cache.AppCache.GetDevice(deviceID)
+	if err != nil {
+		helpers.LogError(err, "Error retrieving device from cache")
+		return false, err
+	}
+
+	var happenedAt string
+	var keepaliveAt string
+
+	// Check if there is cached data and the new data is more recent.
+	if cachedDevice != nil {
+
+		cachedSettingsAtStr, ok := cachedDevice["settings_at"].(string)
+		if !ok {
+			helpers.LogError(nil, "Cached settings_at is not a string or missing")
+			cachedSettingsAtStr = "0001-01-01T00:00:00Z" // Default to the earliest possible timestamp
+		}
+		happenedAt, ok = cachedDevice["happened_at"].(string)
+		if !ok {
+			return false, errors.New("cached happened_at is not a string")
+		}
+		keepaliveAt, ok = cachedDevice["keepalive_at"].(string)
+		if !ok {
+			return false, errors.New("cached keepalive_at is not a string")
+		}
+
+		cachedSettingsAt, err := time.Parse("2006-01-02T15:04:05Z", cachedSettingsAtStr)
+		if err != nil {
+			return false, fmt.Errorf("error parsing cached settings_at time: %v", err)
+		}
+
+		newSettingsAt, err := time.Parse("2006-01-02T15:04:05Z", settingsAt)
+		if err != nil {
+			return false, fmt.Errorf("error parsing new settings_at time: %v", err)
+		}
+
+		// Update only if the new settings timestamp is more recent.
+		if !newSettingsAt.After(cachedSettingsAt) {
+			helpers.LogInfo("No update needed. Cached settings_at is newer or equal.")
+			return false, nil
+		}
+
+	} else {
+		happenedAt = "0001-01-01T00:00:00Z"
+		keepaliveAt = "0001-01-01T00:00:00Z"
+	}
+
+	// --- Update the device cache (e.g., parking:device:<id>)
+	err = cache.AppCache.UpdateSettingsAt(deviceID, settingsAt, happenedAt, keepaliveAt)
+	if err != nil {
+		helpers.LogError(err, "Failed to update device settings timestamp in cache")
+		return false, err
+	}
+
+	// --- Log updates for PostgreSQL synchronization (e.g., logs:device-settings-at)
+	logPayload := map[string]any{
+		"device_id":   deviceID,
+		"settings_at": settingsAt,
+	}
+
+	err = cache.AppCache.RPush("logs:device-settings-at", logPayload)
+	if err != nil {
+		helpers.LogError(err, "Failed to push device settings_at to Redis")
+	}
+
+	// Broadcast the update to clients using Socket.IO.
+	app.SocketIO.BroadcastToNamespace("/", "settings-event", logPayload)
+	helpers.LogInfo("Broadcasted settings event for device %s", deviceID)
+	// TODO: implement "settings-event" in frontend
+
+	return true, nil
+}
+
 // updateDeviceCacheAndBroadcast updates the device data cache and broadcasts changes if the incoming data is newer than what's in the cache.
 func (h *LoraHandler) updateDeviceCacheAndBroadcast(parsedData map[string]any, deviceId string) error {
-	// Extract the list of parking packages from the parsed data.
+	// Extract the list of parking packages from the parsed data
 	latestParkingPackage, ok := parsedData["parking_packages"].([]map[string]any)
 	if !ok {
 		return errors.New("invalid or missing parking_packages data")
 	}
-	// Return early if there are no parking packages.
+
+	// Return early if there are no parking packages
 	if len(latestParkingPackage) == 0 {
 		return nil
 	}
 
-	// Retrieve the timestamp from the first parking package.
+	// Retrieve the timestamp from the first parking package
 	timestamp, ok := latestParkingPackage[0]["timestamp"].(int)
 	if !ok {
 		return errors.New("timestamp missing or not an integer")
 	}
 
-	// Convert the timestamp to a UTC time string.
+	// Convert the timestamp to a UTC time string
 	timestampTime := time.Unix(int64(timestamp), 0)
 	happenedAt := timestampTime.UTC().Format("2006-01-02T15:04:05Z")
 
-	// Retrieve cached device data.
+	// Retrieve cached device data
 	cachedDevice, err := cache.AppCache.GetDevice(deviceId)
 	if err != nil {
 		helpers.LogError(err, "Error retrieving device from cache")
 		return err
 	}
 
-	// Check if there is cached data and the new data is more recent.
+	// Check if there is cached data and the new data is more recent
 	if cachedDevice != nil {
 		cachedHappenedAtStr, ok := cachedDevice["happened_at"].(string)
 		if !ok {
@@ -446,53 +565,69 @@ func (h *LoraHandler) updateDeviceCacheAndBroadcast(parsedData map[string]any, d
 			return fmt.Errorf("error parsing new happened_at time: %v", err)
 		}
 
-		// Proceed with update if the new data is more recent.
+		// Proceed with update if the new data is more recent
 		if newHappenedAt.After(cachedHappenedAt) {
-
-			// Extract the firmware version as a float64
-			firmwareVersionFloat, ok := parsedData["firmware_version"].(float64)
-			if !ok {
-				return errors.New("firmware_version missing or not a float64")
-			}
-
-			// Format the firmware version as a string
-			firmwareVersion := fmt.Sprintf("%.2f", firmwareVersionFloat)
-
-			// Extract the beacons data from the parking package
-			beacons, ok := latestParkingPackage[0]["beacons"].([]map[string]any)
-			if !ok {
-				return errors.New("beacons missing or not in the expected format")
-			}
-
-			// Determine if the parking spot is occupied
-			isOccupied := (latestParkingPackage[0]["is_occupied"].(int)) == 1
-
-			// --- Update the device cache ( parking:device:<id> )
-			err := cache.AppCache.ProcessParkingEventData(deviceId, firmwareVersion, beacons, happenedAt, isOccupied)
-			if err != nil {
-				helpers.LogError(err, "Failed to update device cache")
-				return err
-			}
-
-			// --- Log updates for PostgreSQL synchronization ( logs:device-update )
-			// Create a payload for logging the update
-			var payload = make(map[string]any)
-			payload["firmware_version"] = firmwareVersion
-			payload["device_id"] = deviceId
-			payload["happened_at"] = happenedAt
-			payload["is_occupied"] = isOccupied
-			payload["beacons"] = beacons
-
-			// Push the log entry to Redis for PostgreSQL update processing
-			err = cache.AppCache.RPush("logs:device-update", payload)
-			if err != nil {
-				helpers.LogError(err, "Failed to push to Redis logs:device-update")
-			}
-
-			// Broadcast the update to clients using socket.io.
-			app.SocketIO.BroadcastToNamespace("/", "parking-event", payload)
-
+			return h.processParkingEvent(parsedData, deviceId, happenedAt, latestParkingPackage)
 		}
+
+		helpers.LogInfo("No update needed. Cached happened_at is newer or equal.")
+		return nil
 	}
+
+	// If no cached data exists, process the event as a new entry
+	return h.processParkingEvent(parsedData, deviceId, happenedAt, latestParkingPackage)
+}
+
+func (h *LoraHandler) processParkingEvent(
+	parsedData map[string]any,
+	deviceId string,
+	happenedAt string,
+	latestParkingPackage []map[string]any,
+) error {
+	// Extract the firmware version as a float64
+	firmwareVersionFloat, ok := parsedData["firmware_version"].(float64)
+	if !ok {
+		return errors.New("firmware_version missing or not a float64")
+	}
+
+	// Format the firmware version as a string
+	firmwareVersion := fmt.Sprintf("%.2f", firmwareVersionFloat)
+
+	// Extract the beacons data from the parking package
+	beacons, ok := latestParkingPackage[0]["beacons"].([]map[string]any)
+	if !ok {
+		return errors.New("beacons missing or not in the expected format")
+	}
+
+	// Determine if the parking spot is occupied
+	isOccupied := (latestParkingPackage[0]["is_occupied"].(int)) == 1
+
+	// --- Update the device cache (parking:device:<id>)
+	err := cache.AppCache.ProcessParkingEventData(deviceId, firmwareVersion, beacons, happenedAt, isOccupied)
+	if err != nil {
+		helpers.LogError(err, "Failed to update device cache")
+		return err
+	}
+
+	// --- Log updates for PostgreSQL synchronization (logs:device-update)
+	// Create a payload for logging the update
+	payload := map[string]any{
+		"firmware_version": firmwareVersion,
+		"device_id":        deviceId,
+		"happened_at":      happenedAt,
+		"is_occupied":      isOccupied,
+		"beacons":          beacons,
+	}
+
+	// Push the log entry to Redis for PostgreSQL update processing
+	err = cache.AppCache.RPush("logs:device-update", payload)
+	if err != nil {
+		helpers.LogError(err, "Failed to push to Redis logs:device-update")
+		return err
+	}
+
+	// Broadcast the update to clients using socket.io
+	app.SocketIO.BroadcastToNamespace("/", "parking-event", payload)
+
 	return nil
 }

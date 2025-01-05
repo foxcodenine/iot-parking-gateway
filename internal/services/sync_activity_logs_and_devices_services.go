@@ -139,11 +139,11 @@ func (s *Service) SyncDevices() {
 
 }
 
-// SyncDevicesKeepalive processes and synchronizes device keepalive updates from Redis to PostgreSQL.
-func (s *Service) SyncDevicesKeepalive() {
+// SyncDevicesKeepaliveAt processes and synchronizes device keepalive updates from Redis to PostgreSQL.
+func (s *Service) SyncDevicesKeepaliveAt() {
 
 	// Retrieve keepalive log data from Redis and delete the key.
-	items, err := s.cache.LRangeAndDelete("logs:device-update-keepalive")
+	items, err := s.cache.LRangeAndDelete("logs:device-keepalive-at")
 	if err != nil {
 		// Log an error if Redis operations fail and return early.
 		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
@@ -213,4 +213,80 @@ func (s *Service) SyncDevicesKeepalive() {
 
 	// Log the successful update.
 	s.infoLog.Printf("Successfully updated keepalive timestamps for %d devices in PostgreSQL", len(deviceUpdateLogs))
+}
+
+// SyncDevicesSettings processes and synchronizes device settings updates from Redis to PostgreSQL.
+func (s *Service) SyncDevicesSettingsAt() {
+
+	// Retrieve settings log data from Redis and delete the key.
+	items, err := s.cache.LRangeAndDelete("logs:device-settings-at")
+	if err != nil {
+		// Log an error if Redis operations fail and return early.
+		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
+		return
+	}
+
+	// Prepare a slice to hold the converted devices entries.
+	deviceUpdateLogs := make([]models.Device, 0, len(items))
+
+	// Iterate through each item retrieved from Redis.
+	for _, item := range items {
+
+		// Attempt to assert the item type to a map[string]any (JSON-like structure).
+		itemMap, ok := item.(map[string]any)
+		if !ok {
+			s.errorLog.Println("Invalid item type: expected map[string]any")
+			continue
+		}
+
+		// Ensure the `device_id` field exists and is a string.
+		deviceID, ok := itemMap["device_id"].(string)
+		if !ok || deviceID == "" {
+			s.errorLog.Println("Missing or invalid device_id in item map")
+			continue
+		}
+
+		// Ensure the `settings_at` field exists and is a valid timestamp.
+		settingsAtStr, ok := itemMap["settings_at"].(string)
+		if !ok || settingsAtStr == "" {
+			s.errorLog.Printf("Missing or invalid settings_at for device %s", deviceID)
+			continue
+		}
+
+		// Parse the `settings_at` timestamp.
+		newSettingsAt, err := time.Parse("2006-01-02T15:04:05Z", settingsAtStr)
+		if err != nil {
+			helpers.LogError(err, "Error parsing settings_at timestamp")
+			continue
+		}
+
+		// Create a Device struct for this settings log entry.
+		device := models.Device{
+			DeviceID:   deviceID,
+			SettingsAt: newSettingsAt,
+		}
+
+		// Append the device to the slice for batch processing.
+		deviceUpdateLogs = append(deviceUpdateLogs, device)
+	}
+
+	// Sort the settings logs by the SettingsAt field.
+	sort.Slice(deviceUpdateLogs, func(i, j int) bool {
+		return deviceUpdateLogs[i].SettingsAt.Before(deviceUpdateLogs[j].SettingsAt)
+	})
+
+	// If there are no valid entries, return early.
+	if len(deviceUpdateLogs) == 0 {
+		// s.infoLog.Println("No valid Settings logs to process")
+		return
+	}
+
+	// Attempt to bulk update the Settings timestamps in PostgreSQL.
+	if err := s.models.Device.BulkUpdateDevicesSettings(deviceUpdateLogs); err != nil {
+		s.errorLog.Printf("Failed to bulk update settings timestamps for devices: %v", err)
+		return
+	}
+
+	// Log the successful update.
+	s.infoLog.Printf("Successfully updated settings timestamps for %d devices in PostgreSQL", len(deviceUpdateLogs))
 }

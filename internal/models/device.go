@@ -26,7 +26,8 @@ type Device struct {
 	BeaconsJSON     sql.NullString `db:"beacons,omitempty" json:"beacons_json"`
 	Beacons         []Beacon       `json:"beacons"`
 	HappenedAt      time.Time      `db:"happened_at" json:"happened_at"`
-	KeepaliveAt     time.Time      `db:"keepalive_at" json:"keepalive_at"` // New field for keepalive event
+	KeepaliveAt     time.Time      `db:"keepalive_at" json:"keepalive_at"`
+	SettingsAt      time.Time      `db:"settings_at" json:"settings_at"`
 	IsOccupied      bool           `db:"is_occupied" json:"is_occupied"`
 	IsAllowed       bool           `db:"is_allowed" json:"is_allowed"` // Indicates if the device is allowed
 	IsBlocked       bool           `db:"is_blocked" json:"is_blocked"` // Indicates if the device is blocked
@@ -162,6 +163,20 @@ func (d *Device) Create(newDevice *Device) (*Device, error) {
 		return nil, fmt.Errorf("failed to convert device data: %w", err)
 	}
 
+	if _, ok := deviceData["keepalive_at"]; !ok {
+		fmt.Println(ok)
+		deviceData["keepalive_at"] = "0001-01-01T00:00:00Z"
+	}
+
+	if _, ok := deviceData["settings_at"]; !ok {
+		fmt.Println(ok)
+		deviceData["settings_at"] = "0001-01-01T00:00:00Z"
+	}
+	if _, ok := deviceData["happened_at"]; !ok {
+		fmt.Println(ok)
+		deviceData["happened_at"] = "0001-01-01T00:00:00Z"
+	}
+
 	// Save the device data to the cache
 	if err := cache.AppCache.SaveDeviceData(newDevice.DeviceID, deviceData); err != nil {
 		return nil, fmt.Errorf("failed to cache device data: %w", err)
@@ -224,6 +239,22 @@ func (d *Device) Upsert(device *Device) (*Device, error) {
 	deviceData, err := helpers.StructToMap(upsertDevice)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert device data: %w", err)
+	}
+
+	fmt.Println(deviceData)
+
+	if _, ok := deviceData["keepalive_at"]; !ok {
+		fmt.Println(ok)
+		deviceData["keepalive_at"] = "0001-01-01T00:00:00Z"
+	}
+
+	if _, ok := deviceData["settings_at"]; !ok {
+		fmt.Println(ok)
+		deviceData["settings_at"] = "0001-01-01T00:00:00Z"
+	}
+	if _, ok := deviceData["happened_at"]; !ok {
+		fmt.Println(ok)
+		deviceData["happened_at"] = "0001-01-01T00:00:00Z"
 	}
 
 	// Save the device data to the cache
@@ -414,6 +445,45 @@ func (d *Device) BulkUpdateDevicesKeepalive(deviceData []Device) error {
 	_, err := dbSession.SQL().Exec(query, args...)
 	if err != nil {
 		return fmt.Errorf("failed to execute bulk update for keepalive_at field: %w", err)
+	}
+
+	return nil // Return nil if the operation was successful.
+}
+
+// BulkUpdateDevicesSettings updates the `settings_at` field for multiple devices in a single database query.
+// This method ensures efficient updates by batching updates into a single SQL statement.
+func (d *Device) BulkUpdateDevicesSettings(deviceData []Device) error {
+	// Return early if no data is provided to avoid unnecessary processing.
+	if len(deviceData) == 0 {
+		return nil // No data to update
+	}
+
+	var args []interface{}                        // Arguments to be passed to the query.
+	valuesList := make([]string, len(deviceData)) // List of value placeholders for SQL.
+
+	for i, data := range deviceData {
+		// Prepare a position offset for SQL placeholders based on the number of fields per device.
+		pos := i*2 + 1 // Each device requires 2 placeholders: `device_id` and `settings_at`.
+		valuesList[i] = fmt.Sprintf("($%d, $%d::timestamp)", pos, pos+1)
+		args = append(args, data.DeviceID, data.SettingsAt) // Add the actual values.
+	}
+
+	// Construct the SQL statement with explicit type casts to ensure proper data handling.
+	query := fmt.Sprintf(`
+		UPDATE parking.devices AS d
+		SET
+			settings_at = v.settings_at,
+			updated_at = NOW() 
+		FROM (VALUES
+			%s
+		) AS v(device_id, settings_at)
+		WHERE d.device_id = v.device_id
+	`, strings.Join(valuesList, ", "))
+
+	// Execute the constructed query with the arguments.
+	_, err := dbSession.SQL().Exec(query, args...)
+	if err != nil {
+		return fmt.Errorf("failed to execute bulk update for settings_at field: %w", err)
 	}
 
 	return nil // Return nil if the operation was successful.
