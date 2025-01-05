@@ -513,7 +513,6 @@ func (h *LoraHandler) updateDeviceSettingsInCacheAndBroadcast(parsedData map[str
 	// Broadcast the update to clients using Socket.IO.
 	app.SocketIO.BroadcastToNamespace("/", "settings-event", logPayload)
 	helpers.LogInfo("Broadcasted settings event for device %s", deviceID)
-	// TODO: implement "settings-event" in frontend
 
 	return true, nil
 }

@@ -490,7 +490,6 @@ func (s *UDPServer) updateDeviceSettingsInCacheAndBroadcast(parsedData map[strin
 	}
 
 	// Push the log entry to Redis for PostgreSQL update processing.
-	// TODO: in lora
 	err = s.cache.RPush("logs:device-settings-at", logPayload)
 	if err != nil {
 		helpers.LogError(err, "Failed to push device settings_at to Redis")
