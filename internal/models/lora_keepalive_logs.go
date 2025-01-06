@@ -130,7 +130,7 @@ func (l *LoraKeepaliveLog) BulkInsert(keepaliveLogs []LoraKeepaliveLog) error {
 
 	// Prepare slices for SQL values and arguments.
 	values := make([]string, 0, len(keepaliveLogs))
-	args := make([]interface{}, 0, len(keepaliveLogs)*36) // Adjust the argument count based on the number of columns
+	args := make([]interface{}, 0, len(keepaliveLogs)*33) // Adjust the argument count based on the number of columns
 
 	for i, log := range keepaliveLogs {
 		// Create a placeholder for each record with indexed arguments

@@ -24,6 +24,7 @@ type Models struct {
 	NbiotSettingLog     NbiotSettingLog
 	RawDataLog          RawDataLog
 	Setting             Setting
+	SigfoxKeepaliveLog  SigfoxKeepaliveLog
 	User                User
 }
 

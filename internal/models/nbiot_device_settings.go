@@ -38,36 +38,36 @@ type NbiotDeviceSettings struct {
 	MaximumRegistrationAttempts int `db:"maximum_registration_attempts" json:"maximum_registration_attempts"`
 	MaximumDeepSleepTime        int `db:"maximum_deep_sleep_time" json:"maximum_deep_sleep_time"`
 
-	DeepSleepTime1  int64 `db:"deep_sleep_time_1" json:"deep_sleep_time_1"`
-	ActionBefore1   int64 `db:"action_before_1" json:"action_before_1"`
-	ActionAfter1    int64 `db:"action_after_1" json:"action_after_1"`
-	DeepSleepTime2  int64 `db:"deep_sleep_time_2" json:"deep_sleep_time_2"`
-	ActionBefore2   int64 `db:"action_before_2" json:"action_before_2"`
-	ActionAfter2    int64 `db:"action_after_2" json:"action_after_2"`
-	DeepSleepTime3  int64 `db:"deep_sleep_time_3" json:"deep_sleep_time_3"`
-	ActionBefore3   int64 `db:"action_before_3" json:"action_before_3"`
-	ActionAfter3    int64 `db:"action_after_3" json:"action_after_3"`
-	DeepSleepTime4  int64 `db:"deep_sleep_time_4" json:"deep_sleep_time_4"`
-	ActionBefore4   int64 `db:"action_before_4" json:"action_before_4"`
-	ActionAfter4    int64 `db:"action_after_4" json:"action_after_4"`
-	DeepSleepTime5  int64 `db:"deep_sleep_time_5" json:"deep_sleep_time_5"`
-	ActionBefore5   int64 `db:"action_before_5" json:"action_before_5"`
-	ActionAfter5    int64 `db:"action_after_5" json:"action_after_5"`
-	DeepSleepTime6  int64 `db:"deep_sleep_time_6" json:"deep_sleep_time_6"`
-	ActionBefore6   int64 `db:"action_before_6" json:"action_before_6"`
-	ActionAfter6    int64 `db:"action_after_6" json:"action_after_6"`
-	DeepSleepTime7  int64 `db:"deep_sleep_time_7" json:"deep_sleep_time_7"`
-	ActionBefore7   int64 `db:"action_before_7" json:"action_before_7"`
-	ActionAfter7    int64 `db:"action_after_7" json:"action_after_7"`
-	DeepSleepTime8  int64 `db:"deep_sleep_time_8" json:"deep_sleep_time_8"`
-	ActionBefore8   int64 `db:"action_before_8" json:"action_before_8"`
-	ActionAfter8    int64 `db:"action_after_8" json:"action_after_8"`
-	DeepSleepTime9  int64 `db:"deep_sleep_time_9" json:"deep_sleep_time_9"`
-	ActionBefore9   int64 `db:"action_before_9" json:"action_before_9"`
-	ActionAfter9    int64 `db:"action_after_9" json:"action_after_9"`
-	DeepSleepTime10 int64 `db:"deep_sleep_time_10" json:"deep_sleep_time_10"`
-	ActionBefore10  int64 `db:"action_before_10" json:"action_before_10"`
-	ActionAfter10   int64 `db:"action_after_10" json:"action_after_10"`
+	DeepSleepTime1  int `db:"deep_sleep_time_1" json:"deep_sleep_time_1"`
+	ActionBefore1   int `db:"action_before_1" json:"action_before_1"`
+	ActionAfter1    int `db:"action_after_1" json:"action_after_1"`
+	DeepSleepTime2  int `db:"deep_sleep_time_2" json:"deep_sleep_time_2"`
+	ActionBefore2   int `db:"action_before_2" json:"action_before_2"`
+	ActionAfter2    int `db:"action_after_2" json:"action_after_2"`
+	DeepSleepTime3  int `db:"deep_sleep_time_3" json:"deep_sleep_time_3"`
+	ActionBefore3   int `db:"action_before_3" json:"action_before_3"`
+	ActionAfter3    int `db:"action_after_3" json:"action_after_3"`
+	DeepSleepTime4  int `db:"deep_sleep_time_4" json:"deep_sleep_time_4"`
+	ActionBefore4   int `db:"action_before_4" json:"action_before_4"`
+	ActionAfter4    int `db:"action_after_4" json:"action_after_4"`
+	DeepSleepTime5  int `db:"deep_sleep_time_5" json:"deep_sleep_time_5"`
+	ActionBefore5   int `db:"action_before_5" json:"action_before_5"`
+	ActionAfter5    int `db:"action_after_5" json:"action_after_5"`
+	DeepSleepTime6  int `db:"deep_sleep_time_6" json:"deep_sleep_time_6"`
+	ActionBefore6   int `db:"action_before_6" json:"action_before_6"`
+	ActionAfter6    int `db:"action_after_6" json:"action_after_6"`
+	DeepSleepTime7  int `db:"deep_sleep_time_7" json:"deep_sleep_time_7"`
+	ActionBefore7   int `db:"action_before_7" json:"action_before_7"`
+	ActionAfter7    int `db:"action_after_7" json:"action_after_7"`
+	DeepSleepTime8  int `db:"deep_sleep_time_8" json:"deep_sleep_time_8"`
+	ActionBefore8   int `db:"action_before_8" json:"action_before_8"`
+	ActionAfter8    int `db:"action_after_8" json:"action_after_8"`
+	DeepSleepTime9  int `db:"deep_sleep_time_9" json:"deep_sleep_time_9"`
+	ActionBefore9   int `db:"action_before_9" json:"action_before_9"`
+	ActionAfter9    int `db:"action_after_9" json:"action_after_9"`
+	DeepSleepTime10 int `db:"deep_sleep_time_10" json:"deep_sleep_time_10"`
+	ActionBefore10  int `db:"action_before_10" json:"action_before_10"`
+	ActionAfter10   int `db:"action_after_10" json:"action_after_10"`
 
 	NBIoTUDPIP     string `db:"nb_iot_udp_ip" json:"nb_iot_udp_ip"`
 	NBIoTUDPPort   int    `db:"nb_iot_udp_port" json:"nb_iot_udp_port"`
