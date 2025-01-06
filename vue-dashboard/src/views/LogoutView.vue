@@ -17,6 +17,7 @@ const dashboardStore = useDashboardStore();
 const router = useRouter();
 
 
+
 onActivated(async () => {
     try {
         // Perform the logout API request
