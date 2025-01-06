@@ -89,8 +89,7 @@ function closeUserMenuOnClickOutside() {
 }
 
 onMounted(() => {
-    closeUserMenuOnClickOutside();
-    
+    closeUserMenuOnClickOutside();    
 });
 
 </script>

@@ -42,6 +42,9 @@ function goToView(view ) {
     router.push({ name: view });
 }
 
+
+console.log(123456789)
+
 </script>
 
 <!-- --------------------------------------------------------------- -->

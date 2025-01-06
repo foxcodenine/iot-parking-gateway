@@ -53,7 +53,7 @@ router.beforeEach(async (to, from, next) => {
 		messageStore.clearFlashMessage();
 
 	// Redirect to login if not authenticated
-	if (!isAuthenticated.value && to.name !== 'loginView') {
+	if (!isAuthenticated.value && !['loginView', 'forgotPasswordView'].includes(to.name)) {
 		authStore.setRedirectTo(to);
 		return next({ name: 'loginView' });
 	}
@@ -63,9 +63,9 @@ router.beforeEach(async (to, from, next) => {
 		authStore.resetAuthStore();
 		appStore.resetAppStore();		
 	
-		if (!isAuthenticated.value && to.name !== 'loginView') {
+		if (!isAuthenticated.value && !['loginView', 'forgotPasswordView'].includes(to.name)) {
 			// TODO: Log token has expired - logout
-			authStore.setRedirectTo(to);
+			authStore.setRedirectTo(to);	
 			return next({ name: 'loginView' });
 		}
 	}

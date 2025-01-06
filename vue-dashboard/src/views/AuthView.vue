@@ -1,7 +1,7 @@
 <template>
     <main class="vview__main">
 
-        <img class="background" src="@/assets/images/sign/photo-1724274876097-103bb600debb.avif" alt="">
+        <img class="background" src="/public/background-image.avif" alt="">
 
         <div class="ssign">
             <div class="ssign__image">
@@ -104,7 +104,7 @@ watch(isAuthenticated, (newVal) => {
     &__image {
         height: 100%;
         flex: 1;
-        background-image: url("@/assets/images/sign/photo-1445548671936-e1ff8a6a6b20.avif");
+        background-image: url("/public/foreground-image.avif");
         background-size: cover;
         background-position: center;
 

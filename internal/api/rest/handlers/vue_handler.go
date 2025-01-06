@@ -16,11 +16,13 @@ func (v *VueHandler) ServeIndexWithVariables(w http.ResponseWriter, r *http.Requ
 	// Define your dynamic variable
 
 	// googleApiKey, _ := helpers.EncryptAES(os.Getenv("GOOGLE_API_KEY"), core.AES_SECRET_KEY)
+	loginTitle := "Welcome to <b>IoTrack</b> Pro"
 
 	data := struct {
 		// GoogleApiKey string
+		LoginTitle string
 	}{
-		// GoogleApiKey: googleApiKey,
+		LoginTitle: loginTitle,
 	}
 
 	// Path to the index.html file

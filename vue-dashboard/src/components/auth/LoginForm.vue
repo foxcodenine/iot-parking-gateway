@@ -1,9 +1,7 @@
 <template>
     <form class="ssign__form" @submit.prevent="submitForm">
         <div>
-            <div class="ssign__title mt-4 mb-6 ">
-                Welcome to <b>IoTrack</b> Pro
-            </div>
+            <div class="ssign__title mt-4 mb-6 " v-html="'Welcome to <b>IoTrack</b> Pro'"></div>
 
             <div class="ssign__flash-message mb-4 h-5 text-red-600">
                 {{ flashMessage }}

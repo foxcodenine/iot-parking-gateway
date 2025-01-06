@@ -1,15 +1,15 @@
 services:
   app:
-    # build:
-    #   context: .
-    #   dockerfile: config/app/Dockerfile
-    image: foxcodenine/iot-parking-gateway_app:latest
+    build:
+      context: .
+      dockerfile: config/app/Dockerfile
+    # image: foxcodenine/iot-parking-gateway_app:latest
     container_name: iot-parking-gateway_app
     ports:
       - "${HTTP_PORT_EX}:${HTTP_PORT}"   
       - "${UDP_PORT_EX}:${UDP_PORT}/udp"  
-    # volumes:
-      # - .:/app  # (development only) - Mounts the current directory into /app inside the container for live code updates 
+    volumes:
+      - ./public:/root/dist/public/  # (development only) - Mounts the current directory into /app inside the container for live code updates 
     depends_on:
       - postgres
       - redis
