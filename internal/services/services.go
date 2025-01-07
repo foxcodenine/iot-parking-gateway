@@ -109,6 +109,12 @@ func (s *Service) RegisterNewDevices() {
 				NetworkType: networkType,
 			}
 			_, err = s.models.LoraDeviceSettings.Create(&newDeviceSetting)
+		case "SigFox":
+			newDeviceSetting := models.SigfoxDeviceSettings{
+				DeviceID:    deviceID,
+				NetworkType: networkType,
+			}
+			_, err = s.models.SigfoxDeviceSettings.Create(&newDeviceSetting)
 		}
 
 		if err != nil {

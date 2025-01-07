@@ -13,19 +13,21 @@ var dbSession up.Session
 
 // Models struct will hold references to all database models, e.g., Device.
 type Models struct {
-	ActivityLog         ActivityLog
-	AuditLog            AuditLog
-	Device              Device
-	LoraDeviceSettings  LoraDeviceSettings
-	LoraKeepaliveLog    LoraKeepaliveLog
-	LoraSettingLog      LoraSettingLog
-	NbiotDeviceSettings NbiotDeviceSettings
-	NbiotKeepaliveLog   NbiotKeepaliveLog
-	NbiotSettingLog     NbiotSettingLog
-	RawDataLog          RawDataLog
-	Setting             Setting
-	SigfoxKeepaliveLog  SigfoxKeepaliveLog
-	User                User
+	ActivityLog          ActivityLog
+	AuditLog             AuditLog
+	Device               Device
+	LoraDeviceSettings   LoraDeviceSettings
+	LoraKeepaliveLog     LoraKeepaliveLog
+	LoraSettingLog       LoraSettingLog
+	NbiotDeviceSettings  NbiotDeviceSettings
+	NbiotKeepaliveLog    NbiotKeepaliveLog
+	NbiotSettingLog      NbiotSettingLog
+	RawDataLog           RawDataLog
+	Setting              Setting
+	SigfoxKeepaliveLog   SigfoxKeepaliveLog
+	SigfoxSettingLog     SigfoxSettingLog
+	SigfoxDeviceSettings SigfoxDeviceSettings
+	User                 User
 }
 
 var AppModels Models
