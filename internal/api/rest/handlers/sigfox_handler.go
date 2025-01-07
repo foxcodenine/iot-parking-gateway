@@ -245,8 +245,6 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 		helpers.LogError(err, "Failed to update device settings_at in cache and broadcast it")
 	}
 
-	helpers.PrettyPrintJSON(parsedData)
-
 	// Push parsed parking data packages to Redis.
 	for _, i := range parsedData["parking_packages"].([]map[string]any) {
 

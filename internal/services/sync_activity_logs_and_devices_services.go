@@ -2,6 +2,7 @@ package services
 
 import (
 	"database/sql"
+	"fmt"
 	"sort"
 	"strconv"
 	"time"
@@ -166,6 +167,8 @@ func (s *Service) SyncDevicesKeepaliveAt() {
 		// Ensure the `device_id` field exists and is a string.
 		deviceID, ok := itemMap["device_id"].(string)
 		if !ok || deviceID == "" {
+			fmt.Println(">", itemMap)
+			helpers.PrettyPrintJSON(items)
 			s.errorLog.Println("Missing or invalid device_id in item map")
 			continue
 		}
