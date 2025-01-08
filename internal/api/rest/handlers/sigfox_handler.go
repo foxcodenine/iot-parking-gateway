@@ -199,6 +199,8 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 	// Process firmware-specific data parsing based on the firmware version.
 	var parsedData map[string]any
 	switch firmwareVersion {
+	case 5.7:
+		parsedData, err = sigfoxfw.Sigfox_57(hexStr, req.Timestamp)
 	case 6:
 		parsedData, err = sigfoxfw.Sigfox_60(hexStr, req.Timestamp)
 

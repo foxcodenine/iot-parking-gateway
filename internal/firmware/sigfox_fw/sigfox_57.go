@@ -7,7 +7,7 @@ import (
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 )
 
-func Sigfox_60(hexStr string, timestamp int) (map[string]any, error) {
+func Sigfox_57(hexStr string, timestamp int) (map[string]any, error) {
 	myMap := map[string]any{}
 	pkgAmount, parkingAmount, keepAliveAmount, settingsAmount := 0, 0, 0, 0
 
@@ -40,7 +40,7 @@ func Sigfox_60(hexStr string, timestamp int) (map[string]any, error) {
 		switch eventID {
 		case 26, 31:
 			parkingAmount++
-			pkg, err := parseParkingPackage60(hexStr, timestamp, nextOffset1)
+			pkg, err := parseParkingPackag57(hexStr, timestamp, nextOffset1)
 			if err != nil {
 				return nil, err
 			}
@@ -48,7 +48,7 @@ func Sigfox_60(hexStr string, timestamp int) (map[string]any, error) {
 			nextOffset1 = pkg["nextOffset"].(int)
 		case 6:
 			keepAliveAmount++
-			pkg, err := parseKeepAlivePackage60(hexStr, timestamp, nextOffset1)
+			pkg, err := parseKeepAlivePackag57(hexStr, timestamp, nextOffset1)
 			if err != nil {
 				return nil, err
 			}
@@ -57,7 +57,7 @@ func Sigfox_60(hexStr string, timestamp int) (map[string]any, error) {
 
 		case 10:
 			settingsAmount++
-			pkg, err := parseSettingsPackage60(hexStr, timestamp, nextOffset1)
+			pkg, err := parseSettingsPackag57(hexStr, timestamp, nextOffset1)
 			if err != nil {
 				return nil, err
 			}
@@ -83,7 +83,7 @@ func Sigfox_60(hexStr string, timestamp int) (map[string]any, error) {
 }
 
 // Parses the Parking Package
-func parseParkingPackage60(hexStr string, timestamp, offset int) (map[string]any, error) {
+func parseParkingPackag57(hexStr string, timestamp, offset int) (map[string]any, error) {
 	pkg := map[string]any{"timestamp": timestamp}
 	var err error
 	var nextOffset int
@@ -133,17 +133,21 @@ func parseParkingPackage60(hexStr string, timestamp, offset int) (map[string]any
 }
 
 // Parses the Keep Alive Package
-func parseKeepAlivePackage60(hexStr string, timestamp, offset int) (map[string]any, error) {
+func parseKeepAlivePackag57(hexStr string, timestamp, offset int) (map[string]any, error) {
 	pkg := map[string]any{"timestamp": timestamp}
 	var err error
 	var nextOffset int
 
-	if pkg["idle_voltage"], nextOffset, err = helpers.ParseHexSubstring(hexStr, offset, 2); err != nil {
+	if pkg["idle_voltage"], nextOffset, err = helpers.ParseHexSubstring(hexStr, offset, 1); err != nil {
 		return nil, helpers.WrapError(err)
 	}
-	pkg["idle_voltage"] = int(math.Floor(float64(pkg["idle_voltage"].(int)) * 0.2197))
+	pkg["idle_voltage"] = int(math.Floor(float64(pkg["idle_voltage"].(int)) * 16))
 
-	if pkg["current"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 2); err != nil {
+	if pkg["battery_percentage"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+
+	if pkg["current"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)
 	}
 	pkg["current"] = int(math.Floor(float64(pkg["current"].(int)) * 0.6104))
@@ -168,6 +172,11 @@ func parseKeepAlivePackage60(hexStr string, timestamp, offset int) (map[string]a
 		return nil, helpers.WrapError(err)
 	}
 
+	if pkg["radar_cumulative"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
+		return nil, helpers.WrapError(err)
+	}
+	pkg["radar_cumulative"] = int(math.Floor(float64(pkg["radar_cumulative"].(int)) * 256))
+
 	if pkg["settings_checksum"], nextOffset, err = helpers.ParseHexSubstring(hexStr, nextOffset, 1); err != nil {
 		return nil, helpers.WrapError(err)
 	}
@@ -177,7 +186,7 @@ func parseKeepAlivePackage60(hexStr string, timestamp, offset int) (map[string]a
 }
 
 // Parses the Settings Package
-func parseSettingsPackage60(hexStr string, timestamp, offset int) (map[string]any, error) {
+func parseSettingsPackag57(hexStr string, timestamp, offset int) (map[string]any, error) {
 	pkg := map[string]any{"timestamp": timestamp}
 	var err error
 	var nextOffset int

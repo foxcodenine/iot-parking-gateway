@@ -10,13 +10,15 @@ CREATE TABLE IF NOT EXISTS parking.sigfox_keepalive_logs (
     timestamp BIGINT,                              -- Event timestamp in UNIX format.
 
     idle_voltage SMALLINT,                         -- Idle voltage in V.
+    battery_percentage SMALLINT DEFAULT NULL,               
     current SMALLINT,                             -- Current in mA.
     reset_count SMALLINT,                         -- Reset count.    
     temperature_min SMALLINT,                     -- Minimum temperature.
     temperature_max SMALLINT,                     -- Maximum temperature.
     radar_error SMALLINT,                         -- Radar error count.   
     tcve_error SMALLINT,                          -- TCVE error count.
-    settings_checksum SMALLINT,                   -- Settings checksum value.
+    radar_cumulative INT,                       
+    settings_checksum SMALLINT DEFAULT NULL,                   -- Settings checksum value.
 
     PRIMARY KEY (id, happened_at)
 );
