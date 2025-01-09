@@ -44,7 +44,7 @@ if not data_entries:
     exit(1)
 
 # REST API URL
-API_URL = "http://localhost:8080/api/sigfox"
+API_URL = "http://localhost:8080/api/lora/chirpstack"
 
 # Use a loop to iterate over the data entries
 for entry in data_entries:

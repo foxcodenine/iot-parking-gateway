@@ -1,0 +1,32 @@
+v5_3
+	-Current UNIX Timestamp in Keep Alive included only once (in first event) even if rand byte is 0x00
+v5_3_1
+	-Fixed UNIX Timestamp issue
+v5_3_3
+	-Keep Alive
+		-LR-06-Keep Alive and NB-06-Keep Alive
+			-Changed 'Idle Voltage' and 'Current' to 2 bytes
+			-updated dividend
+		-SF-06-Keep Alive
+			-Changed 'Idle Voltage' to 2 bytes and removed 'Current'
+			-updated dividend
+v5_7
+	-CRC-8 checksum now includes apn length
+	-Embedded FW still expects trailer bytes (incorrect offset)
+v5_8
+	-Keep Alive
+		-LR-06-Keep Alive and NB-06-Keep Alive
+			-Changed 'Idle Voltage' and 'Current' to 2 bytes
+			-updated dividend
+		-LR-06-DL (Time), LR - 10 - DL (Settings), NB - 06 - DL (Time) and NB - 10 - DL (Settings)
+			-updated to new downlink structure by making separate downlinks
+		-SF-06-Keep Alive
+			-Changed 'Idle Voltage' to 2 bytes and removed 'Current'
+			-updated dividend
+v6_0
+	-NB-06-Keep Alive
+		-Added 'Network Operator Code'
+	-NB-10-Settings and NB-10-DL (Settings)
+		-Added 'APN User', 'APN Password', 'Network Operator Code', 'Network Band' and 'T3324' and 'T3412'
+	-SF-06-Keep Alive
+		-Removed 'Radar Cumulative', 'Battery Percentage' and added 'Current'
