@@ -1,14 +1,11 @@
 <template>
     <main class="vview__main">
 
-        <img class="background" src="/public/background-image.avif" alt="">
+        <div class="background"></div>
 
-        <div class="ssign">
-            <div class="ssign__image">
-
-            </div>
-            <component :is="currentFormComponent" />
-    
+        <div class="ssign"> 
+            <div class="ssign__image"></div>
+            <component :is="currentFormComponent" />    
         </div>
 
     </main>
@@ -70,8 +67,9 @@ watch(isAuthenticated, (newVal) => {
 }
 
 .background {
-    object-fit: cover;
-    object-position: center;
+    background-image: url("/public/background-image.avif");
+    background-size: cover;
+    background-position: center;
     opacity: 0.5;
     position: absolute;
     top: 0;
