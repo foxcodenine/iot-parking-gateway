@@ -1,7 +1,7 @@
 <template>
     <form class="ssign__form" @submit.prevent="submitForm">
         <div>
-            <div class="ssign__title mt-4 mb-6 " v-html="loginTitle"></div>
+            <div class="ssign__title mt-4 mb-6" v-html="loginPageTitle" ></div>
 
             <div class="ssign__flash-message mb-4 h-5 text-red-600">
                 {{ flashMessage }}
@@ -57,11 +57,12 @@ const router = useRouter();
 const email = ref("user@dev.com");
 const password = ref("DevPass");
 const flashMessage = ref("")
-const loginTitle = ref(GO_LOGIN_TITLE);
+const loginPageTitle = ref(GO_LOGIN_PAGE_TITLE);
 
-if (loginTitle.value == "{{ .LoginTitle }}") {
-    loginTitle.value = "Welcome to <b>IoTrack</b> Pro";
-}
+
+if (loginPageTitle.value == "{{ .LoginPageTitle }}") {
+    loginPageTitle.value = "Welcome to <b>IoTrack</b> Pro";
+} 
 
 
 // - Methods -----------------------------------------------------------

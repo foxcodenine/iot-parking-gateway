@@ -230,6 +230,47 @@ func (h *SettingHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	// -----------------------------------------------------------------
 
+	loginPageTitle, ok := updatedFields["login_page_title"]
+	if ok {
+		if userData.AccessLevel > 0 {
+			http.Error(w, "Permission denied.", http.StatusForbidden)
+			return
+		}
+
+		// Fetch the cached value
+		cachedVal, err := cache.AppCache.HGet("app:settings", "login_page_title")
+		if err != nil {
+			helpers.RespondWithError(w, err, "Failed to fetch cached setting value.", http.StatusInternalServerError)
+			return
+		}
+
+		// Check if the value is the same
+		if cachedVal.(string) != loginPageTitle {
+			// Validate that the string is not empty, has at least 5 characters, and does not contain potentially harmful tags
+			if len(loginPageTitle) < 5 || regexp.MustCompile(`(?i)<script>|<iframe>|<object>|<embed>|<applet>`).MatchString(loginPageTitle) {
+				http.Error(w, "Invalid value for login_page_title. It must be at least 5 characters long and free of any potentially harmful HTML tags.", http.StatusBadRequest)
+				return
+			}
+
+			val := map[string]interface{}{"val": loginPageTitle}
+
+			// Proceed to update the setting
+			_, err = app.Models.Setting.UpdateByKey("login_page_title", val)
+			if err != nil {
+				helpers.RespondWithError(w, err, "Failed to update the 'login_page_title' setting.", http.StatusInternalServerError)
+				return
+			}
+
+			err = auditLogSettingUpdate(userData, r, "login_page_title", loginPageTitle)
+			if err != nil {
+				helpers.LogError(err, "Failed to create an audit log entry for updating the 'login_page_title' setting.")
+			}
+			rootLevelSettingsChange = true
+		}
+	}
+
+	// -----------------------------------------------------------------
+
 	default_latitude, latOk := updatedFields["default_latitude"]
 	if latOk {
 

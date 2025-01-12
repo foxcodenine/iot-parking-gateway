@@ -361,7 +361,7 @@ func (u *User) GetRootUser() (*User, error) {
 
 	collection := dbSession.Collection(u.TableName())
 	var user User
-	err := collection.Find(up.Cond{"access_level": 0}).One(&user)
+	err := collection.Find(up.Cond{"email": os.Getenv("APP_ROOT_EMAIL")}).One(&user)
 	if err != nil {
 		if err == up.ErrNoMoreRows {
 			// No user found with the given email

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"text/template"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 )
 
@@ -14,15 +15,29 @@ type VueHandler struct {
 
 func (v *VueHandler) ServeIndexWithVariables(w http.ResponseWriter, r *http.Request) {
 	// Define your dynamic variable
-
 	// googleApiKey, _ := helpers.EncryptAES(os.Getenv("GOOGLE_API_KEY"), core.AES_SECRET_KEY)
-	loginTitle := "Welcome to <b>IoTrack</b> Pro"
+
+	loginPageTitle, err := cache.AppCache.HGet("app:settings", "login_page_title")
+	if err != nil {
+		// Log the error with a specific message to indicate fetching login page title failed
+		helpers.LogError(err, "Failed to fetch login page title from cache; using default value.")
+		// Set a default value if there's an error fetching the cached value
+		loginPageTitle = "Welcome to <b>IoTrack</b> Pro"
+	}
+
+	// Safe type assertion
+	loginPageTitleStr, ok := loginPageTitle.(string)
+	if !ok {
+		// Log or handle the unexpected type scenario
+		helpers.LogError(nil, "Expected string for login page title but got another type; using default value.")
+		loginPageTitleStr = "Welcome to <b>IoTrack</b> Pro"
+	}
 
 	data := struct {
 		// GoogleApiKey string
-		LoginTitle string
+		LoginPageTitle string
 	}{
-		LoginTitle: loginTitle,
+		LoginPageTitle: loginPageTitleStr,
 	}
 
 	// Path to the index.html file

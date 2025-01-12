@@ -41,6 +41,7 @@ type QueueConfig struct {
 
 type Exchange struct {
 	Name string
+	Type string // "direct" or "fanout"
 }
 
 func SetupRabbitMQConfig() RabbitConfig {
@@ -58,20 +59,21 @@ func SetupRabbitMQConfig() RabbitConfig {
 		URL:            urlStr,
 		ReconnectDelay: 10 * time.Second,
 		Queues: map[string]QueueConfig{
-			"test_queue": {
-				Name:       "test_queue",
-				RoutingKey: "test_queue",
-				Durable:    true,
-				Exchanges: []Exchange{
-					{Name: "test_exchange"},
-				},
-			},
+
 			"event_logs_queue": {
 				Name:       "event_logs_queue",
-				RoutingKey: "event_logs_queue",
+				RoutingKey: "event_logs",
 				Durable:    true,
 				Exchanges: []Exchange{
-					{Name: "event_logs_exchange"},
+					{Name: "event_logs_exchange", Type: "fanout"},
+				},
+			},
+			"thingboard_logs_queue": {
+				Name:       "thingboard_logs_queue",
+				RoutingKey: "thingboard_logs",
+				Durable:    true,
+				Exchanges: []Exchange{
+					{Name: "event_logs_exchange", Type: "fanout"},
 				},
 			},
 		},

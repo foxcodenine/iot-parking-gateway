@@ -104,6 +104,8 @@ This approach:
 
 5. 
     docker compose pull
+    or
+    sudo docker compose pull app
 
 <!-- --------------------------------------------------------------- -->
 

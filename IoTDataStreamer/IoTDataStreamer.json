@@ -1,0 +1,51 @@
+{
+    "child": {
+        "child1": {
+            "directory": "\/home\/foxcodenine\/foxfiles\/git\/repo\/iot-parking-gateway\/IoTDataStreamer",
+            "height": 234,
+            "profile": "2b7c4080-0ddd-46c5-8f23-563fd3ba789d",
+            "readOnly": false,
+            "synchronizedInput": true,
+            "type": "Terminal",
+            "uuid": "2830542f-4564-4aa7-857f-7ca8d905e7e4",
+            "width": 802
+        },
+        "child2": {
+            "child1": {
+                "directory": "\/home\/foxcodenine\/foxfiles\/git\/repo\/iot-parking-gateway\/IoTDataStreamer",
+                "height": 224,
+                "profile": "2b7c4080-0ddd-46c5-8f23-563fd3ba789d",
+                "readOnly": false,
+                "synchronizedInput": true,
+                "type": "Terminal",
+                "uuid": "1b669f8c-7456-4d11-87c1-64126ccb0eff",
+                "width": 802
+            },
+            "child2": {
+                "directory": "\/home\/foxcodenine\/foxfiles\/git\/repo\/iot-parking-gateway\/IoTDataStreamer",
+                "height": 224,
+                "profile": "2b7c4080-0ddd-46c5-8f23-563fd3ba789d",
+                "readOnly": false,
+                "synchronizedInput": true,
+                "type": "Terminal",
+                "uuid": "cd147d84-a9e4-44e7-8869-68bef55868b9",
+                "width": 802
+            },
+            "orientation": 1,
+            "position": 32,
+            "ratio": 0.49888641425389757,
+            "type": "Paned"
+        },
+        "orientation": 1,
+        "position": 34,
+        "ratio": 0.342105263157894746,
+        "type": "Paned"
+    },
+    "height": 684,
+    "name": "${title}",
+    "synchronizedInput": false,
+    "type": "Session",
+    "uuid": "138a576d-2339-4db6-9ae7-758288db2eb8",
+    "version": "1.0",
+    "width": 802
+}

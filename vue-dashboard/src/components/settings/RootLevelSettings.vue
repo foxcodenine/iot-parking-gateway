@@ -80,6 +80,15 @@
             </div>
         </div>
 
+        <div class="fform__row mt-10 " @click="clearMessage" :class="{ 'fform__disabled': edit_key != 'cors_allowed_origins' }">
+            <div class="fform__description"><b>login_page_title</b> &nbsp Specifies the domains that are permitted to access the API, including development hosts. Use '*' to allow all or specify domains individually, separated by a comma.</div>
+            <div class="fform__group ">
+                <input class="fform__input " :class="{'fform__input--active':edit_key=='login_page_title'}" id="login_page_title" type="text" @blur="edit_key=null" 
+                    v-model.trim="login_page_title" :disabled="edit_key != 'login_page_title'" placeholder="The HTML-formatted title text displayed on the login page of the IoTrack Pro application.">
+                <svg @click="edit_key='login_page_title'" class="fform__icon" :class="{'fform__icon--active':edit_key=='login_page_title'}"> <use xlink:href="@/assets/svg/sprite.svg#icon-pencil"></use></svg>
+            </div>
+        </div>
+
         <button  class="bbtn bbtn--red mt-14"  @click.prevent="initUpdateSettings()">
             Update Settings
         </button>
@@ -104,6 +113,8 @@ const redis_ttl_seconds = ref(null);
 const device_access_mode = ref(null);
 const initial_parking_check_date = ref(null);
 const cors_allowed_origins = ref(null);
+const login_page_title = ref(null);
+
 
 const adminModalOn = ref(false);
 
@@ -167,6 +178,12 @@ function initUpdateSettings() {
         hasError = true;
     }
 
+    // Validate login_page_title for non-empty and safe HTML content
+    if (!login_page_title.value.trim() || /<script|<\/script>/i.test(login_page_title.value)) {
+        message.push("Login page title must be provided and not include potentially dangerous content such as scripts.");
+        hasError = true;
+    }
+
     if (hasError) {
         messageStore.setFlashMessages(message);
         messageStore.setFlashClass("flash-message--yellow");
@@ -192,6 +209,7 @@ async function updateSettings(payload) {
         payload.google_map_id = google_map_id.value;
         payload.initial_parking_check_date = initial_parking_check_date.value;
         payload.cors_allowed_origins = cors_allowed_origins.value;
+        payload.login_page_title = login_page_title.value;
 
         const response = await appStore.updateSettings(payload);
 
@@ -221,6 +239,7 @@ onMounted(()=>{
     device_access_mode.value = settings.device_access_mode;
     initial_parking_check_date.value = settings.initial_parking_check_date;
     cors_allowed_origins.value = settings.cors_allowed_origins;
+    login_page_title.value = settings.login_page_title;
 });
 
 </script>

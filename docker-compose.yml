@@ -1,10 +1,11 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: config/app/Dockerfile
-    # image: foxcodenine/iot-parking-gateway_app:latest
+    # build:
+    #   context: .
+    #   dockerfile: config/app/Dockerfile
+    image: foxcodenine/iot-parking-gateway_app:latest
     container_name: iot-parking-gateway_app
+    restart: always
     ports:
       - "${HTTP_PORT_EX}:${HTTP_PORT}"   
       - "${UDP_PORT_EX}:${UDP_PORT}/udp"  
@@ -64,6 +65,7 @@ services:
   postgres:
     image: timescale/timescaledb:latest-pg14
     container_name: iot-parking-gateway_postgres
+    restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -88,6 +90,7 @@ services:
   redis:  
     image: redislabs/rebloom:latest  
     container_name: iot-parking-gateway_redis
+    restart: always
 
     ports:
       - "${REDIS_PORT_EX}:${REDIS_PORT}"  
@@ -116,6 +119,7 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: iot-parking-gateway_rabbitmq
+    restart: always
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
@@ -130,7 +134,7 @@ services:
 
   pgweb:
     container_name: iot-parking-gateway_pgweb
-    # restart: always
+    restart: always
     image: sosedoff/pgweb
     ports:
       - "${PGWEB_PORT_EX}:${PGWEB_PORT}"  

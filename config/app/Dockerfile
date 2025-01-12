@@ -15,7 +15,8 @@ COPY ./dist ./dist
 COPY . .
 
 # Build the Go app for production
-RUN CGO_ENABLED=0 GOOS=linux go build -o server cmd/app/main.go
+# RUN CGO_ENABLED=0 GOOS=linux go build -o server cmd/app/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o server cmd/app/*
 
 # Use a minimal base image for the runtime
 FROM alpine:3.20.3

@@ -266,7 +266,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 			helpers.LogError(err, "Failed to serialize parsedData to JSON")
 			continue
 		}
-		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
+		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "", string(messageData))
 	}
 
 	// Push parsed keepalive data to Redis.
@@ -287,7 +287,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 			helpers.LogError(err, "Failed to serialize parsedData to JSON")
 			continue
 		}
-		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
+		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "", string(messageData))
 	}
 
 	// Push parsed settings data to Redis.
@@ -316,7 +316,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 			helpers.LogError(err, "Failed to serialize parsedData to JSON")
 			continue
 		}
-		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "event_logs_queue", string(messageData))
+		mq.AppRabbitMQProducer.SendMessage("event_logs_exchange", "", string(messageData))
 	}
 }
 

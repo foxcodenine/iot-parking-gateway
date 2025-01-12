@@ -71,19 +71,25 @@ func (p *RabbitMQProducer) connect() bool {
 }
 
 func (p *RabbitMQProducer) setupExchangesAndQueues() error {
+	// Declare exchanges
 	for _, exchange := range p.config.GetAllExchanges() {
 		if err := p.channel.ExchangeDeclare(
-			exchange.Name, "direct", true, false, false, false, nil); err != nil {
+			exchange.Name, exchange.Type, true, false, false, false, nil); err != nil {
 			return err
 		}
 	}
 
+	// Declare and bind queues
 	for _, queue := range p.config.Queues {
 		if _, err := p.channel.QueueDeclare(queue.Name, queue.Durable, false, false, false, nil); err != nil {
 			return err
 		}
 		for _, exchange := range queue.Exchanges {
-			if err := p.channel.QueueBind(queue.Name, queue.RoutingKey, exchange.Name, false, nil); err != nil {
+			routingKey := queue.RoutingKey
+			if exchange.Type == "fanout" {
+				routingKey = "" // No routing key needed for fanout exchanges
+			}
+			if err := p.channel.QueueBind(queue.Name, routingKey, exchange.Name, false, nil); err != nil {
 				return err
 			}
 		}
@@ -111,19 +117,25 @@ func (p *RabbitMQProducer) monitorConnection() {
 	}()
 }
 
-// sendMessage sends a message to a specified queue
+// sendMessage sends a message to a specified queue using a direct exchange
 func (p *RabbitMQProducer) SendMessage(exchangeName, queueName, message string) {
-	queueConfig, exists := p.config.Queues[queueName]
-	if !exists {
-		helpers.LogInfo("Queue configuration not found for %s", queueName)
-		return
+
+	var routingKey string = ""
+	if queueName != "" {
+
+		queueConfig, exists := p.config.Queues[queueName]
+		if !exists {
+			helpers.LogInfo("Queue configuration not found for %s", queueName)
+			return
+		}
+		routingKey = queueConfig.RoutingKey
 	}
 
 	if err := p.channel.Publish(
-		exchangeName,           // exchange
-		queueConfig.RoutingKey, // routing key
-		false,                  // mandatory
-		false,                  // immediate
+		exchangeName, // exchange
+		routingKey,   // routing key
+		false,        // mandatory
+		false,        // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        []byte(message),
