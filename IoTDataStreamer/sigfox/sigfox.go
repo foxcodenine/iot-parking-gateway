@@ -16,7 +16,7 @@ import (
 
 // import necessary standard and third-party packages
 type SigfoxData struct {
-	Timestamp string `json:"timestamp"`
+	Timestamp int64  `json:"timestamp"`
 	Device    string `json:"device"`
 	SeqNumber string `json:"seq_number"`
 	Data      string `json:"data"`
