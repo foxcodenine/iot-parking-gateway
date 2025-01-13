@@ -77,7 +77,7 @@ func Run() {
 			// Optionally handle the error, e.g., retry or log
 		}
 
-		fmt.Printf("(%d) ----------------------\nDecoded and sent data: %+v\n", lineCount, data)
+		fmt.Printf("----------------------\nDecoded and sent data: %+v\n", data)
 		lineCount++
 
 		time.Sleep(time.Second * 1) // Throttle the rate of data processing.
