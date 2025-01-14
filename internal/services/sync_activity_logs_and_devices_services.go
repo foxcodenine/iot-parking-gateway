@@ -2,6 +2,7 @@ package services
 
 import (
 	"database/sql"
+	"fmt"
 	"sort"
 	"strconv"
 	"time"
@@ -17,7 +18,7 @@ func (s *Service) SyncActivityLogs() {
 	items, err := s.cache.LRangeAndDelete("logs:activity-logs")
 	if err != nil {
 		// Log error if Redis operations fail.
-		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
+		helpers.LogError(err, "Error retrieving items from Redis")
 		return
 	}
 
@@ -30,7 +31,7 @@ func (s *Service) SyncActivityLogs() {
 		// Attempt to assert the type to a map[string]any (JSON-like structure).
 		itemMap, ok := item.(map[string]any)
 		if !ok {
-			s.errorLog.Println("Invalid item type: expected map[string]any")
+			helpers.LogError(nil, "Invalid item type: expected map[string]any")
 			continue
 		}
 
@@ -54,12 +55,12 @@ func (s *Service) SyncActivityLogs() {
 
 		// Attempt to bulk insert all activity logs into PostgreSQL.
 		if err = s.models.ActivityLog.BulkInsert(activityLogs); err != nil {
-			s.errorLog.Printf("Failed to insert activity logs to PostgreSQL: %v", err)
+			helpers.LogError(err, "Failed to insert activity logs to PostgreSQL")
 			return
 		}
 
 		// Log successful insertion and update.
-		s.infoLog.Printf("Successfully inserted %d activity logs records into PostgreSQL", len(activityLogs))
+		helpers.LogInfo("Successfully inserted %d activity logs records into PostgreSQL", len(activityLogs))
 	}
 
 }
@@ -71,7 +72,7 @@ func (s *Service) SyncDevices() {
 	items, err := s.cache.LRangeAndDelete("logs:device-update")
 	if err != nil {
 		// Log error if Redis operations fail.
-		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
+		helpers.LogError(err, "Error retrieving items from Redis")
 		return
 	}
 
@@ -84,7 +85,7 @@ func (s *Service) SyncDevices() {
 		// Attempt to assert the type to a map[string]any (JSON-like structure).
 		itemMap, ok := item.(map[string]any)
 		if !ok {
-			s.errorLog.Println("Invalid item type: expected map[string]any")
+			helpers.LogError(nil, "Invalid item type: expected map[string]any")
 			continue
 		}
 
@@ -130,11 +131,11 @@ func (s *Service) SyncDevices() {
 
 		// If activity logs are successfully inserted, proceed to update devices.
 		if err = s.models.Device.BulkUpdateDevices(deviceUpdateLogs); err != nil {
-			s.errorLog.Printf("Failed to update device records: %v", err)
+			helpers.LogError(err, "Failed to update device records")
 			return
 		}
 
-		s.infoLog.Printf("Successfully updated %d device records into PostgreSQL", len(deviceUpdateLogs))
+		helpers.LogInfo("Successfully updated %d device records into PostgreSQL", len(deviceUpdateLogs))
 	}
 
 }
@@ -146,7 +147,7 @@ func (s *Service) SyncDevicesKeepaliveAt() {
 	items, err := s.cache.LRangeAndDelete("logs:device-keepalive-at")
 	if err != nil {
 		// Log an error if Redis operations fail and return early.
-		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
+		helpers.LogError(err, "Error retrieving items from Redis")
 		return
 	}
 
@@ -159,21 +160,21 @@ func (s *Service) SyncDevicesKeepaliveAt() {
 		// Attempt to assert the item type to a map[string]any (JSON-like structure).
 		itemMap, ok := item.(map[string]any)
 		if !ok {
-			s.errorLog.Println("Invalid item type: expected map[string]any")
+			helpers.LogError(nil, "Invalid item type: expected map[string]any")
 			continue
 		}
 
 		// Ensure the `device_id` field exists and is a string.
 		deviceID, ok := itemMap["device_id"].(string)
 		if !ok || deviceID == "" {
-			s.errorLog.Println("Missing or invalid device_id in item map")
+			helpers.LogError(nil, "Missing or invalid device_id in item map")
 			continue
 		}
 
 		// Ensure the `keepalive_at` field exists and is a valid timestamp.
 		keepaliveAtStr, ok := itemMap["keepalive_at"].(string)
 		if !ok || keepaliveAtStr == "" {
-			s.errorLog.Printf("Missing or invalid keepalive_at for device %s", deviceID)
+			helpers.LogError(nil, fmt.Sprintf("Missing or invalid keepalive_at for device %s", deviceID))
 			continue
 		}
 
@@ -201,18 +202,18 @@ func (s *Service) SyncDevicesKeepaliveAt() {
 
 	// If there are no valid entries, return early.
 	if len(deviceUpdateLogs) == 0 {
-		// s.infoLog.Println("No valid keepalive logs to process")
+		// helpers.LogInfo("No valid keepalive logs to process")
 		return
 	}
 
 	// Attempt to bulk update the keepalive timestamps in PostgreSQL.
 	if err := s.models.Device.BulkUpdateDevicesKeepalive(deviceUpdateLogs); err != nil {
-		s.errorLog.Printf("Failed to bulk update keepalive timestamps for devices: %v", err)
+		helpers.LogError(err, "Failed to bulk update keepalive timestamps for devices")
 		return
 	}
 
 	// Log the successful update.
-	s.infoLog.Printf("Successfully updated keepalive timestamps for %d devices in PostgreSQL", len(deviceUpdateLogs))
+	helpers.LogInfo("Successfully updated keepalive timestamps for %d devices in PostgreSQL", len(deviceUpdateLogs))
 }
 
 // SyncDevicesSettings processes and synchronizes device settings updates from Redis to PostgreSQL.
@@ -222,7 +223,7 @@ func (s *Service) SyncDevicesSettingsAt() {
 	items, err := s.cache.LRangeAndDelete("logs:device-settings-at")
 	if err != nil {
 		// Log an error if Redis operations fail and return early.
-		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
+		helpers.LogError(err, "Error retrieving items from Redis")
 		return
 	}
 
@@ -235,21 +236,21 @@ func (s *Service) SyncDevicesSettingsAt() {
 		// Attempt to assert the item type to a map[string]any (JSON-like structure).
 		itemMap, ok := item.(map[string]any)
 		if !ok {
-			s.errorLog.Println("Invalid item type: expected map[string]any")
+			helpers.LogError(nil, "Invalid item type: expected map[string]any")
 			continue
 		}
 
 		// Ensure the `device_id` field exists and is a string.
 		deviceID, ok := itemMap["device_id"].(string)
 		if !ok || deviceID == "" {
-			s.errorLog.Println("Missing or invalid device_id in item map")
+			helpers.LogError(nil, "Missing or invalid device_id in item map")
 			continue
 		}
 
 		// Ensure the `settings_at` field exists and is a valid timestamp.
 		settingsAtStr, ok := itemMap["settings_at"].(string)
 		if !ok || settingsAtStr == "" {
-			s.errorLog.Printf("Missing or invalid settings_at for device %s", deviceID)
+			helpers.LogError(nil, fmt.Sprintf("Missing or invalid settings_at for device %s", deviceID))
 			continue
 		}
 
@@ -277,16 +278,16 @@ func (s *Service) SyncDevicesSettingsAt() {
 
 	// If there are no valid entries, return early.
 	if len(deviceUpdateLogs) == 0 {
-		// s.infoLog.Println("No valid Settings logs to process")
+		// helpers.LogInfo("No valid Settings logs to process")
 		return
 	}
 
 	// Attempt to bulk update the Settings timestamps in PostgreSQL.
 	if err := s.models.Device.BulkUpdateDevicesSettings(deviceUpdateLogs); err != nil {
-		s.errorLog.Printf("Failed to bulk update settings timestamps for devices: %v", err)
+		helpers.LogError(err, "Failed to bulk update settings timestamps for devices")
 		return
 	}
 
 	// Log the successful update.
-	s.infoLog.Printf("Successfully updated settings timestamps for %d devices in PostgreSQL", len(deviceUpdateLogs))
+	helpers.LogInfo("Successfully updated settings timestamps for %d devices in PostgreSQL", len(deviceUpdateLogs))
 }

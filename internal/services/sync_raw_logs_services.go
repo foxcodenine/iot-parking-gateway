@@ -1,8 +1,10 @@
 package services
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 	"github.com/google/uuid"
 )
@@ -12,7 +14,7 @@ func (s *Service) SyncRawLogs() {
 
 	items, err := s.cache.LRangeAndDelete("logs:raw-data-logs")
 	if err != nil {
-		s.errorLog.Printf("Error retrieving items from Redis: %v", err)
+		helpers.LogError(err, "Error retrieving items from Redis")
 		return
 	}
 
@@ -21,58 +23,58 @@ func (s *Service) SyncRawLogs() {
 	for _, item := range items {
 		itemMap, ok := item.(map[string]interface{})
 		if !ok {
-			s.errorLog.Println("Invalid item type: expected map[string]interface{}")
+			helpers.LogInfo("Invalid item type: expected map[string]interface{}")
 			continue
 		}
 
 		// Convert id field from string to uuid.UUID
 		uuidStr, ok := itemMap["id"].(string)
 		if !ok {
-			s.errorLog.Println("Invalid UUID format: expected string")
+			helpers.LogInfo("Invalid UUID format: expected string")
 			continue
 		}
 
 		uuidValue, err := uuid.Parse(uuidStr)
 		if err != nil {
-			s.errorLog.Printf("Failed to parse UUID %s: %v\n", uuidStr, err)
+			helpers.LogError(err, fmt.Sprintf("Failed to parse UUID %s", uuidStr))
 			continue
 		}
 
 		// Parse created_at field from string to time.Time
 		createAtStr, ok := itemMap["created_at"].(string)
 		if !ok {
-			s.errorLog.Println("Invalid created_at format: expected string")
+			helpers.LogInfo("Invalid created_at format: expected string")
 			continue
 		}
 
 		createdAt, err := time.Parse(time.RFC3339, createAtStr)
 		if err != nil {
-			s.errorLog.Printf("Failed to parse created_at %s: %v\n", createAtStr, err)
+			helpers.LogError(err, fmt.Sprintf("Failed to parse created_at %s\n", createAtStr))
 			continue
 		}
 
 		// Check for and convert other fields safely
 		deviceID, ok := itemMap["device_id"].(string)
 		if !ok {
-			s.errorLog.Println("Invalid device_id format: expected string")
+			helpers.LogInfo("Invalid device_id format: expected string")
 			continue
 		}
 
 		firmwareVersion, ok := itemMap["firmware_version"].(float64) // Redis stores numbers as float64
 		if !ok {
-			s.errorLog.Println("Invalid firmware_version format: expected float64")
+			helpers.LogInfo("Invalid firmware_version format: expected float64")
 			continue
 		}
 
 		networkType, ok := itemMap["network_type"].(string)
 		if !ok {
-			s.errorLog.Println("Invalid network_type format: expected string")
+			helpers.LogInfo("Invalid network_type format: expected string")
 			continue
 		}
 
 		rawData, ok := itemMap["raw_data"].(string)
 		if !ok {
-			s.errorLog.Println("Invalid raw_data format: expected string")
+			helpers.LogInfo("Invalid raw_data format: expected string")
 			continue
 		}
 
@@ -92,10 +94,10 @@ func (s *Service) SyncRawLogs() {
 		// Bulk insert into PostgreSQL
 		err = s.models.RawDataLog.BulkInsert(rawDataLogs)
 		if err != nil {
-			s.errorLog.Printf("Failed to insert raw data logs to PostgreSQL: %v", err)
+			helpers.LogError(err, "Failed to insert raw data logs to PostgreSQL")
 			return // Log the error and exit if bulk insert fails
 		}
-		s.infoLog.Printf("Successfully inserted %d raw data logs into PostgreSQL", len(rawDataLogs))
+		helpers.LogInfo("Successfully inserted %d raw data logs into PostgreSQL", len(rawDataLogs))
 	}
 
 }

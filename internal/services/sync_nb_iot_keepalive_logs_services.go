@@ -13,7 +13,7 @@ func (s *Service) SyncNBIoTKeepaliveLogs() {
 	items, err := s.cache.LRangeAndDelete("logs:nb-keepalive-logs")
 	if err != nil {
 		// Log error if Redis operations fail.
-		s.errorLog.Printf("Error retrieving logs:nb-keepalive-logs from Redis: %v", err)
+		helpers.LogError(err, "Error retrieving logs:nb-keepalive-logs from Redis")
 		return
 	}
 
@@ -26,7 +26,7 @@ func (s *Service) SyncNBIoTKeepaliveLogs() {
 		// Attempt to assert the type to a map[string]any (JSON-like structure).
 		itemMap, ok := item.(map[string]any)
 		if !ok {
-			s.errorLog.Println("Invalid item type: expected map[string]any")
+			helpers.LogError(nil, "Invalid item type: expected map[string]any")
 			continue
 		}
 
@@ -52,9 +52,9 @@ func (s *Service) SyncNBIoTKeepaliveLogs() {
 
 		// Log successful insertion of keepalive logs.
 		if err != nil {
-			s.errorLog.Printf("Failed to insert keepalive logs to PostgreSQL: %v", err)
+			helpers.LogError(err, "Failed to insert keepalive logs to PostgreSQL")
 			return
 		}
-		s.infoLog.Printf("Successfully inserted %d keepalive logs into PostgreSQL", len(nbIotKeepaliveLogs))
+		helpers.LogInfo("Successfully inserted %d keepalive logs into PostgreSQL", len(nbIotKeepaliveLogs))
 	}
 }

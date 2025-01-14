@@ -14,18 +14,15 @@ import (
 )
 
 type Service struct {
-	models   models.Models
-	cache    *cache.RedisCache
-	infoLog  *log.Logger
-	errorLog *log.Logger
+	models  models.Models
+	cache   *cache.RedisCache
+	infoLog *log.Logger
 }
 
-func NewService(m models.Models, rc *cache.RedisCache, il, el *log.Logger) *Service {
+func NewService(m models.Models, rc *cache.RedisCache) *Service {
 	return &Service{
-		models:   m,
-		cache:    rc,
-		infoLog:  il,
-		errorLog: el,
+		models: m,
+		cache:  rc,
 	}
 }
 
@@ -34,7 +31,7 @@ func (s *Service) RegisterNewDevices() {
 	// Retrieve device IDs from Redis and delete the set afterwards.
 	deviceEntries, err := s.cache.SMembersDel("to-register-devices")
 	if err != nil {
-		s.errorLog.Printf("Failed to retrieve device IDs from Redis: %v", err)
+		helpers.LogError(err, "Failed to retrieve device IDs from Redis")
 		return
 	}
 
@@ -44,14 +41,14 @@ func (s *Service) RegisterNewDevices() {
 		// Convert interface to string, ensuring it represents a device ID correctly.
 		deviceInfo, ok := entry.(string)
 		if !ok {
-			s.errorLog.Printf("Invalid device ID format: expected string but got %T", entry)
+			helpers.LogError(nil, fmt.Sprintf("Invalid device ID format: expected string but got %T", entry))
 			continue
 		}
 
 		// Split the string into parts based on spaces
 		parts := strings.Split(deviceInfo, " ")
 		if len(parts) < 3 {
-			s.errorLog.Printf("Device information string does not have enough parts: %s\n", deviceInfo)
+			helpers.LogError(nil, fmt.Sprintf("Device information string does not have enough parts: %s\n", deviceInfo))
 			return // or continue if in a loop
 		}
 
@@ -63,7 +60,7 @@ func (s *Service) RegisterNewDevices() {
 		// Convert firmwareVersionStr to a float
 		firmwareVersion, err := strconv.ParseFloat(firmwareVersionStr, 64) // 64 specifies the precision
 		if err != nil {
-			s.errorLog.Printf("Failed to convert firmware version to float: %s\n", err)
+			helpers.LogError(err, "Failed to convert firmware version to float")
 			return // or handle the error appropriately
 		}
 
@@ -90,7 +87,7 @@ func (s *Service) RegisterNewDevices() {
 		// Attempt to create a new device record in the database.
 		_, err = s.models.Device.Create(&newDevice)
 		if err != nil {
-			s.errorLog.Printf("Failed to create a new device record for ID %s: %v", deviceID, err)
+			helpers.LogError(err, fmt.Sprintf("Failed to create a new device record for ID %s", deviceID))
 			continue // Proceed to the next ID instead of stopping.
 		}
 
@@ -118,15 +115,15 @@ func (s *Service) RegisterNewDevices() {
 		}
 
 		if err != nil {
-			s.errorLog.Printf("Failed to create a new device settings record for ID %s: %v", deviceID, err)
+			helpers.LogError(err, fmt.Sprintf("Failed to create a new device settings record for ID %s", deviceID))
 			continue // Proceed to the next ID instead of stopping.
 		}
 
 	}
 	if len(deviceEntries) == 1 {
-		s.infoLog.Println("Successfully added 1 device to PostgreSQL")
+		helpers.LogInfo("Successfully added 1 device to PostgreSQL")
 	} else if len(deviceEntries) > 1 {
-		s.infoLog.Printf("Successfully added %d devices to PostgreSQL", len(deviceEntries))
+		helpers.LogInfo("Successfully added %d devices to PostgreSQL", len(deviceEntries))
 	}
 }
 
@@ -136,7 +133,7 @@ func (s *Service) PopulateDeviceBloomFilter() {
 	deviceInstance := models.Device{}
 	devices, err := deviceInstance.GetAllIncludingDeleted()
 	if err != nil {
-		s.errorLog.Printf("Error retrieving devices from Postgres: %v", err)
+		helpers.LogError(err, "Error retrieving devices from Postgres")
 		return
 	}
 

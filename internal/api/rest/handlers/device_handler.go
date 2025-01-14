@@ -163,7 +163,7 @@ func (h *DeviceHandler) Get(w http.ResponseWriter, r *http.Request) {
 	device, err := app.Models.Device.GetByID(id)
 
 	if err != nil {
-		app.ErrorLog.Printf("Failed to retrieve device %s: %v", id, err)
+		helpers.LogError(err, fmt.Sprintf("Failed to retrieve device %s", id))
 		helpers.RespondWithError(w, err, "Failed to retrieve device", http.StatusInternalServerError)
 		return
 	}
@@ -253,7 +253,7 @@ func (h *DeviceHandler) Destroy(w http.ResponseWriter, r *http.Request) {
 	// Attempt to soft delete the device
 	err = app.Models.Device.SoftDeleteByID(id)
 	if err != nil {
-		app.ErrorLog.Printf("Failed to soft delete device %s: %v", id, err)
+		helpers.LogError(err, fmt.Sprintf("Failed to soft delete device %s", id))
 		if err.Error() == "device not found" {
 			http.Error(w, fmt.Sprintf("Device with ID %s not found.", id), http.StatusNotFound)
 		} else {

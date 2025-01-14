@@ -3,7 +3,6 @@ package core
 import (
 	"context"
 	"errors"
-	"log"
 	"net"
 	"net/http"
 	"time"
@@ -23,9 +22,6 @@ import (
 type App struct {
 	AppURL     string
 	HttpPort   string
-	InfoLog    *log.Logger
-	ErrorLog   *log.Logger
-	FatalLog   *log.Logger
 	DB         *pgxpool.Pool
 	Models     models.Models
 	MQProducer *mq.RabbitMQProducer

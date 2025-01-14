@@ -14,40 +14,40 @@ import (
 	"time"
 )
 
-// DeviceInfo defines the structure for device-specific information.
+// DeviceInfo contains device metadata for LoRa devices.
 type DeviceInfo struct {
-	TenantID          string                 `json:"tenantId"`          // Unique identifier for the tenant
-	TenantName        string                 `json:"tenantName"`        // Name of the tenant
-	ApplicationID     string                 `json:"applicationId"`     // Identifier for the application
-	ApplicationName   string                 `json:"applicationName"`   // Name of the application
-	DeviceProfileID   string                 `json:"deviceProfileId"`   // ID of the device profile
-	DeviceProfileName string                 `json:"deviceProfileName"` // Name of the device profile
-	DeviceName        string                 `json:"deviceName"`        // Name of the device
-	DevEui            string                 `json:"devEui"`            // Device EUI (Extended Unique Identifier)
-	Tags              map[string]interface{} `json:"tags"`              // Arbitrary tags as a map for additional metadata
+	TenantID          string                 `json:"tenantId"`
+	TenantName        string                 `json:"tenantName"`
+	ApplicationID     string                 `json:"applicationId"`
+	ApplicationName   string                 `json:"applicationName"`
+	DeviceProfileID   string                 `json:"deviceProfileId"`
+	DeviceProfileName string                 `json:"deviceProfileName"`
+	DeviceName        string                 `json:"deviceName"`
+	DevEui            string                 `json:"devEui"`
+	Tags              map[string]interface{} `json:"tags"`
 }
 
-// ConvertHexToBase64 converts the Data field from a hex string to a base64 string.
+// LoraData represents the structure for incoming LoRa data.
+type LoraData struct {
+	DeviceInfo DeviceInfo `json:"deviceInfo"`
+	Data       string     `json:"data"`
+}
+
+// ConvertHexToBase64 converts the data from hex to Base64 format.
 func (ld *LoraData) ConvertHexToBase64() error {
-	bytes, err := hex.DecodeString(ld.Data)
+	decoded, err := hex.DecodeString(ld.Data)
 	if err != nil {
-		return fmt.Errorf("error decoding hex: %v", err)
+		return fmt.Errorf("[LORA] Error decoding hex: %v", err)
 	}
-	ld.Data = base64.StdEncoding.EncodeToString(bytes)
+	ld.Data = base64.StdEncoding.EncodeToString(decoded)
 	return nil
 }
 
-// LoraData represents the structure for the incoming LoRa data.
-type LoraData struct {
-	DeviceInfo DeviceInfo `json:"deviceInfo"` // Embedded DeviceInfo structure
-	Data       string     `json:"data"`       // Encoded data received from the device
-}
-
-// Run initiates the process of reading, processing, and sending data to an API.
+// Run processes data from a file and sends it to an API.
 func Run() {
 	file, err := os.Open("lora_raw_data.txt")
 	if err != nil {
-		log.Fatalf("Failed to open file: %v", err)
+		log.Fatalf("[LORA] Failed to open file: %v", err)
 	}
 	defer file.Close()
 
@@ -55,59 +55,50 @@ func Run() {
 	var lineCount int
 
 	for scanner.Scan() {
-		line := scanner.Text()
-		line = strings.Trim(line, `"`) // Clean the line from surrounding double quotes.
-
+		line := strings.Trim(scanner.Text(), `"`)
 		var data LoraData
+
 		err := json.Unmarshal([]byte(line), &data)
 		if err != nil {
-			log.Fatalf("> %d\nError decoding JSON: %v\n", lineCount, err)
+			log.Fatalf("[LORA] Line %d: Error decoding JSON: %v", lineCount, err)
 		}
 
-		// Convert hex data to base64 format.
 		err = data.ConvertHexToBase64()
 		if err != nil {
-			log.Fatalf("> %d\nError converting hex to base64: %v\n", lineCount, err)
+			log.Fatalf("[LORA] Line %d: Error converting hex to Base64: %v", lineCount, err)
 		}
 
-		// Send the data to the remote API.
 		err = sendDataToAPI(data)
 		if err != nil {
-			log.Printf("> %d\nError sending data to API: %v\n", lineCount, err)
-			// Optionally handle the error, e.g., retry or log
+			log.Printf("[LORA] Line %d: Error sending data: %v", lineCount, err)
+		} else {
+			log.Printf("[LORA] Line %d: Data sent successfully: %+v", lineCount, data)
 		}
 
-		fmt.Printf("----------------------\nDecoded and sent data: %+v\n", data)
-		lineCount++
+		fmt.Println("")
 
-		time.Sleep(time.Second * 1) // Throttle the rate of data processing.
+		lineCount++
+		time.Sleep(time.Second) // Simulate throttling
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatalf("Error reading file: %v", err)
+		log.Fatalf("[LORA] Error reading file: %v", err)
 	}
 }
 
-// sendDataToAPI sends the LoraData to the specified endpoint via HTTP POST.
+// sendDataToAPI sends the LoRa data to an API via HTTP POST.
 func sendDataToAPI(data LoraData) error {
 	url := "http://localhost:8080/api/lora/chirpstack"
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("error marshalling data to JSON: %v", err)
+		return fmt.Errorf("[LORA] Error marshalling data to JSON: %v", err)
 	}
 
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		return fmt.Errorf("error sending POST request: %v", err)
+		return fmt.Errorf("[LORA] Error sending POST request: %v", err)
 	}
 	defer resp.Body.Close()
-
-	// Optionally, read and log the response body
-	// responseBody, err := ioutil.ReadAll(resp.Body)
-	// if err != nil {
-	//     return fmt.Errorf("error reading response body: %v", err)
-	// }
-	// fmt.Printf("Received response: %s\n", responseBody)
 
 	return nil
 }

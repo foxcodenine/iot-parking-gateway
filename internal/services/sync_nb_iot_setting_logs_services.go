@@ -3,6 +3,7 @@ package services
 import (
 	"sort"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 )
 
@@ -11,14 +12,14 @@ func (s *Service) SyncNBIoTSettingLogs() {
 	items, err := s.cache.LRangeAndDelete("logs:nb-setting-logs")
 	if err != nil {
 		// Log error if Redis operations fail.
-		s.errorLog.Printf("Error retrieving nb-setting-logs from Redis: %v", err)
+		helpers.LogError(err, "Error retrieving nb-setting-logs from Redis")
 		return
 	}
 
 	// Process items and convert them to NbiotSettingLogs.
 	nbIotSettingLogs, nbIotDeviceSetting, err := s.ProcessNBIoTSettingLogs(items)
 	if err != nil {
-		s.errorLog.Printf("Error processing NB-IoT setting logs: %v", err)
+		helpers.LogError(err, "Error processing NB-IoT setting logs")
 	}
 
 	// Track errors independently for the two operations.
@@ -28,9 +29,9 @@ func (s *Service) SyncNBIoTSettingLogs() {
 	if len(nbIotSettingLogs) > 0 {
 		settingLogsError = s.models.NbiotSettingLog.BulkInsert(nbIotSettingLogs)
 		if settingLogsError != nil {
-			s.errorLog.Printf("Failed to insert nbiot_settings_logs to PostgreSQL: %v", settingLogsError)
+			helpers.LogError(settingLogsError, "Failed to insert nbiot_settings_logs to PostgreSQL")
 		} else {
-			s.infoLog.Printf("Successfully inserted %d nbiot_settings_logs in PostgreSQL", len(nbIotSettingLogs))
+			helpers.LogInfo("Successfully inserted %d nbiot_settings_logs in PostgreSQL", len(nbIotSettingLogs))
 		}
 	}
 
@@ -38,15 +39,15 @@ func (s *Service) SyncNBIoTSettingLogs() {
 	if len(nbIotDeviceSetting) > 0 {
 		deviceSettingsError = s.models.NbiotDeviceSettings.BulkUpdate(nbIotDeviceSetting)
 		if deviceSettingsError != nil {
-			s.errorLog.Printf("Failed to update nbiot_device_settings in PostgreSQL: %v", deviceSettingsError)
+			helpers.LogError(deviceSettingsError, "Failed to update nbiot_device_settings in PostgreSQL")
 		} else {
-			s.infoLog.Printf("Successfully updated %d nbiot_device_settings in PostgreSQL", len(nbIotDeviceSetting))
+			helpers.LogInfo("Successfully updated %d nbiot_device_settings in PostgreSQL", len(nbIotDeviceSetting))
 		}
 	}
 
 	// If both operations failed, log an overarching error.
 	if settingLogsError != nil && deviceSettingsError != nil {
-		s.errorLog.Printf("Both nbiot_settings_logs and nbiot_device_settings operations failed")
+		helpers.LogError(nil, "Both nbiot_settings_logs and nbiot_device_settings operations failed")
 	}
 }
 
@@ -62,7 +63,7 @@ func (s *Service) ProcessNBIoTSettingLogs(items []any) ([]models.NbiotSettingLog
 		itemMap, ok := item.(map[string]any)
 		if !ok {
 			// Log the error but continue processing other items.
-			s.errorLog.Println("Invalid item type: expected map[string]any")
+			helpers.LogError(nil, "Invalid item type: expected map[string]any")
 			continue
 		}
 
@@ -70,7 +71,7 @@ func (s *Service) ProcessNBIoTSettingLogs(items []any) ([]models.NbiotSettingLog
 		settingLog, err := models.NewNbiotSettingLog(itemMap)
 		if err != nil {
 			// Log the conversion error but continue processing other items.
-			s.errorLog.Printf("Error converting item to NbiotSettingLog: %v", err)
+			helpers.LogError(err, "Error converting item to NbiotSettingLog")
 			continue
 		}
 

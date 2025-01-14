@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/gob"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -90,18 +91,16 @@ func main() {
 func initializeAppConfig() {
 	time.Sleep(time.Millisecond * 10)
 
-	// Load InfoLog and ErrorLog
-	app.InfoLog = helpers.GetInfoLog()
-	app.ErrorLog = helpers.GetErrorLog()
-	app.FatalLog = helpers.GetFatalLog()
-
 	var deviceAccessMode = os.Getenv("DEVICE_ACCESS_MODE")
 	app.DeviceAccessMode = &deviceAccessMode
 
 	// Load environment and configuration
 	if err := loadEnv(); err != nil {
-		app.ErrorLog.Fatalf("Error loading environment variables: %v\n", err)
+		log.Fatalf("Error loading environment variables \n%v", err)
 	}
+	helpers.ConfigLogger()
+	helpers.LogInfo("App running in environment: %s\n", os.Getenv("GO_ENV"))
+
 	app.AppURL = os.Getenv("APP_URL")
 	app.HttpPort = os.Getenv("HTTP_PORT")
 
@@ -111,9 +110,9 @@ func initializeAppConfig() {
 	// Initialize a Redis connection pool
 	redisPool, err := cache.CreateRedisPool()
 	if err != nil {
-		app.ErrorLog.Fatalf("Failed to connect to Redis: %v\n", err)
+		helpers.LogFatal(err, "Failed to connect to Redis")
 	} else {
-		app.InfoLog.Printf("Successfully connected to Redis on :%s", os.Getenv("REDIS_PORT"))
+		helpers.LogInfo("Successfully connected to Redis on :%s", os.Getenv("REDIS_PORT"))
 	}
 
 	// Assign Redis cache instance to the app configuration
@@ -123,8 +122,6 @@ func initializeAppConfig() {
 	app.Service = services.NewService(
 		app.Models,
 		app.Cache,
-		app.InfoLog,
-		app.ErrorLog,
 	)
 
 	// Setup RabbitMQ Producer
@@ -166,8 +163,6 @@ func loadEnv() error {
 	if err != nil {
 		return fmt.Errorf("failed to set new JWT secret key in environment. \n%w", err)
 	}
-
-	app.InfoLog.Printf("App running in environment: %s\n", os.Getenv("GO_ENV"))
 	return nil
 }
 
@@ -177,14 +172,14 @@ func initializeDatabase() {
 	// Initialize database connection
 	database, err := db.OpenDB()
 	if err != nil {
-		app.ErrorLog.Fatalf("Error connecting to the database: %v", err)
+		helpers.LogFatal(err, "Error connecting to the database")
 	}
 	// Assign the database connection to the app configuration
 	app.DB = database
 
 	app.Models, err = models.New(database)
 	if err != nil {
-		app.ErrorLog.Fatalf("Error initializing models: %v", err)
+		helpers.LogFatal(err, "Error initializing models")
 	}
 }
 
@@ -234,5 +229,5 @@ func initializeRootUser() {
 		}
 	}
 
-	app.InfoLog.Println("Root user created or updated and cached successfully")
+	helpers.LogInfo("Root user created or updated and cached successfully")
 }

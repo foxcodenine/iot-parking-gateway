@@ -3,6 +3,7 @@ package services
 import (
 	"sort"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 )
 
@@ -11,14 +12,14 @@ func (s *Service) SyncLoraSettingLogs() {
 	items, err := s.cache.LRangeAndDelete("logs:lora-setting-logs")
 	if err != nil {
 		// Log error if Redis operations fail.
-		s.errorLog.Printf("Error retrieving lora-setting-logs from Redis: %v", err)
+		helpers.LogError(err, "Error retrieving lora-setting-logs from Redis")
 		return
 	}
 
 	// Process items and convert them to loraSettingLogs.
 	loraSettingLogs, loraDeviceSetting, err := s.ProcessLoraSettingLogs(items)
 	if err != nil {
-		s.errorLog.Printf("Error processing NB-IoT setting logs: %v", err)
+		helpers.LogError(err, "Error processing NB-IoT setting logs")
 	}
 
 	// Track errors independently for the two operations.
@@ -28,9 +29,9 @@ func (s *Service) SyncLoraSettingLogs() {
 	if len(loraSettingLogs) > 0 {
 		settingLogsError = s.models.LoraSettingLog.BulkInsert(loraSettingLogs)
 		if settingLogsError != nil {
-			s.errorLog.Printf("Failed to insert lora_settings_logs to PostgreSQL: %v", settingLogsError)
+			helpers.LogError(settingLogsError, "Failed to insert lora_settings_logs to PostgreSQL")
 		} else {
-			s.infoLog.Printf("Successfully inserted %d lora_settings_logs in PostgreSQL", len(loraSettingLogs))
+			helpers.LogInfo("Successfully inserted %d lora_settings_logs in PostgreSQL", len(loraSettingLogs))
 		}
 	}
 
@@ -38,15 +39,15 @@ func (s *Service) SyncLoraSettingLogs() {
 	if len(loraDeviceSetting) > 0 {
 		deviceSettingsError = s.models.LoraDeviceSettings.BulkUpdate(loraDeviceSetting)
 		if deviceSettingsError != nil {
-			s.errorLog.Printf("Failed to update lora_device_settings in PostgreSQL: %v", deviceSettingsError)
+			helpers.LogError(err, "Failed to update lora_device_settings in PostgreSQL")
 		} else {
-			s.infoLog.Printf("Successfully updated %d lora_device_settings in PostgreSQL", len(loraDeviceSetting))
+			helpers.LogInfo("Successfully updated %d lora_device_settings in PostgreSQL", len(loraDeviceSetting))
 		}
 	}
 
 	// If both operations failed, log an overarching error.
 	if settingLogsError != nil && deviceSettingsError != nil {
-		s.errorLog.Printf("Both lora_settings_logs and lora_device_settings operations failed")
+		helpers.LogError(nil, "Both lora_settings_logs and lora_device_settings operations failed")
 	}
 }
 
@@ -62,7 +63,7 @@ func (s *Service) ProcessLoraSettingLogs(items []any) ([]models.LoraSettingLog, 
 		itemMap, ok := item.(map[string]any)
 		if !ok {
 			// Log the error but continue processing other items.
-			s.errorLog.Println("Invalid item type: expected map[string]any")
+			helpers.LogError(nil, "Invalid item type: expected map[string]any")
 			continue
 		}
 
@@ -70,7 +71,7 @@ func (s *Service) ProcessLoraSettingLogs(items []any) ([]models.LoraSettingLog, 
 		settingLog, err := models.NewLoraSettingLog(itemMap)
 		if err != nil {
 			// Log the conversion error but continue processing other items.
-			s.errorLog.Printf("Error converting item to LoraSettingLog: %v", err)
+			helpers.LogError(err, "Error converting item to LoraSettingLog")
 			continue
 		}
 

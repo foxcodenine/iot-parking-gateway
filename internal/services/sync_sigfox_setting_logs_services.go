@@ -3,6 +3,7 @@ package services
 import (
 	"sort"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/foxcodenine/iot-parking-gateway/internal/models"
 )
 
@@ -11,14 +12,14 @@ func (s *Service) SyncSigfoxSettingLogs() {
 	items, err := s.cache.LRangeAndDelete("logs:sigfox-setting-logs")
 	if err != nil {
 		// Log error if Redis operations fail.
-		s.errorLog.Printf("Error retrieving sigfox-setting-logs from Redis: %v", err)
+		helpers.LogError(err, "Error retrieving sigfox-setting-logs from Redis")
 		return
 	}
 
 	// Process items and convert them to sigfoxSettingLogs.
 	sigfoxSettingLogs, sigfoxDeviceSetting, err := s.ProcessSigfoxSettingLogs(items)
 	if err != nil {
-		s.errorLog.Printf("Error processing NB-IoT setting logs: %v", err)
+		helpers.LogError(err, "Error processing NB-IoT setting logs")
 	}
 
 	// Track errors independently for the two operations.
@@ -28,9 +29,9 @@ func (s *Service) SyncSigfoxSettingLogs() {
 	if len(sigfoxSettingLogs) > 0 {
 		settingLogsError = s.models.SigfoxSettingLog.BulkInsert(sigfoxSettingLogs)
 		if settingLogsError != nil {
-			s.errorLog.Printf("Failed to insert sigfox_settings_logs to PostgreSQL: %v", settingLogsError)
+			helpers.LogError(settingLogsError, "Failed to insert sigfox_settings_logs to PostgreSQL")
 		} else {
-			s.infoLog.Printf("Successfully inserted %d sigfox_settings_logs in PostgreSQL", len(sigfoxSettingLogs))
+			helpers.LogInfo("Successfully inserted %d sigfox_settings_logs in PostgreSQL", len(sigfoxSettingLogs))
 		}
 	}
 
@@ -38,15 +39,15 @@ func (s *Service) SyncSigfoxSettingLogs() {
 	if len(sigfoxDeviceSetting) > 0 {
 		deviceSettingsError = s.models.SigfoxDeviceSettings.BulkUpdate(sigfoxDeviceSetting)
 		if deviceSettingsError != nil {
-			s.errorLog.Printf("Failed to update sigfox_device_settings in PostgreSQL: %v", deviceSettingsError)
+			helpers.LogError(deviceSettingsError, "Failed to update sigfox_device_settings in PostgreSQL")
 		} else {
-			s.infoLog.Printf("Successfully updated %d sigfox_device_settings in PostgreSQL", len(sigfoxDeviceSetting))
+			helpers.LogInfo("Successfully updated %d sigfox_device_settings in PostgreSQL", len(sigfoxDeviceSetting))
 		}
 	}
 
 	// If both operations failed, log an overarching error.
 	if settingLogsError != nil && deviceSettingsError != nil {
-		s.errorLog.Printf("Both sigfox_settings_logs and sigfox_device_settings operations failed")
+		helpers.LogError(nil, "Both sigfox_settings_logs and sigfox_device_settings operations failed")
 	}
 }
 
@@ -62,7 +63,7 @@ func (s *Service) ProcessSigfoxSettingLogs(items []any) ([]models.SigfoxSettingL
 		itemMap, ok := item.(map[string]any)
 		if !ok {
 			// Log the error but continue processing other items.
-			s.errorLog.Println("Invalid item type: expected map[string]any")
+			helpers.LogInfo("Invalid item type: expected map[string]any")
 			continue
 		}
 
@@ -70,7 +71,7 @@ func (s *Service) ProcessSigfoxSettingLogs(items []any) ([]models.SigfoxSettingL
 		settingLog, err := models.NewSigfoxSettingLog(itemMap)
 		if err != nil {
 			// Log the conversion error but continue processing other items.
-			s.errorLog.Printf("Error converting item to SigfoxSettingLog: %v", err)
+			helpers.LogError(err, "Error converting item to SigfoxSettingLog")
 			continue
 		}
 

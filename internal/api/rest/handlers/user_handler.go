@@ -70,7 +70,7 @@ func (u *UserHandler) Store(w http.ResponseWriter, r *http.Request) {
 
 	userData, err := app.GetUserFromContext(r.Context())
 	if err != nil {
-		app.ErrorLog.Printf("Authentication error: %v", err)
+		helpers.LogError(err, "Authentication error")
 		http.Error(w, "Authentication error.", http.StatusUnauthorized)
 		return
 	}
@@ -165,7 +165,7 @@ func (u *UserHandler) Store(w http.ResponseWriter, r *http.Request) {
 func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	userData, err := app.GetUserFromContext(r.Context())
 	if err != nil {
-		app.ErrorLog.Printf("Authentication error: %v", err)
+		helpers.LogError(err, "Authentication error")
 		http.Error(w, "Authentication error.", http.StatusUnauthorized)
 		return
 	}
@@ -279,7 +279,7 @@ func (u *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 func (u *UserHandler) Destroy(w http.ResponseWriter, r *http.Request) {
 	userData, err := app.GetUserFromContext(r.Context())
 	if err != nil {
-		app.ErrorLog.Printf("Authentication error: %v", err)
+		helpers.LogError(err, "Authentication error")
 		http.Error(w, "Authentication error.", http.StatusUnauthorized)
 		return
 	}

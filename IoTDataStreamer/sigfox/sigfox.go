@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-// import necessary standard and third-party packages
+// SigfoxData defines the structure for incoming Sigfox data.
 type SigfoxData struct {
 	Timestamp int64  `json:"timestamp"`
 	Device    string `json:"device"`
@@ -22,21 +22,21 @@ type SigfoxData struct {
 	Data      string `json:"data"`
 }
 
-// ConvertHexToBase64 converts the Data field from a hex string to a base64 string.
+// ConvertHexToBase64 converts the data from hex to Base64 format.
 func (sd *SigfoxData) ConvertHexToBase64() error {
-	bytes, err := hex.DecodeString(sd.Data)
+	decoded, err := hex.DecodeString(sd.Data)
 	if err != nil {
-		return fmt.Errorf("error decoding hex: %v", err)
+		return fmt.Errorf("[SIGFOX] Error decoding hex: %v", err)
 	}
-	sd.Data = base64.StdEncoding.EncodeToString(bytes)
+	sd.Data = base64.StdEncoding.EncodeToString(decoded)
 	return nil
 }
 
-// Run initiates the process of reading, processing, and sending data to an API.
+// Run processes data from a file and sends it to an API.
 func Run() {
 	file, err := os.Open("sigfox_raw_data.txt")
 	if err != nil {
-		log.Fatalf("Failed to open file: %v", err)
+		log.Fatalf("[SIGFOX] Failed to open file: %v", err)
 	}
 	defer file.Close()
 
@@ -44,54 +44,50 @@ func Run() {
 	var lineCount int
 
 	for scanner.Scan() {
-		line := scanner.Text()
-		line = strings.Trim(line, `"`) // Clean the line from surrounding double quotes.
-
+		line := strings.Trim(scanner.Text(), `"`)
 		var data SigfoxData
+
 		err := json.Unmarshal([]byte(line), &data)
 		if err != nil {
-			log.Fatalf("> %d\nError decoding JSON: %v\n", lineCount, err)
+			log.Fatalf("[SIGFOX] Line %d: Error decoding JSON: %v", lineCount, err)
 		}
 
-		// Convert hex data to base64 format.
 		err = data.ConvertHexToBase64()
 		if err != nil {
-			log.Fatalf("> %d\nError converting hex to base64: %v\n", lineCount, err)
+			log.Fatalf("[SIGFOX] Line %d: Error converting hex to Base64: %v", lineCount, err)
 		}
 
-		fmt.Printf("----------------------\nDecoded and sent data: %+v\n", data)
-		lineCount++
+		err = sendDataToAPI(data)
+		if err != nil {
+			log.Printf("[SIGFOX] Line %d: Error sending data: %v", lineCount, err)
+		} else {
+			log.Printf("[SIGFOX] Line %d: Data sent successfully: %+v", lineCount, data)
+		}
 
-		time.Sleep(time.Second * 1) // Throttle the rate of data processing.
+		fmt.Println("")
+
+		lineCount++
+		time.Sleep(time.Second) // Simulate throttling
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatalf("Error reading file: %v", err)
+		log.Fatalf("[SIGFOX] Error reading file: %v", err)
 	}
 }
 
-// {"timestamp":1735373204,"device":"034D35AE","seq_number":"186","data":"PAoBABcgTgA="}
-
-// sendDataToAPI sends the SigfoxData to the specified endpoint via HTTP POST.
+// sendDataToAPI sends the Sigfox data to an API via HTTP POST.
 func sendDataToAPI(data SigfoxData) error {
 	url := "http://localhost:8080/api/sigfox"
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return fmt.Errorf("error marshalling data to JSON: %v", err)
+		return fmt.Errorf("[SIGFOX] Error marshalling data to JSON: %v", err)
 	}
 
 	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		return fmt.Errorf("error sending POST request: %v", err)
+		return fmt.Errorf("[SIGFOX] Error sending POST request: %v", err)
 	}
 	defer resp.Body.Close()
-
-	// Optionally, read and log the response body
-	// responseBody, err := ioutil.ReadAll(resp.Body)
-	// if err != nil {
-	//     return fmt.Errorf("error reading response body: %v", err)
-	// }
-	// fmt.Printf("Received response: %s\n", responseBody)
 
 	return nil
 }

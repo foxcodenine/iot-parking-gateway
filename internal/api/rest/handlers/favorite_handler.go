@@ -16,7 +16,7 @@ func (h *FavoriteHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	userData, err := app.GetUserFromContext(r.Context())
 	if err != nil {
-		app.ErrorLog.Printf("Authentication error: %v", err)
+		helpers.LogError(err, "Authentication error")
 		http.Error(w, "Authentication error.", http.StatusUnauthorized)
 		return
 	}
