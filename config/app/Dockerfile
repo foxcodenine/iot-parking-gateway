@@ -41,6 +41,12 @@ COPY --from=builder /app/dist ./dist
 # Make sure the script is executable
 RUN chmod +x wait-for.sh
 
+# Copy the shared setup script
+COPY scripts/copy-shared.sh ./copy-shared.sh
+
+# Make it executable
+RUN chmod +x copy-shared.sh
+
 # Expose the port your app runs on
 EXPOSE 8080
 
@@ -49,4 +55,4 @@ EXPOSE 8080
 
 # RUN rm /app/internal/core/core.go
 
-CMD ["./wait-for.sh", "postgres:5432", "--", "./server"]
+CMD ["./copy-shared.sh", "./wait-for.sh", "postgres:5432", "--", "./server"]
