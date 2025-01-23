@@ -9,8 +9,8 @@ services:
     ports:
       - "${HTTP_PORT_EX}:${HTTP_PORT}"   
       - "${UDP_PORT_EX}:${UDP_PORT}/udp"  
-    # volumes:
-    #   - ./shared/public:/root/dist/public/  
+    volumes:
+      - ./shared/public:/root/dist/public/  
     depends_on:
       - postgres
       - redis
@@ -75,6 +75,7 @@ services:
     volumes:
       # Mount initialization scripts for setting up schema and tables
       - ./initdb-scripts:/docker-entrypoint-initdb.d
+      
       # - postgres-data:/var/lib/postgresql/data  # (production) - Persistent data storage for production 
       - /srv/docker/bind-mounts/iot-parking-gateway/postgres-data/:/var/lib/postgresql/data/  # (development only) - Bind mount for dev, enables direct file access on host
     networks:
