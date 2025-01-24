@@ -11,6 +11,7 @@ services:
       - "${UDP_PORT_EX}:${UDP_PORT}/udp"  
     volumes:
       - ./shared/public:/root/dist/public/  
+      - ./shared/logs:/root/dist/logs/  
     depends_on:
       - postgres
       - redis
@@ -23,6 +24,8 @@ services:
       - APP_URL=${APP_URL}
       - DEBUG=${DEBUG}
       - GO_ENV=${GO_ENV}
+      - INFO_LOG_MODE=${INFO_LOG_MODE}
+      - ERROR_LOG_MODE=${ERROR_LOG_MODE}
 
       # Application Ports 
       - HTTP_PORT=${HTTP_PORT}

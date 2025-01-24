@@ -47,7 +47,7 @@ func (s *UDPServer) Start() {
 	if err != nil {
 		helpers.LogFatal(err, "Failed to start UDP server")
 	}
-	helpers.LogInfo("UDP server started on %s\n", s.Addr)
+	helpers.LogInfo("UDP server started on %s", s.Addr)
 
 	go s.listen() // Start listening in a goroutine
 

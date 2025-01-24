@@ -75,8 +75,6 @@ func Run() {
 			log.Printf("[LORA] Line %d: Data sent successfully: %+v", lineCount, data)
 		}
 
-		fmt.Println("")
-
 		lineCount++
 		time.Sleep(time.Second) // Simulate throttling
 	}

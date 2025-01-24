@@ -39,9 +39,13 @@ func WrapError(err error) error {
 		return fmt.Errorf("%w", err)
 	}
 
-	// Use color to make file and line number red
-	red := color.New(color.FgRed).SprintFunc()
-	fileLineInfo := red(fmt.Sprintf("[%s:%d]", file, line))
+	fileLineInfo := fmt.Sprintf("[%s:%d]", file, line)
+
+	if os.Getenv("ERROR_LOG_MODE") != "file" {
+		// Use color to make file and line number red
+		red := color.New(color.FgRed).SprintFunc()
+		fileLineInfo = red(fmt.Sprintf("[%s:%d]", file, line))
+	}
 
 	return fmt.Errorf("%s: %w", fileLineInfo, err)
 }

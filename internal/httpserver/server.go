@@ -81,7 +81,7 @@ func NewHttpServer(port string) *Server {
 // Start begins running the HTTP server in a separate goroutine to allow it to listen for incoming requests without blocking the main thread.
 func (s *Server) Start() {
 	go func() {
-		helpers.LogInfo("HTTP server starting on %s\n", s.HTTPServer.Addr)
+		helpers.LogInfo("HTTP server starting on %s", s.HTTPServer.Addr)
 		if err := s.HTTPServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			helpers.LogError(err, "Error starting the server: %v\n")
 		}

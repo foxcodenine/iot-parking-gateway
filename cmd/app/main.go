@@ -99,7 +99,7 @@ func initializeAppConfig() {
 		log.Fatalf("Error loading environment variables \n%v", err)
 	}
 	helpers.ConfigLogger()
-	helpers.LogInfo("App running in environment: %s\n", os.Getenv("GO_ENV"))
+	helpers.LogInfo("App running in environment: %s", os.Getenv("GO_ENV"))
 
 	app.AppURL = os.Getenv("APP_URL")
 	app.HttpPort = os.Getenv("HTTP_PORT")

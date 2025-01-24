@@ -205,8 +205,6 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 
 	default:
 
-		fmt.Printf("%f", firmwareVersion)
-
 		response := map[string]interface{}{
 			"status":  "unsupported_firmware",
 			"message": fmt.Sprintf("Device %s has an unsupported firmware version:  %.2f. Request ignored.", deviceID, firmwareVersion),

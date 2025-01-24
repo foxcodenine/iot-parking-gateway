@@ -164,16 +164,16 @@ func (d *Device) Create(newDevice *Device) (*Device, error) {
 	}
 
 	if _, ok := deviceData["keepalive_at"]; !ok {
-		fmt.Println(ok)
+
 		deviceData["keepalive_at"] = "0001-01-01T00:00:00Z"
 	}
 
 	if _, ok := deviceData["settings_at"]; !ok {
-		fmt.Println(ok)
+
 		deviceData["settings_at"] = "0001-01-01T00:00:00Z"
 	}
 	if _, ok := deviceData["happened_at"]; !ok {
-		fmt.Println(ok)
+
 		deviceData["happened_at"] = "0001-01-01T00:00:00Z"
 	}
 
@@ -241,19 +241,17 @@ func (d *Device) Upsert(device *Device) (*Device, error) {
 		return nil, fmt.Errorf("failed to convert device data: %w", err)
 	}
 
-	fmt.Println(deviceData)
-
 	if _, ok := deviceData["keepalive_at"]; !ok {
-		fmt.Println(ok)
+
 		deviceData["keepalive_at"] = "0001-01-01T00:00:00Z"
 	}
 
 	if _, ok := deviceData["settings_at"]; !ok {
-		fmt.Println(ok)
+
 		deviceData["settings_at"] = "0001-01-01T00:00:00Z"
 	}
 	if _, ok := deviceData["happened_at"]; !ok {
-		fmt.Println(ok)
+
 		deviceData["happened_at"] = "0001-01-01T00:00:00Z"
 	}
 

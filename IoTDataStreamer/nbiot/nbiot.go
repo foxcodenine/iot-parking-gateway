@@ -39,7 +39,7 @@ func Run() {
 		} else {
 			log.Printf("[NBIOT] Line %d: Data sent successfully", lineCount)
 		}
-		fmt.Println("")
+
 		lineCount++
 	}
 
