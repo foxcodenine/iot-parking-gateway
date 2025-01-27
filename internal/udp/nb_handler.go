@@ -2,8 +2,6 @@ package udp
 
 import (
 	"bytes"
-	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -28,17 +26,26 @@ func (s *UDPServer) nbMessageHandler(conn *net.UDPConn, data []byte, addr *net.U
 	reply = append(reply, hexTimestamp)
 
 	// -----------------------------------------------------------------
+	// try 01
 	// Convert data to a string and trim any newlines
 	// hexStr := string(bytes.TrimSpace(data))
 	// -----------------------------------------------------------------
-	base64Str := string(bytes.TrimSpace(data))
-	bufferBase64, err := base64.StdEncoding.DecodeString(base64Str)
-	if err != nil {
-		handleErrorSendResponse(err, "Error decoding base64", conn, addr, reply)
-		return
+	// try 02
+	// base64Str := string(bytes.TrimSpace(data))
+	// bufferBase64, err := base64.StdEncoding.DecodeString(base64Str)
+	// if err != nil {
+	// 	handleErrorSendResponse(err, "Error decoding base64", conn, addr, reply)
+	// 	return
+	// }
+	// // Convert the decoded bytes to a hex string
+	// hexStr := hex.EncodeToString(bufferBase64)
+	// -----------------------------------------------------------------
+	// try 03
+	var builder bytes.Buffer
+	for _, b := range data {
+		builder.WriteString(fmt.Sprintf("%02x", b))
 	}
-	// Convert the decoded bytes to a hex string
-	hexStr := hex.EncodeToString(bufferBase64)
+	hexStr := builder.String()
 	// -----------------------------------------------------------------
 
 	// Validate minimum hex string length
