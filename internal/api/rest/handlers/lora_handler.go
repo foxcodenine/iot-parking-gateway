@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/foxcodenine/iot-parking-gateway/internal/api/rest/validations"
 	"github.com/foxcodenine/iot-parking-gateway/internal/cache"
 	lorafw "github.com/foxcodenine/iot-parking-gateway/internal/firmware/lora_fw"
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
@@ -23,6 +24,19 @@ type LoraHandler struct {
 }
 
 func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
+
+	// Validate the 'event' query parameter
+	if err := validations.ValidateEventUpQueryParam(r); err != nil {
+		response := map[string]interface{}{
+			"status":  "error",
+			"message": err.Error(),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
 	type DeviceInfo struct {
 		TenantId          string `json:"tenantId"`
 		TenantName        string `json:"tenantName"`
