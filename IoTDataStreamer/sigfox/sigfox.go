@@ -52,10 +52,10 @@ func Run() {
 			log.Fatalf("[SIGFOX] Line %d: Error decoding JSON: %v", lineCount, err)
 		}
 
-		err = data.ConvertHexToBase64()
-		if err != nil {
-			log.Fatalf("[SIGFOX] Line %d: Error converting hex to Base64: %v", lineCount, err)
-		}
+		// err = data.ConvertHexToBase64()
+		// if err != nil {
+		// 	log.Fatalf("[SIGFOX] Line %d: Error converting hex to Base64: %v", lineCount, err)
+		// }
 
 		err = sendDataToAPI(data)
 		if err != nil {

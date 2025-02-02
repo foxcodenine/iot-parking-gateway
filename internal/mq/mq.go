@@ -11,26 +11,28 @@ import (
 type RabbitConfig struct {
 	URL            string
 	ReconnectDelay time.Duration
-	Queues         map[string]QueueConfig // Map of queues by name
+	Queues         map[string]Queue
+	Exchanges      map[string]Exchange
+	RoutingKey     map[string]Bind
 }
 
-func (r *RabbitConfig) GetAllExchanges() []Exchange {
-	exchangeMap := make(map[string]Exchange)
-	for _, queueConfig := range r.Queues {
-		for _, exchange := range queueConfig.Exchanges {
-			// Use exchange name as key to ensure uniqueness
-			exchangeMap[exchange.Name] = exchange
-		}
-	}
+// func (r *RabbitConfig) GetAllExchanges() []Exchange {
+// 	exchangeMap := make(map[string]Exchange)
+// 	for _, queueConfig := range r.Queues {
+// 		for _, exchange := range queueConfig.Exchanges {
+// 			// Use exchange name as key to ensure uniqueness
+// 			exchangeMap[exchange.Name] = exchange
+// 		}
+// 	}
 
-	// Convert the map to a slice
-	exchanges := make([]Exchange, 0, len(exchangeMap))
-	for _, exchange := range exchangeMap {
-		exchanges = append(exchanges, exchange)
-	}
+// 	// Convert the map to a slice
+// 	exchanges := make([]Exchange, 0, len(exchangeMap))
+// 	for _, exchange := range exchangeMap {
+// 		exchanges = append(exchanges, exchange)
+// 	}
 
-	return exchanges
-}
+// 	return exchanges
+// }
 
 type QueueConfig struct {
 	Name       string
@@ -40,8 +42,38 @@ type QueueConfig struct {
 }
 
 type Exchange struct {
-	Name string
-	Type string // "direct" or "fanout"
+	Name    string
+	Type    string // "direct" or "fanout"
+	Durable bool
+}
+
+type Queue struct {
+	Name    string
+	Durable bool
+}
+
+type Bind struct {
+	Exchange string
+	Queue    string
+}
+
+var Queues = map[string]Queue{
+	"event_logs": {
+		Name:    "event_logs",
+		Durable: true,
+	},
+	"thingsboard_event_logs": {
+		Name:    "thingsboard_event_logs",
+		Durable: true,
+	},
+}
+
+var Excanges = map[string]Exchange{
+	"event_logs": {
+		Name:    "event_logs",
+		Type:    "fanout",
+		Durable: true,
+	},
 }
 
 func SetupRabbitMQConfig() RabbitConfig {
@@ -58,23 +90,18 @@ func SetupRabbitMQConfig() RabbitConfig {
 	return RabbitConfig{
 		URL:            urlStr,
 		ReconnectDelay: 10 * time.Second,
-		Queues: map[string]QueueConfig{
 
-			"event_logs_queue": {
-				Name:       "event_logs_queue",
-				RoutingKey: "event_logs",
-				Durable:    true,
-				Exchanges: []Exchange{
-					{Name: "event_logs_exchange", Type: "fanout"},
-				},
+		Queues:    Queues,
+		Exchanges: Excanges,
+
+		RoutingKey: map[string]Bind{
+			"event_logs": {
+				Exchange: "event_logs",
+				Queue:    "event_logs",
 			},
-			"thingboard_logs_queue": {
-				Name:       "thingboard_logs_queue",
-				RoutingKey: "thingboard_logs",
-				Durable:    true,
-				Exchanges: []Exchange{
-					{Name: "event_logs_exchange", Type: "fanout"},
-				},
+			"thingsboard_event_logs": {
+				Exchange: "event_logs",
+				Queue:    "thingsboard_event_logs",
 			},
 		},
 	}

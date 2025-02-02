@@ -1,7 +1,6 @@
 package mq
 
 import (
-	"errors"
 	"fmt"
 
 	"time"
@@ -72,30 +71,29 @@ func (p *RabbitMQProducer) connect() bool {
 }
 
 func (p *RabbitMQProducer) setupExchangesAndQueues() error {
-	// Declare Exchanges
-	for _, exchange := range p.config.Exchanges {
-		err := p.channel.ExchangeDeclare(exchange.Name, exchange.Type, exchange.Durable, false, false, false, nil)
-		if err != nil {
+	// Declare exchanges
+	for _, exchange := range p.config.GetAllExchanges() {
+		if err := p.channel.ExchangeDeclare(
+			exchange.Name, exchange.Type, true, false, false, false, nil); err != nil {
 			return err
 		}
 	}
 
-	// Declare Queues
+	// Declare and bind queues
 	for _, queue := range p.config.Queues {
-		_, err := p.channel.QueueDeclare(queue.Name, queue.Durable, false, false, false, nil)
-		if err != nil {
+		if _, err := p.channel.QueueDeclare(queue.Name, queue.Durable, false, false, false, nil); err != nil {
 			return err
 		}
-	}
-
-	// Ending Queses to Excahnges
-	for routingKey, bind := range p.config.RoutingKey {
-		err := p.channel.QueueBind(bind.Queue, routingKey, bind.Exchange, false, nil)
-		if err != nil {
-			return err
+		for _, exchange := range queue.Exchanges {
+			routingKey := queue.RoutingKey
+			if exchange.Type == "fanout" {
+				routingKey = "" // No routing key needed for fanout exchanges
+			}
+			if err := p.channel.QueueBind(queue.Name, routingKey, exchange.Name, false, nil); err != nil {
+				return err
+			}
 		}
 	}
-
 	return nil
 }
 
@@ -119,71 +117,32 @@ func (p *RabbitMQProducer) monitorConnection() {
 	}()
 }
 
-func (p *RabbitMQProducer) SendMessageToExchange(exchangeName, message string) {
-	exchange, ok := p.config.Exchanges[exchangeName]
-	if !ok {
-		helpers.LogError(
-			errors.New("exchange not found"),
-			fmt.Sprintf("Exchange '%s' does not exist", exchangeName),
-		)
-		return
+// sendMessage sends a message to a specified queue using a direct exchange
+func (p *RabbitMQProducer) SendMessage(exchangeName, queueName, message string) {
+
+	var routingKey string = ""
+	if queueName != "" {
+
+		queueConfig, exists := p.config.Queues[queueName]
+		if !exists {
+			helpers.LogInfo("Queue configuration not found for %s", queueName)
+			return
+		}
+		routingKey = queueConfig.RoutingKey
 	}
 
-	err := p.channel.Publish(
-		exchange.Name, // exchange name to publish to
-		"",            // routing key (empty if not needed)
-		false,         // mandatory
-		false,         // immediate
+	if err := p.channel.Publish(
+		exchangeName, // exchange
+		routingKey,   // routing key
+		false,        // mandatory
+		false,        // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        []byte(message),
 			MessageId:   uuid.NewString(),
 		},
-	)
-
-	if err != nil {
-		helpers.LogError(
-			err,
-			fmt.Sprintf("Failed to publish message to exchange '%s'", exchangeName),
-		)
-	}
-}
-
-func (p *RabbitMQProducer) SendMessage(routingKeyName, exchangeName, message string) {
-	routingKey, ok := p.config.RoutingKey[routingKeyName]
-	if !ok {
-		helpers.LogError(
-			errors.New("routingKey not found"),
-			fmt.Sprintf("Routing key '%s' does not exist", routingKeyName),
-		)
-		return
-	}
-	if routingKey.Exchange != exchangeName {
-		helpers.LogError(
-			errors.New("exchange mismatch"),
-			fmt.Sprintf("Routing key '%s' is configured for exchange '%s', but received exchange '%s'",
-				routingKeyName, routingKey.Exchange, exchangeName),
-		)
-		return
-	}
-
-	err := p.channel.Publish(
-		exchangeName,
-		routingKeyName,
-		false, // mandatory
-		false, // immediate
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(message),
-			MessageId:   uuid.NewString(),
-		},
-	)
-
-	if err != nil {
-		helpers.LogError(
-			err,
-			fmt.Sprintf("Failed to publish message using routing key '%s' on exchange '%s'", routingKeyName, exchangeName),
-		)
+	); err != nil {
+		helpers.LogError(err, "Failed to publish a message to queue "+queueName)
 	}
 }
 

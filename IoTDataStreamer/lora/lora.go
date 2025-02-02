@@ -86,7 +86,7 @@ func Run() {
 
 // sendDataToAPI sends the LoRa data to an API via HTTP POST.
 func sendDataToAPI(data LoraData) error {
-	url := "http://localhost:8080/api/lora/chirpstack"
+	url := "http://localhost:8080/api/lora/chirpstack?event=up"
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("[LORA] Error marshalling data to JSON: %v", err)
