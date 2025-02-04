@@ -1,15 +1,15 @@
 <template>
     <div class="the-selector " :class="{'the-selector__disabled': props.isDisabled}" @click="toggleOptions" :id="fieldId">
         <label class="the-selector__label" for="type">{{ label }}<span v-if="isRequired" class="the-selector__required">*</span></label>
-        <div class="the-selector__text" :class="{'the-selector__text--open': showOptions}" v-html="selectedOption._value"></div>
+        <div class="the-selector__text" :class="{'the-selector__text--open': showOptions}">{{ selectedOption._value }}</div>
         <ul class="the-selector__options" v-show="showOptions">
 
             <li @click="showOptions = false">
                 <input v-model="searchTerm" class="the-selector__input" type="text" placeholder="Filter options...">
             </li>
 
-            <li v-for="option, index in filterOptions" :key="`${index}-${option._key}`" @click="selectOption(option)" v-html="option._value">
-                
+            <li v-for="option, index in filterOptions" :key="`${index}-${option._key}`" @click="selectOption(option)">
+                {{ option._value }}
             </li>
         </ul>
         <svg class="the-selector__downarrow">
@@ -200,7 +200,7 @@ onMounted(()=>{
     margin: 0;
     transform: translateY(0.3rem);
     z-index: 1000;
-    max-height: 360px;
+    max-height: 300px;
     overflow: auto;
     border: 1px solid $col-slate-300;
     border-radius: $border-radius;

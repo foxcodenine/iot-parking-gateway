@@ -1,0 +1,26 @@
+@use './variables' as *;
+@use './tailwind' as *;
+
+%custom-scrollbar {
+    overflow: overlay; // This allows the content to visually fall under the scrollbar
+    scrollbar-width: thin; // Specifies a thinner scrollbar for Firefox
+    scrollbar-color: $col-zinc-700 $col-zinc-900; // Sets the thumb and track colors (Firefox)
+
+    &::-webkit-scrollbar {
+        width: 4px; // Narrow width for the scrollbar handle
+        background-color: transparent; // Transparent background for the scrollbar track
+    }
+
+    &::-webkit-scrollbar-track {
+        background: $col-zinc-900; // Darker track color
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: $col-zinc-700; // Darker thumb color
+        border-radius: 2px; // Slightly rounded corners for the thumb
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background: $col-zinc-600; // Lighter thumb color on hover for better visibility
+    }
+}

@@ -95,7 +95,7 @@ function zoomChanged() {
 
 function adjustMapView() {
 
-    let devicePositions = Object.values(getfilteredDevices.value).map(device => ({ lat: device.latitude, lng: device.longitude }));
+    let devicePositions = Object.values(getDevicesList.value).map(device => ({ lat: device.latitude, lng: device.longitude }));
     let uniquePositions = [...new Set(devicePositions.map(pos => JSON.stringify(pos)))].map(str => JSON.parse(str));
 
     if (uniquePositions.length === 0) return;

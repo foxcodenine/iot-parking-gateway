@@ -1,0 +1,200 @@
+@use '../abstracts/' as *;
+
+.flash-message {
+    font-family: $font-action;
+    font-size: .9rem;
+    padding: 0.5rem 1rem; // Slightly increased padding for a better look
+    border-radius: $border-radius;
+    border: 1px solid transparent;
+    background-color: transparent;
+    color: $col-slate-800;
+    font-weight: 400;
+    opacity: 0;
+    transition: opacity .3s ease, transform .3s ease; // Added transform transition
+    min-height: 2.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); // Added subtle shadow
+    transform: translateY(-10px); // Initial position for a slight slide-in effect
+
+    &--none {
+        border: 1px solid transparent;
+        background-color: transparent;
+        color: transparent;
+        opacity: 1;
+    }
+
+    &--slate {
+        border: 1px solid rgba($col-slate-300, .8);
+        background-color: rgba($col-slate-100, .8);
+        color: $col-slate-800;
+        opacity: 1;
+        transform: translateY(0); // Reset transform
+    }
+
+    &--gray {
+        border: 1px solid rgba($col-gray-300, .8);
+        background-color: rgba($col-gray-100, .8);
+        color: $col-gray-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--zinc {
+        border: 1px solid rgba($col-zinc-300, .8);
+        background-color: rgba($col-zinc-100, .8);
+        color: $col-zinc-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--neutral {
+        border: 1px solid rgba($col-neutral-300, .8);
+        background-color: rgba($col-neutral-100, .8);
+        color: $col-neutral-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--stone {
+        border: 1px solid rgba($col-stone-300, .8);
+        background-color: rgba($col-stone-100, .8);
+        color: $col-stone-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--red {
+        border: 1px solid rgba($col-red-300, .8);
+        background-color: rgba($col-red-100, .8);
+        color: $col-red-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--orange {
+        border: 1px solid rgba($col-orange-300, .8);
+        background-color: rgba($col-orange-100, .8);
+        color: $col-orange-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--amber {
+        border: 1px solid rgba($col-amber-300, .8);
+        background-color: rgba($col-amber-100, .8);
+        color: $col-amber-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--yellow {
+        border: 1px solid rgba($col-yellow-300, .8);
+        background-color: rgba($col-yellow-100, .8);
+        color: $col-yellow-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--lime {
+        border: 1px solid rgba($col-lime-300, .8);
+        background-color: rgba($col-lime-100, .8);
+        color: $col-lime-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--green {
+        border: 1px solid rgba($col-green-300, .8);
+        background-color: rgba($col-green-100, .8);
+        color: $col-green-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--emerald {
+        border: 1px solid rgba($col-emerald-300, .8);
+        background-color: rgba($col-emerald-100, .8);
+        color: $col-emerald-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--teal {
+        border: 1px solid rgba($col-teal-300, .8);
+        background-color: rgba($col-teal-100, .8);
+        color: $col-teal-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--cyan {
+        border: 1px solid rgba($col-cyan-300, .8);
+        background-color: rgba($col-cyan-100, .8);
+        color: $col-cyan-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--sky {
+        border: 1px solid rgba($col-sky-300, .8);
+        background-color: rgba($col-sky-100, .8);
+        color: $col-sky-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--blue {
+        border: 1px solid rgba($col-blue-300, .8);
+        background-color: rgba($col-blue-100, .8);
+        color: $col-blue-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--indigo {
+        border: 1px solid rgba($col-indigo-300, .8);
+        background-color: rgba($col-indigo-100, .8);
+        color: $col-indigo-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--violet {
+        border: 1px solid rgba($col-violet-300, .8);
+        background-color: rgba($col-violet-100, .8);
+        color: $col-violet-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--purple {
+        border: 1px solid rgba($col-purple-300, .8);
+        background-color: rgba($col-purple-100, .8);
+        color: $col-purple-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--fuchsia {
+        border: 1px solid rgba($col-fuchsia-300, .8);
+        background-color: rgba($col-fuchsia-100, .8);
+        color: $col-fuchsia-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--pink {
+        border: 1px solid rgba($col-pink-300, .8);
+        background-color: rgba($col-pink-100, .8);
+        color: $col-pink-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    &--rose {
+        border: 1px solid rgba($col-rose-300, .8);
+        background-color: rgba($col-rose-100, .8);
+        color: $col-rose-800;
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

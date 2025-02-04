@@ -1,0 +1,29 @@
+@use '../abstracts/' as *;
+
+
+.heading--2 {
+    font-size: 1.8rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    color: $col-text-2;
+    font-family: $font-display;
+}
+
+.heading--3 {
+    font-size: 1rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    color: $col-text-2;
+    font-family: $font-display;
+    letter-spacing: 1px;
+}
+
+.heading--4{
+    font-size: .9rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    color: $col-text-2;
+    font-family: $font-display;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba($col-text-4, .8);
+}

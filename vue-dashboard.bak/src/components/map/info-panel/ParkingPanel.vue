@@ -189,6 +189,7 @@ const qty = reactive({
 const getDevicesList = computed(() => {
 
     const initial_parking_check_date = appStore.getAppSettings['initial_parking_check_date'];
+
     
     if (!deviceStore.getDevicesList || deviceStore.getDevicesList.length === 0) {
         return [];
@@ -237,14 +238,11 @@ const getDevicesList = computed(() => {
     })
 
     devices = devices.filter(item => {
-        
         return (
-            (item.device_id?.toLowerCase().includes(searchTerm.value.toLowerCase().trim()) ||
+            item.device_id?.toLowerCase().includes(searchTerm.value.toLowerCase().trim()) ||
             item.name?.toLowerCase().includes(searchTerm.value.toLowerCase().trim()) ||
             item.network_type?.toLowerCase().includes(searchTerm.value.toLowerCase().trim()) ||
-            String(item.firmware_version)?.toLowerCase().includes(searchTerm.value.toLowerCase().trim()))
-            && !item.is_hidden 
-            
+            String(item.firmware_version)?.toLowerCase().includes(searchTerm.value.toLowerCase().trim())
         )
     })
 

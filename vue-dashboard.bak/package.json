@@ -1,0 +1,34 @@
+{
+  "name": "vue-dashboard",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "VITE_VUE_ENV=development vite",
+    "build": "VITE_VUE_ENV=production vite build",
+    "preview": "VITE_VUE_ENV=production vite preview"
+  },
+  "dependencies": {
+    "@popperjs/core": "^2.11.8",
+    "@vueuse/core": "^11.3.0",
+    "axios": "^1.7.7",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.4.5",
+    "floating-vue": "^5.2.2",
+    "pinia": "^2.2.6",
+    "sass-loader": "^16.0.3",
+    "socket.io-client": "^2.4.0",
+    "v-calendar": "^3.1.2",
+    "validator": "^13.12.0",
+    "vue": "^3.5.12",
+    "vue-loading-overlay": "^6.0.6",
+    "vue-router": "^4.4.5",
+    "vue3-google-map": "^0.21.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.1.4",
+    "sass": "^1.81.0",
+    "vite": "^5.4.10",
+    "vite-plugin-vue-devtools": "^7.5.4"
+  }
+}

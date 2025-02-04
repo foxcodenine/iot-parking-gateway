@@ -1,6 +1,6 @@
 <template>
     <div>
-        Events History
+        Keepalive
     </div>
 </template>
 

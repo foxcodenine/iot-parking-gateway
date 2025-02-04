@@ -1,0 +1,47 @@
+/* Pointer cursor - often used for clickable elements like buttons or links */
+.cursor-pointer { cursor: pointer !important; }
+
+/* Default cursor - the usual arrow */
+.cursor-default { cursor: default !important; }
+
+/* Context menu cursor - often used to denote the availability of a context menu */
+.cursor-context-menu { cursor: context-menu !important; }
+
+/* Help cursor - often used to indicate that help information is available */
+.cursor-help { cursor: help !important; }
+
+/* Wait cursor - usually an hourglass or a spinning circle, indicating that the application is busy */
+.cursor-wait { cursor: wait !important; }
+
+/* Crosshair cursor - a crosshair, often used in graphical applications */
+.cursor-crosshair { cursor: crosshair !important; }
+
+/* Text cursor - indicates text can be selected, typically an I-beam */
+.cursor-text { cursor: text !important; }
+
+/* Disabled cursor - indicates that the element is not available for interaction */
+.cursor-not-allowed { cursor: not-allowed !important; }
+
+/* Move cursor - indicates something can be moved */
+.cursor-move { cursor: move !important; }
+
+/* Grab cursor - indicates that something can be grabbed */
+.cursor-grab { cursor: grab !important; }
+
+/* Grabbing cursor - indicates that something is being grabbed */
+.cursor-grabbing { cursor: grabbing !important; }
+
+/* All-scroll cursor - indicates scrolling is possible in all directions */
+.cursor-all-scroll { cursor: all-scroll !important; }
+
+/* Zoom-in cursor - indicates that something can be zoomed in */
+.cursor-zoom-in { cursor: zoom-in !important; }
+
+/* Zoom-out cursor - indicates that something can be zoomed out */
+.cursor-zoom-out { cursor: zoom-out !important; }
+
+/* Alias cursor - indicates an alias or shortcut is to be created */
+.cursor-alias { cursor: alias !important; }
+
+/* Progressive cursor - indicates progress */
+.cursor-progress { cursor: progress !important; }

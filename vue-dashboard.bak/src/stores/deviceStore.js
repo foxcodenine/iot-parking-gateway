@@ -13,18 +13,14 @@ export const useDeviceStore = defineStore("deviceStore", () => {
     const devicesList = ref({});
     const devicesFetched = ref(false);
 
-    // Used in Map page. Flter devices on the Map Page based on status, date, or search criteria
     const filteredDevices = ref([]);
 
     // - Getters -------------------------------------------------------
     const getDevicesList = computed(() => {
          return devicesList.value;
     } );
-
-    // Used in Map page. Return filter devices on the Map Page based on status, date, or search criteria
-    const getfilteredDevices = computed(() => {        
-
-         return filteredDevices.value.filter(device => !device.is_hidden);
+    const getfilteredDevices = computed(() => {
+         return filteredDevices.value;
     } );
 
     // - Actions -------------------------------------------------------

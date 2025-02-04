@@ -36,8 +36,7 @@ function timeElapsed(utcDateString) {
     const diffMs = now - parsedDate; // Calculate the difference in milliseconds
 
     if (diffMs < 0) {
-        console.log(diffMs)
-        return "Unsynced";
+        return "In the future";
     }
 
     const seconds = Math.floor(diffMs / 1000);

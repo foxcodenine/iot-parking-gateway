@@ -1,0 +1,35 @@
+// _____________________________________________________________________
+@use './tailwind' as *;
+$font-primary: 'Barlow', sans-serif;
+$font-display: 'Inconsolata', 'Montserrat', sans-serif;
+$font-action: 'Poppins', sans-serif;  
+
+// _____________________________________________________________________
+
+$border: 1px solid currentColor;
+$border-radius: .3rem;
+
+// _____________________________________________________________________
+
+$col-text-1: $col-slate-800; 
+$col-text-2: $col-slate-700; 
+$col-text-3: $col-slate-600; 
+$col-text-4: $col-slate-500; 
+$col-text-5: $col-slate-400; 
+
+$col-white: #fff;
+$col-black: #000;
+
+// _____________________________________________________________________
+
+$box-shadow-0 :rgba($col-gray-800, 0.2) 0px 8px 24px;
+$box-shadow-1: rgba($col-gray-800, 0.2) 0px 7px 29px 0px;
+$box-shadow-2: rgba($col-gray-800, 0.15) 1.95px 1.95px 2.6px;
+$box-shadow-3: rgba($col-gray-800, 0.35) 0px 5px 15px;
+$box-shadow-4: rgba($col-gray-800, 0.16) 0px 1px 4px;
+$box-shadow-5: rgba($col-gray-800, 0.24) 0px 3px 8px;
+$box-shadow-6: rgba($col-gray-800, 0.2) 0px 2px 8px 0px;
+$box-shadow-7: rgba($col-gray-800, 0.10) -2px -2px 3px;
+
+// _____________________________________________________________________
+
