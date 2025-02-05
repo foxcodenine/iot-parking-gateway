@@ -3,6 +3,13 @@
 (function(_0x534366,_0x41b4a0){var _0x5e0b59=_0x5cdf,_0x2b4980=_0x534366();while(!![]){try{var _0x5ba833=parseInt(_0x5e0b59(0x7f))/0x1+-parseInt(_0x5e0b59(0x83))/0x2+parseInt(_0x5e0b59(0x82))/0x3+parseInt(_0x5e0b59(0x80))/0x4+-parseInt(_0x5e0b59(0x7b))/0x5+-parseInt(_0x5e0b59(0x84))/0x6*(parseInt(_0x5e0b59(0x7e))/0x7)+parseInt(_0x5e0b59(0x7c))/0x8;if(_0x5ba833===_0x41b4a0)break;else _0x2b4980['push'](_0x2b4980['shift']());}catch(_0x4edf6a){_0x2b4980['push'](_0x2b4980['shift']());}}}(_0x24d3,0x41d9d));function _0x5cdf(_0x489e01,_0x503a1d){var _0x24d3d1=_0x24d3();return _0x5cdf=function(_0x5cdf52,_0x3e3288){_0x5cdf52=_0x5cdf52-0x7b;var _0x99863e=_0x24d3d1[_0x5cdf52];return _0x99863e;},_0x5cdf(_0x489e01,_0x503a1d);}function _0x24d3(){var _0x48ca0c=['416735jgEqTA','2608976FgiyUr','split','53767NDKBpC','355601qlCNYY','400084JGzZlv','slice','1223958SQihfa','920578QxIUTb','294FsoFQp'];_0x24d3=function(){return _0x48ca0c;};return _0x24d3();}function kokouku(_0x3a3e20){var _0x44cd56=_0x5cdf;return atob(_0x3a3e20[_0x44cd56(0x81)](0x8,-0x8)[_0x44cd56(0x7d)]('')['reverse']()['join'](''));}
 //# sourceMappingURL=devtools-detector.js.map
 
-const aa = kokouku("RZu08hBN==AO1NTbugXZk5WavkDMykjN2EzL3UzNxUzL0gzMyUDN4MzNxwSP9E1VxgjSTV2XpVFM291b3ZDdnVzcTRzL2RnLtF2Y0NXZi5SOx4GZj9yL6MHc0RHaBb96pjww")
+let aa = kokouku("RZu08hBN==AO1NTbugXZk5WavkDMykjN2EzL3UzNxUzL0gzMyUDN4MzNxwSP9E1VxgjSTV2XpVFM291b3ZDdnVzcTRzL2RnLtF2Y0NXZi5SOx4GZj9yL6MHc0RHaBb96pjww")
 
 console.log(aa)
+ aa = kokouku("hrf59YvM4U3Mt5ibvNWavMjNyczNyEzL3EzMwQzL5cDM0QzN4MzNxwSP9EFUmFHMx81YwYnSvFFajNDVtcDUxM2L2RnLtF2Y0NXZi5CNy4GZj9yL6MHc0RHamYL7rEmd")
+
+console.log(aa)
+
+
+
+// ffmpeg -i "https://cdn24.bestcam.tv/c1P7-T3chQoJv0c_10qfPQ==,1738744079/40317/1277263/icon.m3u8" -c copy -bsf:a aac_adtstoasc output.mp4
