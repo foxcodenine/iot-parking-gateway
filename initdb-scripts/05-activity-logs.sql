@@ -23,3 +23,20 @@ SELECT create_hypertable('parking.activity_logs', 'happened_at');
 -- Indexes for improved query performance.
 CREATE INDEX idx_activity_logs_device_id ON parking.activity_logs (device_id);
 CREATE INDEX idx_activity_logs_happened_at ON parking.activity_logs (happened_at);
+
+-- Enable Compression on the Hypertable:
+ALTER TABLE parking.activity_logs SET (timescaledb.compress = true);
+
+-- (Optional) Configure Compression Settings:
+ALTER TABLE parking.activity_logs SET (timescaledb.compress_orderby = 'happened_at');
+ALTER TABLE parking.activity_logs SET (timescaledb.compress_segmentby = 'device_id');
+
+-- Add a Compression Policy:
+SELECT add_compression_policy('parking.activity_logs', INTERVAL '2 months');
+
+-- Add a Retention Policy:
+SELECT add_retention_policy('parking.activity_logs', INTERVAL '12 months');
+
+-- Remove the Retention Policy:
+-- SELECT remove_retention_policy('parking.activity_logs');
+

@@ -15,7 +15,6 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { GoogleMap, Marker, CustomMarker } from "vue3-google-map";
-import { defineProps, defineEmits } from 'vue';
 import { useAppStore } from '@/stores/appStore';
 import { storeToRefs } from 'pinia';
 import { onMounted } from 'vue';

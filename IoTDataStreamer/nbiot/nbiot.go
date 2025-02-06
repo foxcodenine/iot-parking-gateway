@@ -2,7 +2,6 @@ package nbiot
 
 import (
 	"bufio"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -67,8 +66,10 @@ func sendDataToUDP(data string) error {
 		return fmt.Errorf("[NBIOT] Error decoding hex: %v", err)
 	}
 
-	encodedData := base64.StdEncoding.EncodeToString(decodedData)
-	_, err = conn.Write([]byte(encodedData))
+	// encodedData := base64.StdEncoding.EncodeToString(decodedData)
+	// _, err = conn.Write([]byte(encodedData))
+
+	_, err = conn.Write([]byte(decodedData))
 	if err != nil {
 		return fmt.Errorf("[NBIOT] Error sending data: %v\n", err)
 	}

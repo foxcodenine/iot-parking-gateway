@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	up "github.com/upper/db/v4"
+
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/google/uuid"
 )
@@ -25,7 +27,7 @@ type ActivityLog struct {
 	PeakDistanceCm  int       `db:"peak_distance_cm" json:"peak_distance_cm"` // Peak distance in centimeters
 	RadarCumulative int       `db:"radar_cumulative" json:"radar_cumulative"` // Cumulative radar reading
 	IsOccupied      bool      `db:"is_occupied" json:"is_occupied"`           // Whether a vehicle is detected
-	Beacons         []Beacon  `db:"beacons" json:"beacons"`                   // JSONB column to store an array of beacon data
+	Beacons         *[]Beacon `db:"beacons" json:"beacons"`                   // JSONB column to store an array of beacon data
 }
 
 // TableName returns the table name for the ActivityLog model.
@@ -105,7 +107,7 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 			Minor:        int(minor),
 		}
 
-		if networkType == "NB-Iot" || networkType == "LoRa" {
+		if networkType == "NB-IoT" || networkType == "LoRa" {
 			rssi, ok := beaconMap["rssi"].(float64)
 			if !ok {
 				return nil, fmt.Errorf("invalid type for rssi")
@@ -127,7 +129,7 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 		BeaconsAmount:   int(pktData["beacons_amount"].(float64)),
 		RadarCumulative: int(pktData["radar_cumulative"].(float64)),
 		IsOccupied:      pktData["is_occupied"].(float64) != 0, // Convert to boolean.
-		Beacons:         beacons,                               // Attach the processed beacons.
+		Beacons:         &beacons,                              // Attach the processed beacons.
 	}
 
 	if networkType == "NB-Iot" || networkType == "LoRa" {
@@ -171,4 +173,33 @@ func (a *ActivityLog) BulkInsert(activityLogs []ActivityLog) error {
 	}
 
 	return nil
+}
+
+func (a *ActivityLog) GetLastEntryFromPreviousDay() (*ActivityLog, error) {
+	// Use UTC for consistency; adjust if you need a different timezone.
+	now := time.Now().UTC()
+
+	// Calculate the start of today (00:00:00) and the start of yesterday.
+	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	startOfYesterday := startOfToday.AddDate(0, 0, -1)
+
+	collection := dbSession.Collection(a.TableName())
+
+	fmt.Println(startOfYesterday, startOfToday)
+
+	var lastLog ActivityLog
+	err := collection.
+		Find("happened_at >= ? AND happened_at < ?", startOfYesterday, startOfToday).
+		OrderBy("happened_at DESC").
+		One(&lastLog)
+	if err != nil {
+		if err == up.ErrNoMoreRows {
+			return nil, nil
+		}
+		return nil, helpers.WrapError(fmt.Errorf("failed to retrieve last activity log from previous day: %w", err))
+	}
+
+	fmt.Println(lastLog)
+
+	return &lastLog, nil
 }

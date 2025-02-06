@@ -48,8 +48,9 @@ func (u *User) GetAll() ([]*User, error) {
 		// Asserting the type of cached data to []interface{}
 		cachedUsers, ok := cachedData.([]interface{})
 		if !ok {
-			helpers.LogError(fmt.Errorf("cache data type mismatch: expected []interface{}, got %T", cachedData), "Cache data type mismatch")
-			return nil, fmt.Errorf("cache data type mismatch: expected []interface{}, got %T", cachedData)
+			err := helpers.WrapError(fmt.Errorf("cache data type mismatch: expected []interface{}, got %T", cachedData))
+			helpers.LogError(err, "Cache data type mismatch")
+			return nil, err
 		}
 
 		// Initialize slice to hold the converted user objects
@@ -57,7 +58,8 @@ func (u *User) GetAll() ([]*User, error) {
 		for i, cachedUser := range cachedUsers {
 			userMap, ok := cachedUser.(map[string]interface{})
 			if !ok {
-				helpers.LogError(fmt.Errorf("failed to assert type for user data: %T", cachedUser), "Error asserting type for cached user data")
+				err := helpers.WrapError(fmt.Errorf("failed to assert type for user data: %T", cachedUser))
+				helpers.LogError(err, "Error asserting type for cached user data")
 				continue
 			}
 
@@ -92,7 +94,7 @@ func (u *User) GetAll() ([]*User, error) {
 	collection := dbSession.Collection(u.TableName())
 	err = collection.Find().All(&users)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve users from database: %w", err)
+		return nil, helpers.WrapError(fmt.Errorf("failed to retrieve users from database: %w", err))
 	}
 
 	// Cache the users after successful database fetch
@@ -131,7 +133,7 @@ func (u *User) Create() (*User, error) {
 	var err error
 	u.Password, err = helpers.HashPassword(u.Password)
 	if err != nil {
-		return nil, fmt.Errorf("failed to hash password: %w", err)
+		return nil, helpers.WrapError(fmt.Errorf("failed to hash password: %w", err))
 	}
 
 	// Insert user into the database and get the generated ID
@@ -144,7 +146,7 @@ func (u *User) Create() (*User, error) {
 		}
 
 		// Wrap and return other errors
-		return nil, fmt.Errorf("failed to create user: %w", err)
+		return nil, helpers.WrapError(fmt.Errorf("failed to create user: %w", err))
 	}
 
 	err = cache.AppCache.Delete("db:users")
@@ -171,7 +173,7 @@ func (u *User) Update(updatePassword bool) (*User, error) {
 		var err error
 		u.Password, err = helpers.HashPassword(u.Password)
 		if err != nil {
-			return nil, fmt.Errorf("failed to hash password: %w", err)
+			return nil, helpers.WrapError(fmt.Errorf("failed to hash password: %w", err))
 		}
 	}
 
@@ -187,13 +189,13 @@ func (u *User) Update(updatePassword bool) (*User, error) {
 			return nil, ErrDuplicateUser
 		}
 		// Wrap and return other errors
-		return nil, fmt.Errorf("failed to update user: %w", err)
+		return nil, helpers.WrapError(fmt.Errorf("failed to update user: %w", err))
 	}
 
 	// Invalidate the cache after a successful update
 	err = cache.AppCache.Delete("db:users")
 	if err != nil {
-		helpers.LogError(err, "failed to delete users from cache")
+		helpers.LogError(helpers.WrapError(err), "failed to delete users from cache")
 	}
 
 	cache.AppCache.Set(fmt.Sprintf("app:user:logout:%d", u.ID), time.Now().Unix(), 86400)
@@ -211,13 +213,13 @@ func (u *User) Delete(userID int) error {
 	count, err := res.Count()
 	if err != nil {
 		// Log the error and return it
-		helpers.LogError(err, fmt.Sprintf("Failed to count users with ID %d", userID))
-		return fmt.Errorf("failed to verify user existence: %w", err)
+		helpers.LogError(helpers.WrapError(err), fmt.Sprintf("Failed to count users with ID %d", userID))
+		return helpers.WrapError(fmt.Errorf("failed to verify user existence: %w", err))
 	}
 
 	// If no user is found, return an error
 	if count == 0 {
-		err := fmt.Errorf("user with ID %d does not exist", userID)
+		err := helpers.WrapError(fmt.Errorf("user with ID %d does not exist", userID))
 		helpers.LogError(err, "Delete operation failed: user not found")
 		return err
 	}
@@ -225,8 +227,8 @@ func (u *User) Delete(userID int) error {
 	// Attempt to delete the user
 	if err := res.Delete(); err != nil {
 		// Log the deletion error and return it
-		helpers.LogError(err, fmt.Sprintf("Failed to delete user with ID %d", userID))
-		return fmt.Errorf("failed to delete user: %w", err)
+		helpers.LogError(helpers.WrapError(err), fmt.Sprintf("Failed to delete user with ID %d", userID))
+		return helpers.WrapError(fmt.Errorf("failed to delete user: %w", err))
 	}
 
 	// Invalidate the users cache after successful deletion
@@ -244,7 +246,7 @@ func (u *User) Delete(userID int) error {
 // FindUserByEmail retrieves a user by their Email. Returns nil if the user is not found.
 func (u *User) FindUserByEmail(email string) (*User, error) {
 	if strings.TrimSpace(email) == "" {
-		return nil, errors.New("email cannot be empty")
+		return nil, helpers.WrapError(errors.New("email cannot be empty"))
 	}
 
 	collection := dbSession.Collection(u.TableName())
@@ -255,7 +257,7 @@ func (u *User) FindUserByEmail(email string) (*User, error) {
 			// No user found with the given email
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to retrieve user: %w", err)
+		return nil, helpers.WrapError(fmt.Errorf("failed to retrieve user: %w", err))
 	}
 
 	return &user, nil
@@ -272,7 +274,7 @@ func (u *User) FindUserByID(userID int) (*User, error) {
 			// No user found with the given email
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to retrieve user: %w", err)
+		return nil, helpers.WrapError(fmt.Errorf("failed to retrieve user: %w", err))
 	}
 
 	return &user, nil
@@ -283,7 +285,7 @@ func (u *User) GenerateToken() (string, error) {
 	ttlStr := os.Getenv("JWT_EXPIRATION_TIME")
 	ttl, err := strconv.Atoi(ttlStr)
 	if err != nil {
-		return "", fmt.Errorf("invalid JWT_EXPIRATION_TIME: %v", err)
+		return "", helpers.WrapError(fmt.Errorf("invalid JWT_EXPIRATION_TIME: %v", err))
 	}
 
 	// Define token claims
@@ -322,7 +324,7 @@ func (u *User) Upsert(newUser *User, updatePassword bool) (*User, error) {
 		var err error
 		hashedPassword, err = helpers.HashPassword(newUser.Password)
 		if err != nil {
-			return nil, fmt.Errorf("failed to hash password: %w", err)
+			return nil, helpers.WrapError(fmt.Errorf("failed to hash password: %w", err))
 		}
 	}
 
@@ -367,7 +369,7 @@ func (u *User) GetRootUser() (*User, error) {
 			// No user found with the given email
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to retrieve user: %w", err)
+		return nil, helpers.WrapError(fmt.Errorf("failed to retrieve user: %w", err))
 	}
 
 	return &user, nil
