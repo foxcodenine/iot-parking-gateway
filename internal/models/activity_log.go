@@ -47,7 +47,7 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 
 	rawUUID, err := uuid.Parse(rawUUIDStr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse uuid %s: %v", rawUUIDStr, err)
+		return nil, helpers.WrapError(fmt.Errorf("failed to parse uuid %s: %v", rawUUIDStr, err))
 	}
 
 	// Parse the timestamp, expected as a float64 (representing seconds since epoch),
@@ -68,12 +68,12 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 	// Retrieve and process the "beacons" data, expected as an array of maps.
 	beaconData, ok := pktData["beacons"].([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("invalid type for beacons: expected []interface{}")
+		return nil, helpers.WrapError(fmt.Errorf("invalid type for beacons: expected []interface{}"))
 	}
 
 	networkType, ok := pktData["network_type"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid type for network_type: expected string")
+		return nil, helpers.WrapError(fmt.Errorf("invalid type for network_type: expected string"))
 	}
 
 	// Iterate over each beacon entry in the array.
@@ -81,23 +81,23 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 		// Assert that each beacon entry is a map with string keys and interface{} values.
 		beaconMap, ok := beaconItem.(map[string]interface{})
 		if !ok {
-			return nil, fmt.Errorf("invalid type for beacon item: expected map[string]interface{}")
+			return nil, helpers.WrapError(fmt.Errorf("invalid type for beacon item: expected map[string]interface{}"))
 		}
 
 		// Safely retrieve and convert each beacon field from the map.
 		beaconNumber, ok := beaconMap["beacon_number"].(float64)
 		if !ok {
-			return nil, fmt.Errorf("invalid type for beacon_number")
+			return nil, helpers.WrapError(fmt.Errorf("invalid type for beacon_number"))
 		}
 
 		major, ok := beaconMap["major"].(float64)
 		if !ok {
-			return nil, fmt.Errorf("invalid type for major")
+			return nil, helpers.WrapError(fmt.Errorf("invalid type for major"))
 		}
 
 		minor, ok := beaconMap["minor"].(float64)
 		if !ok {
-			return nil, fmt.Errorf("invalid type for minor")
+			return nil, helpers.WrapError(fmt.Errorf("invalid type for minor"))
 		}
 
 		// Append the beacon to the Beacons slice after converting values to int.
@@ -110,7 +110,7 @@ func NewActivityLog(pktData map[string]any) (*ActivityLog, error) {
 		if networkType == "NB-IoT" || networkType == "LoRa" {
 			rssi, ok := beaconMap["rssi"].(float64)
 			if !ok {
-				return nil, fmt.Errorf("invalid type for rssi")
+				return nil, helpers.WrapError(fmt.Errorf("invalid type for rssi"))
 			}
 
 			beacon.RSSI = int(rssi)
@@ -169,7 +169,7 @@ func (a *ActivityLog) BulkInsert(activityLogs []ActivityLog) error {
 	// Execute the constructed query with the arguments
 	_, err := dbSession.SQL().Exec(query, args...)
 	if err != nil {
-		return fmt.Errorf("failed to execute bulk insert for activity logs: %w", err)
+		return helpers.WrapError(fmt.Errorf("failed to execute bulk insert for activity logs: %w", err))
 	}
 
 	return nil
@@ -202,4 +202,42 @@ func (a *ActivityLog) GetLastEntryFromPreviousDay() (*ActivityLog, error) {
 	fmt.Println(lastLog)
 
 	return &lastLog, nil
+}
+
+func (a *ActivityLog) GetActivityLogs(deviceID string, fromDate, toDate int64) ([]*ActivityLog, error) {
+	// Validate inputs
+	if deviceID == "" {
+		return nil, helpers.WrapError(fmt.Errorf("device_id cannot be empty"))
+	}
+	if fromDate <= 0 || toDate <= 0 {
+		return nil, helpers.WrapError(fmt.Errorf("invalid timestamps: both fromDate and toDate must be greater than zero"))
+	}
+	if fromDate > toDate {
+		return nil, helpers.WrapError(fmt.Errorf("fromDate cannot be greater than toDate"))
+	}
+
+	// Convert timestamps to time.Time
+	fromTime := time.Unix(fromDate, 0).UTC()
+	toTime := time.Unix(toDate, 0).UTC()
+
+	// Get the collection
+	collection := dbSession.Collection(a.TableName())
+
+	// Query the database for logs in the time range
+	var logs []*ActivityLog
+
+	err := collection.
+		Find("device_id = ? AND happened_at BETWEEN ? AND ?", deviceID, fromTime, toTime).
+		OrderBy("happened_at ASC").
+		All(&logs)
+
+	// Handle query errors
+	if err != nil {
+		if err == up.ErrNoMoreRows {
+			return nil, nil // No logs found
+		}
+		return nil, helpers.WrapError(fmt.Errorf("failed to fetch activity logs: %w", err))
+	}
+
+	return logs, nil
 }

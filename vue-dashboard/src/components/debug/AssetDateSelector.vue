@@ -15,6 +15,7 @@ import RangeDatePicker from '@/components/commen/RangeDatePicker.vue';
 import DeviceSelector from '@/components/commen/DeviceSelector.vue';
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useDebugStore } from '@/stores/debugStore';
 
 // - Router ------------------------------------------------------------
 
@@ -23,6 +24,7 @@ const router = useRouter();
 
 // - Store -------------------------------------------------------------
 const messageStore = useMessageStore();
+const debugStore = useDebugStore();
 
 // - Data --------------------------------------------------------------
 const confirmOn = ref(false);
@@ -41,6 +43,7 @@ const dateRange = ref({
 watch(() => route.params.id, (newId) => {
     if (newId != deviceID.value) {
         deviceID.value = newId;
+        debugStore.setSelectedDeviceID(newId);
     }
 }, { immediate: true });
 
@@ -48,9 +51,18 @@ watch(() => route.params.id, (newId) => {
 // If `deviceID` changes and is different from the current route, update the route without refreshing
 watch(deviceID, (newId) => {
     if (newId != route.params.id) {
-        router.replace(`/debug/${newId}`);        
+        router.replace(`/debug/${newId}`);  
+        debugStore.setSelectedDeviceID(newId);      
     }
 }, { immediate: true });
+
+watch(dateRange, (dates) => {
+    debugStore.setFromDateTS(dates.fromDate)
+    debugStore.setToDateTS(dates.toDate)
+}, {
+    deep: true,
+    immediate: true,
+});
 
 // - Methods -----------------------------------------------------------
 function clearMessage() {
