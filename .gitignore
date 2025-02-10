@@ -80,4 +80,4 @@ database.yml
 docker-compose.yml
 
 # Golang files
-config.go
+config.gojunkyard/

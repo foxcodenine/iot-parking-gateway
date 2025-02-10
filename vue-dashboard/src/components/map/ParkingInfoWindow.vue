@@ -54,8 +54,8 @@
                 <svg class="info-window__svg" style="padding: .2rem;" @click="editDevice(device.device_id)">
                     <use xlink:href="@/assets/svg/sprite.svg#icon-pencil-9"></use>
                 </svg>
-                <svg class="info-window__svg" style="padding: .4rem;">
-                    <use xlink:href="@/assets/svg/sprite.svg#icon-bug"></use>
+                <svg class="info-window__svg" style="padding: .4rem;" @click="debugDevice(device.device_id)">
+                    <use xlink:href="@/assets/svg/sprite.svg#icon-bug" ></use>
                 </svg>
             </div>
 
@@ -145,6 +145,14 @@ function editDevice(deviceID) {
     router.push({
         name: 'deviceEditView',
         params: { deviceID },
+    });
+}
+
+function debugDevice(deviceID) {
+    closeWindow();
+    router.push({
+        name: 'debugView',
+        params: { id:deviceID },
     });
 }
 

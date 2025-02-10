@@ -25,9 +25,8 @@ const router = createRouter({
 		{ path: '/forgot-password', name: 'forgotPasswordView', component: AuthView, },
 		{ path: '/logout', name: 'logoutView', component: LogoutView },
 		{ path: '/settings', name: 'settingsView', component: SettingsView },
-		{ path: '/debug', name: 'debugView', component: DebugView },
-		{ path: '/helpers/svg', name: 'viewHelpersSvg', component: SvgSpriteView },
-		
+		{ path: '/debug/:id?', name: 'debugView', component: DebugView, props: true },
+		{ path: '/helpers/svg', name: 'viewHelpersSvg', component: SvgSpriteView },		
 
 		// {
 		//   path: '/about', name: 'about',

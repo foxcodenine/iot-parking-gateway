@@ -57,9 +57,11 @@ function updateWidth () {
     }
 };
 
-function setupResizeObserver () {
+function setupResizeObserver() {
     const resizeObserver = new ResizeObserver(() => {
-        updateWidth();
+        requestAnimationFrame(() => {
+            updateWidth();
+        });
     });
 
     if (theTabs.value) {

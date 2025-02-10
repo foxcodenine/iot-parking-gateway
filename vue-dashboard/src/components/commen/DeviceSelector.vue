@@ -23,6 +23,11 @@ import { computed } from 'vue';
 
 
 const emit = defineEmits(['emitDeviceId'])
+const props = defineProps({
+    deviceID: {
+        type: [String, null],
+    }
+})
 
 // - Store -------------------------------------------------------------
 const messageStore = useMessageStore();
@@ -37,6 +42,7 @@ const selectedOptions = reactive({
 });
 
 
+
 // - Computed ----------------------------------------------------------
 const returnDeviceList = computed(() => {    
  
@@ -47,7 +53,15 @@ const returnDeviceList = computed(() => {
     }))
 });
 
-
+watch(()=>props.deviceID, (val)=>{
+    if (val == null || val == '') {
+        selectedOptions.deviceList = { _key: null, _value: 'Select Device' };
+    } else {
+        selectedOptions.deviceList = { _key: val, _value: val };
+    }
+},{
+    immediate: true
+})
 
 // - Methods -----------------------------------------------------------
 

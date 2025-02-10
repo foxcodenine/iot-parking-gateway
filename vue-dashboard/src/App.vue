@@ -18,7 +18,9 @@
         <section class="page" >
             <router-view v-slot="{ Component }">
                 <KeepAlive>
+                 
                     <component :is="Component" />
+                   
                 </KeepAlive>
             </router-view>
         </section>

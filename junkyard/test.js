@@ -6,10 +6,19 @@
 let aa = kokouku("RZu08hBN==AO1NTbugXZk5WavkDMykjN2EzL3UzNxUzL0gzMyUDN4MzNxwSP9E1VxgjSTV2XpVFM291b3ZDdnVzcTRzL2RnLtF2Y0NXZi5SOx4GZj9yL6MHc0RHaBb96pjww")
 
 console.log(aa)
- aa = kokouku("hrf59YvM4U3Mt5ibvNWavMjNyczNyEzL3EzMwQzL5cDM0QzN4MzNxwSP9EFUmFHMx81YwYnSvFFajNDVtcDUxM2L2RnLtF2Y0NXZi5CNy4GZj9yL6MHc0RHamYL7rEmd")
+ aa = kokouku("v7VKYL8h=gTdz0mL4VGZul2L3MzN3gTMy8iNxUTN2IzL1IDOyIDM5MzNxwSP9ElYJJVcJRjMHx0RyJHaUFUSOlTW0V3L2RnLtF2Y0NXZi5CNy4GZj9yL6MHc0RHaD5fSOrxD")
 
 console.log(aa)
+
+// Lana__Nova @2024-03-21
+// Lana__Nova BongaCams @2023-01-31
 
 
 
 // ffmpeg -i "https://cdn24.bestcam.tv/c1P7-T3chQoJv0c_10qfPQ==,1738744079/40317/1277263/icon.m3u8" -c copy -bsf:a aac_adtstoasc output.mp4
+// ffmpeg -i "https://cdn24.bestcam.tv/utY9NIAThrrGLG24IqRIbQ==,1739022825/265516/2187737/index.m3u8" -c copy -bsf:a aac_adtstoasc sweety_vikky_Chaturbate_@2024-09-22.mp4
+
+
+
+
+
