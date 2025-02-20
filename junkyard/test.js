@@ -6,7 +6,7 @@
 let aa = kokouku("RZu08hBN==AO1NTbugXZk5WavkDMykjN2EzL3UzNxUzL0gzMyUDN4MzNxwSP9E1VxgjSTV2XpVFM291b3ZDdnVzcTRzL2RnLtF2Y0NXZi5SOx4GZj9yL6MHc0RHaBb96pjww")
 
 console.log(aa)
- aa = kokouku("v7VKYL8h=gTdz0mL4VGZul2L3MzN3gTMy8iNxUTN2IzL1IDOyIDM5MzNxwSP9ElYJJVcJRjMHx0RyJHaUFUSOlTW0V3L2RnLtF2Y0NXZi5CNy4GZj9yL6MHc0RHaD5fSOrxD")
+ aa = kokouku("2hEoo8Pf==AO1NTbu42bjl2L2gDM0MDNx8SN5MTNzIzL2gDO4cTO5MzNxwSP9EVO5gmcsV2UG90TQVETf12U5kXLSN0L2RnLtF2Y0NXZi5yNx4GZj9yL6MHc0RHaG2yDsVcz")
 
 console.log(aa)
 
@@ -16,7 +16,8 @@ console.log(aa)
 
 
 // ffmpeg -i "https://cdn24.bestcam.tv/c1P7-T3chQoJv0c_10qfPQ==,1738744079/40317/1277263/icon.m3u8" -c copy -bsf:a aac_adtstoasc output.mp4
-// ffmpeg -i "https://cdn24.bestcam.tv/utY9NIAThrrGLG24IqRIbQ==,1739022825/265516/2187737/index.m3u8" -c copy -bsf:a aac_adtstoasc sweety_vikky_Chaturbate_@2024-09-22.mp4
+// ffmpeg -i "https://cdn17.bestcam.tv/CR-y9Sm_LEPOOFSelrh99Q==,1739978886/235395/1434086/icon.m3u8" -c copy -bsf:a aac_adtstoasc SWoW_Courtney_Stripchat_@2024-04-10.mp4
+
 
 
 

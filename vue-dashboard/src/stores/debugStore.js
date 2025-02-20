@@ -7,7 +7,6 @@ import { useDashboardStore } from './dashboardStore';
 
 // ---------------------------------------------------------------------
 
-
 export const useDebugStore = defineStore("debugStore", () => {
 
 
@@ -46,30 +45,26 @@ export const useDebugStore = defineStore("debugStore", () => {
         toDateTS.value = payload;
     }
 
-    async function fetchActivityLogs() {  
+    async function fetchActivityLogs() {
         useDashboardStore().setIsLoading(true);
-
+    
         const fromDate = Math.floor(fromDateTS.value / 1000);
         const toDate = Math.ceil(toDateTS.value / 1000);
-
-
-        try {
-            const response =  await axios.get(useAppStore().getAppUrl + `/api/activity-logs/${selectedDeviceID.value}?from_date=${fromDate}&to_date=${toDate}`);
-            console.log(response)
-            if (response?.status == 200 && response.data?.activity_logs) {
-                activityLogs.value = response.data.activity_logs;
-             
-                return activityLogs.value;
-            }
-
+   
+        try {          
+   
+            // Fetch data from the server
+            const response = await axios.get(`${useAppStore().getAppUrl}/api/activity-logs/${selectedDeviceID.value}?from_date=${fromDate}&to_date=${toDate}`);    
+            return response;
+   
         } catch (error) {
-            console.error('! debugStore.fetchActivityLogs !');
-            throw error; 
-
+            console.error('! Error in fetchActivityLogs !', error.message);
+            throw error;  // Re-throw the error to be handled by the caller or error boundary
         } finally {
             useDashboardStore().setIsLoading(false);
         }
     }
+    
 
 
     // - Expose --------------------------------------------------------

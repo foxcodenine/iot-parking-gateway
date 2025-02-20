@@ -61,14 +61,14 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 
 	// Validate minimum hex string length
 	if len(hexStr) < 5 {
-		http.Error(w, "invalid message length, incoming data too short for parsing", http.StatusBadRequest)
+		http.Error(w, "Invalid message length, incoming data too short for parsing (SigFox)", http.StatusBadRequest)
 		return
 	}
 
 	// Parse firmware version
 	firmwareVersionTmp, _, err := helpers.ParseHexSubstring(hexStr, 0, 1)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Failed to parse firmware version", http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), "Failed to parse firmware version (SigFox)", http.StatusInternalServerError)
 		return
 	}
 
@@ -76,13 +76,14 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 	firmwareVersion := float64(firmwareVersionTmp) / 10.0
 
 	deviceID := strings.ToUpper(req.DeviceID)
+	deviceID = fmt.Sprintf("%08s", deviceID)
 	rawData := req
 	rawData.Data = hexStr
 
 	// Convert struct to JSON string
 	rawDataBytes, err := json.Marshal(rawData)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Error converting to JSON String", http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), "Error converting to JSON String (SigFox)", http.StatusInternalServerError)
 		return
 
 	}
@@ -92,7 +93,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 	deviceIdentifierKey := fmt.Sprintf("SigFox %s", deviceID)
 	isDeviceRegistered, err := cache.AppCache.CheckItemInBloomFilter("registered-devices", deviceIdentifierKey)
 	if err != nil {
-		helpers.LogError(err, "Failed to check Bloom Filter for device ID")
+		helpers.LogError(helpers.WrapError(err), "Failed to check Bloom Filter for device ID (SigFox)")
 	}
 
 	// If the device ID is not registered, track it for registration and prevent duplicates.
@@ -100,12 +101,12 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 		// Add the device to a Redis set for tracking devices that need registration.
 		deviceDataKey := fmt.Sprintf("%s %f", deviceIdentifierKey, firmwareVersion)
 		if err := cache.AppCache.SAdd("to-register-devices", deviceDataKey); err != nil {
-			helpers.LogError(err, "Failed to add device ID to the 'to-register-devices' set")
+			helpers.LogError(helpers.WrapError(err), "Failed to add device ID to the 'to-register-devices' set (SigFox)")
 		}
 
 		// Add the device ID to the Bloom Filter to prevent duplicate registrations in the future.
 		if _, err := cache.AppCache.AddItemToBloomFilter("registered-devices", deviceIdentifierKey); err != nil {
-			helpers.LogError(err, "Failed to add device ID to the 'registered-devices' Bloom Filter")
+			helpers.LogError(helpers.WrapError(err), "Failed to add device ID to the 'registered-devices' Bloom Filter (SigFox)")
 		}
 	}
 
@@ -115,7 +116,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 		// Retrieve the device data from the cache
 		deviceData, err := cache.AppCache.GetDevice(deviceID)
 		if err != nil {
-			helpers.RespondWithError(w, err, "Failed to retrieve device data from cache.", http.StatusInternalServerError)
+			helpers.RespondWithError(w, helpers.WrapError(err), "Failed to retrieve device data from cache (SigFox)", http.StatusInternalServerError)
 			return
 		}
 
@@ -134,7 +135,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 		// Retrieve application settings for device access mode
 		deviceAccessMode, err := cache.AppCache.HGet("app:settings", "device_access_mode")
 		if err != nil {
-			helpers.RespondWithError(w, err, "Failed to retrieve 'device_access_mode' from application settings.", http.StatusInternalServerError)
+			helpers.RespondWithError(w, helpers.WrapError(err), "Failed to retrieve 'device_access_mode' from application settings. (SigFox)", http.StatusInternalServerError)
 			return
 		}
 
@@ -170,7 +171,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 	// Generate a new UUID for the RawDataLog entry
 	rawUUID, err := uuid.NewV7()
 	if err != nil {
-		helpers.RespondWithError(w, err, "Failed to generate UUID for RawDataLog entry.", http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), "Failed to generate UUID for RawDataLog entry. (SigFox)", http.StatusInternalServerError)
 		return
 	}
 
@@ -187,7 +188,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 	// Push the raw data log entry to Redis
 	err = cache.AppCache.RPush("logs:raw-data-logs", rawDataLog)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Failed to push raw data log to Redis.", http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), "Failed to push raw data log to Redis. (SigFox)", http.StatusInternalServerError)
 		return
 	}
 
@@ -215,7 +216,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		helpers.RespondWithError(w, err, fmt.Sprintf("Failed to parse data from Sigfox_%.0f firmware", firmwareVersion*10), http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), fmt.Sprintf("Failed to parse data from Sigfox_%.0f firmware (SigFox)", firmwareVersion*10), http.StatusInternalServerError)
 		return
 	}
 
@@ -224,7 +225,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 	// Check for errors in the update process.
 	if err != nil {
 		// Log the error with additional context for better troubleshooting.
-		helpers.LogError(err, "Failed to update device cache and broadcast changes")
+		helpers.LogError(helpers.WrapError(err), "Failed to update device cache and broadcast changes (SigFox)")
 	}
 
 	// Attempt to update device keepalive_at in cache and broadcast the changes.
@@ -233,7 +234,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 	// Check for errors in the update process.
 	if err != nil {
 		// Log the error with additional context for better troubleshooting.
-		helpers.LogError(err, "Failed to update device keepalive_at in cache and broadcast changes")
+		helpers.LogError(helpers.WrapError(err), "Failed to update device keepalive_at in cache and broadcast changes (SigFox)")
 	}
 
 	// Attempt to update device settings_at in cache, check if device_settings should be updated and broadcast settings_at.
@@ -242,7 +243,7 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 	// Check for errors in the update process.
 	if err != nil {
 		// Log the error with additional context for better troubleshooting.
-		helpers.LogError(err, "Failed to update device settings_at in cache and broadcast it")
+		helpers.LogError(helpers.WrapError(err), "Failed to update device settings_at in cache and broadcast it (SigFox)")
 	}
 
 	// Push parsed parking data packages to Redis.
@@ -306,16 +307,24 @@ func (h *SigfoxHandler) Up(w http.ResponseWriter, r *http.Request) {
 		// Push the package to Redis
 		err := cache.AppCache.RPush("logs:sigfox-setting-logs", i)
 		if err != nil {
-			helpers.LogError(err, "Failed to push setting package data log to Redis")
+			helpers.LogError(helpers.WrapError(err), "Failed to push setting package data log to Redis (SigFox)")
 		}
 
 		messageData, err := json.Marshal(i)
 		if err != nil {
-			helpers.LogError(err, "Failed to serialize parsedData to JSON")
+			helpers.LogError(helpers.WrapError(err), "Failed to serialize parsedData to JSON (SigFox)")
 			continue
 		}
 		mq.AppRabbitMQProducer.SendMessageToExchange("event_logs", string(messageData))
 	}
+
+	// After all the updates and checks, send a success response to the client.
+	response := map[string]interface{}{
+		"status":  "success",
+		"message": "Data processed successfully",
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // updateDeviceKeepaliveInCacheAndBroadcast updates the keepalive timestamp for a device in the cache and broadcasts changes.

@@ -57,7 +57,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	// Parse the JSON payload
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Invalid request payload", http.StatusBadRequest)
+		helpers.RespondWithError(w, helpers.WrapError(err), "Invalid request payload (LoRa)", http.StatusBadRequest)
 		return
 	}
 
@@ -69,7 +69,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	// Decode the base64 string
 	bufferBase64, err := base64.StdEncoding.DecodeString(base64Str)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Error decoding base64", http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), "Error decoding base64 (LoRa)", http.StatusInternalServerError)
 		return
 	}
 
@@ -85,7 +85,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	// Parse firmware version
 	firmwareVersionTmp, _, err := helpers.ParseHexSubstring(hexStr, 0, 1)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Failed to parse firmware version", http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), "Failed to parse firmware version (LoRa)", http.StatusInternalServerError)
 		return
 	}
 
@@ -98,7 +98,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	// Convert struct to JSON string
 	rawDataBytes, err := json.Marshal(rawData)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Error converting to JSON String", http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), "Error converting to JSON String (LoRa)", http.StatusInternalServerError)
 		return
 
 	}
@@ -108,7 +108,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	deviceIdentifierKey := fmt.Sprintf("LoRa %s", deviceID)
 	isDeviceRegistered, err := cache.AppCache.CheckItemInBloomFilter("registered-devices", deviceIdentifierKey)
 	if err != nil {
-		helpers.LogError(err, "Failed to check Bloom Filter for device ID")
+		helpers.LogError(helpers.WrapError(err), "Failed to check Bloom Filter for device ID (LoRa)")
 	}
 
 	// If the device ID is not registered, track it for registration and prevent duplicates.
@@ -116,12 +116,12 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 		// Add the device to a Redis set for tracking devices that need registration.
 		deviceDataKey := fmt.Sprintf("%s %f", deviceIdentifierKey, firmwareVersion)
 		if err := cache.AppCache.SAdd("to-register-devices", deviceDataKey); err != nil {
-			helpers.LogError(err, "Failed to add device ID to the 'to-register-devices' set")
+			helpers.LogError(helpers.WrapError(err), "Failed to add device ID to the 'to-register-devices' set (LoRa)")
 		}
 
 		// Add the device ID to the Bloom Filter to prevent duplicate registrations in the future.
 		if _, err := cache.AppCache.AddItemToBloomFilter("registered-devices", deviceIdentifierKey); err != nil {
-			helpers.LogError(err, "Failed to add device ID to the 'registered-devices' Bloom Filter")
+			helpers.LogError(helpers.WrapError(err), "Failed to add device ID to the 'registered-devices' Bloom Filter (LoRa)")
 		}
 	}
 
@@ -131,7 +131,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 		// Retrieve the device data from the cache
 		deviceData, err := cache.AppCache.GetDevice(deviceID)
 		if err != nil {
-			helpers.RespondWithError(w, err, "Failed to retrieve device data from cache.", http.StatusInternalServerError)
+			helpers.RespondWithError(w, helpers.WrapError(err), "Failed to retrieve device data from cache (LoRa)", http.StatusInternalServerError)
 			return
 		}
 
@@ -150,7 +150,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 		// Retrieve application settings for device access mode
 		deviceAccessMode, err := cache.AppCache.HGet("app:settings", "device_access_mode")
 		if err != nil {
-			helpers.RespondWithError(w, err, "Failed to retrieve 'device_access_mode' from application settings.", http.StatusInternalServerError)
+			helpers.RespondWithError(w, helpers.WrapError(err), "Failed to retrieve 'device_access_mode' from application settings (LoRa).", http.StatusInternalServerError)
 			return
 		}
 
@@ -186,7 +186,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	// Generate a new UUID for the RawDataLog entry
 	rawUUID, err := uuid.NewV7()
 	if err != nil {
-		helpers.RespondWithError(w, err, "Failed to generate UUID for RawDataLog entry.", http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), "Failed to generate UUID for RawDataLog entry (LoRa).", http.StatusInternalServerError)
 		return
 	}
 
@@ -203,7 +203,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	// Push the raw data log entry to Redis
 	err = cache.AppCache.RPush("logs:raw-data-logs", rawDataLog)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Failed to push raw data log to Redis.", http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), "Failed to push raw data log to Redis (LoRa).", http.StatusInternalServerError)
 		return
 	}
 
@@ -230,7 +230,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		helpers.RespondWithError(w, err, fmt.Sprintf("Failed to parse data from Lora_%.0f firmware", firmwareVersion*10), http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), fmt.Sprintf("Failed to parse data from Lora_%.0f firmware", firmwareVersion*10), http.StatusInternalServerError)
 		return
 	}
 
@@ -239,7 +239,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	// Check for errors in the update process.
 	if err != nil {
 		// Log the error with additional context for better troubleshooting.
-		helpers.LogError(err, "Failed to update device cache and broadcast changes")
+		helpers.LogError(helpers.WrapError(err), "Failed to update device cache and broadcast changes (LoRa)")
 	}
 
 	// Attempt to update device keepalive_at in cache and broadcast the changes.
@@ -248,7 +248,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	// Check for errors in the update process.
 	if err != nil {
 		// Log the error with additional context for better troubleshooting.
-		helpers.LogError(err, "Failed to update device keepalive_at in cache and broadcast changes")
+		helpers.LogError(helpers.WrapError(err), "Failed to update device keepalive_at in cache and broadcast changes (LoRa)")
 	}
 
 	// Attempt to update device settings_at in cache, check if device_settings should be updated and broadcast settings_at.
@@ -257,7 +257,7 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 	// Check for errors in the update process.
 	if err != nil {
 		// Log the error with additional context for better troubleshooting.
-		helpers.LogError(err, "Failed to update device settings_at in cache and broadcast it")
+		helpers.LogError(helpers.WrapError(err), "Failed to update device settings_at in cache and broadcast it (LoRa)")
 	}
 
 	// Push parsed parking data packages to Redis.
@@ -271,12 +271,12 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 
 		err := cache.AppCache.RPush("logs:activity-logs", i)
 		if err != nil {
-			helpers.LogError(err, "Failed to push parking package data log to Redis")
+			helpers.LogError(helpers.WrapError(err), "Failed to push parking package data log to Redis (LoRa)")
 		}
 
 		messageData, err := json.Marshal(i)
 		if err != nil {
-			helpers.LogError(err, "Failed to serialize parsedData to JSON")
+			helpers.LogError(helpers.WrapError(err), "Failed to serialize parsedData to JSON (LoRa)")
 			continue
 		}
 
@@ -293,12 +293,12 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 
 		err := cache.AppCache.RPush("logs:lora-keepalive-logs", i)
 		if err != nil {
-			helpers.LogError(err, "Failed to push keepalive package data log to Redis")
+			helpers.LogError(helpers.WrapError(err), "Failed to push keepalive package data log to Redis (LoRa)")
 		}
 
 		messageData, err := json.Marshal(i)
 		if err != nil {
-			helpers.LogError(err, "Failed to serialize parsedData to JSON")
+			helpers.LogError(helpers.WrapError(err), "Failed to serialize parsedData to JSON (LoRa)")
 			continue
 		}
 		mq.AppRabbitMQProducer.SendMessageToExchange("event_logs", string(messageData))
@@ -322,16 +322,24 @@ func (h *LoraHandler) UpChirpstack(w http.ResponseWriter, r *http.Request) {
 		// Push the package to Redis
 		err := cache.AppCache.RPush("logs:lora-setting-logs", i)
 		if err != nil {
-			helpers.LogError(err, "Failed to push setting package data log to Redis")
+			helpers.LogError(helpers.WrapError(err), "Failed to push setting package data log to Redis (LoRa)")
 		}
 
 		messageData, err := json.Marshal(i)
 		if err != nil {
-			helpers.LogError(err, "Failed to serialize parsedData to JSON")
+			helpers.LogError(helpers.WrapError(err), "Failed to serialize parsedData to JSON (LoRa)")
 			continue
 		}
 		mq.AppRabbitMQProducer.SendMessageToExchange("event_logs", string(messageData))
 	}
+
+	// After all the updates and checks, send a success response to the client.
+	response := map[string]interface{}{
+		"status":  "success",
+		"message": "Data processed successfully",
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // updateDeviceKeepaliveInCacheAndBroadcast updates the keepalive timestamp for a device in the cache and broadcasts changes.
@@ -362,7 +370,7 @@ func (h *LoraHandler) updateDeviceKeepaliveInCacheAndBroadcast(parsedData map[st
 	// Retrieve cached device data.
 	cachedDevice, err := cache.AppCache.GetDevice(deviceID)
 	if err != nil {
-		helpers.LogError(err, "Error retrieving device from cache")
+		helpers.LogError(helpers.WrapError(err), "Error retrieving device from cache")
 		return err
 	}
 
@@ -409,7 +417,7 @@ func (h *LoraHandler) updateDeviceKeepaliveInCacheAndBroadcast(parsedData map[st
 	// --- Update the device cache (e.g., parking:device:<id>)
 	err = cache.AppCache.UpdateKeepaliveAt(deviceID, keepaliveAt, happenedAt, settingsAt)
 	if err != nil {
-		helpers.LogError(err, "Failed to update device keepalive timestamp in cache")
+		helpers.LogError(helpers.WrapError(err), "Failed to update device keepalive timestamp in cache")
 		return err
 	}
 
@@ -422,7 +430,7 @@ func (h *LoraHandler) updateDeviceKeepaliveInCacheAndBroadcast(parsedData map[st
 	// Push the log entry to Redis for PostgreSQL update processing.
 	err = cache.AppCache.RPush("logs:device-keepalive-at", logPayload)
 	if err != nil {
-		helpers.LogError(err, "Failed to push keepalive update log to Redis")
+		helpers.LogError(helpers.WrapError(err), "Failed to push keepalive update log to Redis")
 	}
 
 	// Broadcast the update to clients using Socket.IO.
@@ -461,7 +469,7 @@ func (h *LoraHandler) updateDeviceSettingsInCacheAndBroadcast(parsedData map[str
 	// Retrieve cached device data.
 	cachedDevice, err := cache.AppCache.GetDevice(deviceID)
 	if err != nil {
-		helpers.LogError(err, "Error retrieving device from cache")
+		helpers.LogError(helpers.WrapError(err), "Error retrieving device from cache")
 		return false, err
 	}
 
@@ -509,7 +517,7 @@ func (h *LoraHandler) updateDeviceSettingsInCacheAndBroadcast(parsedData map[str
 	// --- Update the device cache (e.g., parking:device:<id>)
 	err = cache.AppCache.UpdateSettingsAt(deviceID, settingsAt, happenedAt, keepaliveAt)
 	if err != nil {
-		helpers.LogError(err, "Failed to update device settings timestamp in cache")
+		helpers.LogError(helpers.WrapError(err), "Failed to update device settings timestamp in cache")
 		return false, err
 	}
 
@@ -521,7 +529,7 @@ func (h *LoraHandler) updateDeviceSettingsInCacheAndBroadcast(parsedData map[str
 
 	err = cache.AppCache.RPush("logs:device-settings-at", logPayload)
 	if err != nil {
-		helpers.LogError(err, "Failed to push device settings_at to Redis")
+		helpers.LogError(helpers.WrapError(err), "Failed to push device settings_at to Redis")
 	}
 
 	// Broadcast the update to clients using Socket.IO.
@@ -557,7 +565,7 @@ func (h *LoraHandler) updateDeviceCacheAndBroadcast(parsedData map[string]any, d
 	// Retrieve cached device data
 	cachedDevice, err := cache.AppCache.GetDevice(deviceId)
 	if err != nil {
-		helpers.LogError(err, "Error retrieving device from cache")
+		helpers.LogError(helpers.WrapError(err), "Error retrieving device from cache")
 		return err
 	}
 
@@ -618,7 +626,7 @@ func (h *LoraHandler) processParkingEvent(
 	// --- Update the device cache (parking:device:<id>)
 	err := cache.AppCache.ProcessParkingEventData(deviceId, firmwareVersion, beacons, happenedAt, isOccupied)
 	if err != nil {
-		helpers.LogError(err, "Failed to update device cache")
+		helpers.LogError(helpers.WrapError(err), "Failed to update device cache")
 		return err
 	}
 
@@ -635,7 +643,7 @@ func (h *LoraHandler) processParkingEvent(
 	// Push the log entry to Redis for PostgreSQL update processing
 	err = cache.AppCache.RPush("logs:device-update", payload)
 	if err != nil {
-		helpers.LogError(err, "Failed to push to Redis logs:device-update")
+		helpers.LogError(helpers.WrapError(err), "Failed to push to Redis logs:device-update")
 		return err
 	}
 

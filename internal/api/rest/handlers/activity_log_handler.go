@@ -24,7 +24,7 @@ func (h *ActivityLogHandler) Get(w http.ResponseWriter, r *http.Request) {
 	toDateStr := r.URL.Query().Get("to_date")
 
 	// Validate device ID
-	if deviceID == "" {
+	if deviceID == "" || deviceID == "undefined" {
 		http.Error(w, "DeviceID cannot be empty", http.StatusBadRequest)
 		return
 	}
@@ -61,7 +61,7 @@ func (h *ActivityLogHandler) Get(w http.ResponseWriter, r *http.Request) {
 	// Fetch activity logs from storage
 	activityLogs, err := app.Models.ActivityLog.GetActivityLogs(deviceID, fromDate, toDate)
 	if err != nil {
-		helpers.RespondWithError(w, err, "Error fetching activity logs", http.StatusInternalServerError)
+		helpers.RespondWithError(w, helpers.WrapError(err), "Error fetching activity logs", http.StatusInternalServerError)
 		return
 	}
 
@@ -82,6 +82,7 @@ func (h *ActivityLogHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Encode and send the response
+	// w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(response)
 	if err != nil {

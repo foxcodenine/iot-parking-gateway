@@ -29,7 +29,7 @@ const props = defineProps({
         type: Object,
         default: {
             fromDate: new Date().setDate(new Date().getDate() + -3),
-            toDate: new Date().setDate(new Date().getDate() + 0)
+            toDate: new Date().getTime(),
         }
     },
 });
@@ -50,9 +50,10 @@ const columns = mapCurrent( {sm:2, md: 2, lg: 2 }, 1);
 const rows = mapCurrent( {xs:2, }, 1);
 
 watch(range, (val) => {
+
     const payload = {
-        fromDate: new Date().setDate(new Date(val.start).getDate() + 0),
-        toDate: new Date().setDate(new Date(val.end).getDate() + 0),
+        fromDate: new Date(val.start).getTime(),
+        toDate: new Date(val.end).getTime(),
     }
     emit("emitDateRange", payload);    
 }, {
