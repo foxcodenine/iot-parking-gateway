@@ -67,7 +67,7 @@
 
 <script setup>
 import { useAppStore } from '@/stores/appStore';
-import { formatToLocalDateTime, timeElapsed } from '@/utils/utils';
+import { formatToLocalDateTime, timeElapsed } from '@/utils/dateTimeUtils';
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { InfoWindow } from 'vue3-google-map';

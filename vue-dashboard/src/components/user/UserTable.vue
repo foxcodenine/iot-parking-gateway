@@ -91,7 +91,8 @@
 
 <script setup>
 import { useUserStore } from '@/stores/userStore';
-import { formatDateUtil, getAccessLevelDescriptionUtil } from '@/utils/utils';
+import { getAccessLevelDescriptionUtil } from '@/utils/utils';
+import { formatDateUtil } from '@/utils/dateTimeUtils';
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';

@@ -50,6 +50,7 @@ func Routes() http.Handler {
 		r.Mount("/sigfox", SigfoxRoutes())
 		r.Mount("/lora", LoraRoutes())
 		r.Mount("/activity-logs", ActivityLogRouter())
+		r.Mount("/keepalive-logs", KeepaliveLogRouter())
 	})
 
 	// Serve all static files under the dist directory

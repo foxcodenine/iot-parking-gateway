@@ -133,7 +133,7 @@
 <script setup>
 import { useDeviceStore } from '@/stores/deviceStore';
 import { useMapStore } from '@/stores/mapStore';
-import { formatToLocalDateTime, timeElapsed } from '@/utils/utils';
+import { formatToLocalDateTime, timeElapsed } from '@/utils/dateTimeUtils';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { Calendar, DatePicker } from 'v-calendar';

@@ -97,3 +97,20 @@ https://vcalendar.io/
 import VCalendar from 'v-calendar';
 import 'v-calendar/style.css';
 
+
+<!-- --------------------------------------------------------------- -->
+
+
+## vuejs-paginate-next
+
+    $ npm i vuejs-paginate-next
+
+https://www.npmjs.com/package/vuejs-paginate-next
+
+
+
+## vue-chartjs
+
+https://vue-chartjs.org/
+
+    $ npm i vue-chartjs chart.js

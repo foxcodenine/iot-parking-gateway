@@ -2,125 +2,33 @@
     <div>
         <form>
             <AssetDateSelector></AssetDateSelector>
-            <button class="bbtn bbtn--sky mt-12" @click.prevent="fetchActivityLogs">Retrieve Activity Logs</button>
+            <button class="bbtn bbtn--blue mt-12" @click.prevent="fetchActivityLogs">Retrieve Activity Logs</button>
         </form>
 
-        <div class="ttable__container">
-            <table class="ttable  mt-8" @click="clearMessage">
+        <paginate v-model="currentPage" :page-count="pageCount" :click-handler="handlePageClick" :prev-text="'Prev'" :next-text="'Next'"
+            :container-class="'pagination mt-10'" />
 
+            <div class="ttable__container" v-if="dataLogs.length > 0">
+            <table class="ttable  mt-8" @click="clearMessage">
                 <thead>
                     <tr>
-                        <th>
-                            <span class="cursor-pointer" @click="sortTable('id')">
-                                #
+                        <th v-for="colname in Object.keys(dataLogs[0])" @click="sortTable(colname)">
+                            <span class="cursor-pointer">
+                                {{ prettifyString(colname) }}
                             </span>
-                            <svg class="t-sort-arrow" :class="sortArrow('id')">
-                                <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
-                            </svg>
-                        </th>
-
-                        <th>
-                            <span class="cursor-pointer" @click="sortTable('device_id')">
-                                Device ID
-                            </span>
-                            <svg class="t-sort-arrow" :class="sortArrow('device_id')">
-                                <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
-                            </svg>
-                        </th>
-
-                        <th>
-                            <span class="cursor-pointer" @click="sortTable('is_occupied')">
-                                Is Occupied
-                            </span>
-                            <svg class="t-sort-arrow" :class="sortArrow('is_occupied')">
-                                <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
-                            </svg>
-                        </th>
-
-                        <th>
-                            <span class="cursor-pointer" @click="sortTable('happened_at')">
-                                Happened At
-                            </span>
-                            <svg class="t-sort-arrow" :class="sortArrow('happened_at')">
-                                <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
-                            </svg>
-                        </th>
-
-                        <th>
-                            <span class="cursor-pointer" @click="sortTable('firmware_version')">
-                                Firmware Version
-                            </span>
-                            <svg class="t-sort-arrow" :class="sortArrow('firmware_version')">
-                                <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
-                            </svg>
-                        </th>
-
-                        <th>
-                            <span class="cursor-pointer" @click="sortTable('magnet_abs_total')">
-                                Magnet ABS Total
-                            </span>
-                            <svg class="t-sort-arrow" :class="sortArrow('magnet_abs_total')">
-                                <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
-                            </svg>
-                        </th>
-
-                        <th>
-                            <span class="cursor-pointer" @click="sortTable('peak_distance_cm')">
-                                Peak Distance (cm)
-                            </span>
-                            <svg class="t-sort-arrow" :class="sortArrow('peak_distance_cm')">
-                                <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
-                            </svg>
-                        </th>
-
-                        <th>
-                            <span class="cursor-pointer" @click="sortTable('radar_cumulative')">
-                                Radar Cumulative
-                            </span>
-                            <svg class="t-sort-arrow" :class="sortArrow('radar_cumulative')">
-                                <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
-                            </svg>
-                        </th>
-
-                        <th>
-                            <span class="cursor-pointer" @click="sortTable('beacons_amount')">
-                                Beacons Qty
-                            </span>
-                            <svg class="t-sort-arrow" :class="sortArrow('beacons_amount')">
-                                <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
-                            </svg>
-                        </th>
-
-                        <th>
-                            <span class="cursor-pointer" >
-                                Beacons
-                            </span>
-                            <svg class="t-sort-arrow" :class="sortArrow('beacons')">
+                            &nbsp;
+                            <svg class="t-sort-arrow" :class="sortArrow(colname)">
                                 <use xlink:href="@/assets/svg/sprite.svg#triangle-1"></use>
                             </svg>
                         </th>
                     </tr>
                 </thead>
-
-
                 <tbody>
-                    <tr v-for="dataLog in returnDataLogs" :key="dataLog.id">
-                        <td>{{ dataLog.id }}</td> 
-                        <td>{{ dataLog.device_id }}</td> 
-                        <td>{{ dataLog.is_occupied ? 'Occupied' : 'Vacant' }}</td>                      
-                        <td>{{ new Date(dataLog.happened_at).toLocaleString() }}</td>                       
-                        <td>{{ dataLog.firmware_version }}</td> 
-                        <td>{{ dataLog.magnet_abs_total }}</td> 
-                        <td>{{ dataLog.peak_distance_cm }} cm</td> 
-                        <td>{{ dataLog.radar_cumulative }}</td> 
-                        <td>{{ dataLog.beacons_amount }}</td> 
-                        <td>{{ dataLog.beacons }}</td> 
+                    <tr v-for="keepaliveLog in returnDataLogs" :key="keepaliveLog.id">
+                        <td v-for="recordValue in Object.values(keepaliveLog)">{{ recordValue }}</td>
                     </tr>
                 </tbody>
-
-
             </table>
-
         </div>
 
     </div>
@@ -134,6 +42,13 @@ import { useMessageStore } from '@/stores/messageStore';
 
 import AssetDateSelector from '../AssetDateSelector.vue';
 import { computed, ref } from 'vue';
+import { formatToLocalDateTime } from '@/utils/dateTimeUtils';
+import Paginate from 'vuejs-paginate-next';
+
+
+// Pagination settings
+const perPage = 20;
+const currentPage = ref(1);
 
 // ---------------------------------------------------------------------
 
@@ -150,12 +65,31 @@ const dataLogs = ref([]);
 
 // - Computed ----------------------------------------------------------
 
+
+
+// Compute total pages using the length of the data logs array
+const pageCount = computed(() => Math.ceil(dataLogs.value.length / perPage));
+
+// Compute the items for the current page
+const paginatedItems = computed(() => {
+    const start = (currentPage.value - 1) * perPage;
+    return dataLogs.value.slice(start, start + perPage);
+});
+
 const returnDataLogs = computed(() => {
 
-    let list =  [...dataLogs.value];
+    let list = [...paginatedItems.value];
+
+
+    list.forEach(log => {
+        log.happened_at = formatToLocalDateTime(log.happened_at);
+        delete log.created_at;
+        delete log.raw_id;
+    });
 
     list.sort((a, b) => {
         let modifier = sortDesc.value ? -1 : 1;
+
 
         if (a[sortBy.value] < b[sortBy.value]) return -1 * modifier;
         if (a[sortBy.value] > b[sortBy.value]) return 1 * modifier;
@@ -163,10 +97,17 @@ const returnDataLogs = computed(() => {
         return 0;
 
     })
+
     return list;
-})
+});
+
 
 // -- Methods ----------------------------------------------------------
+
+// Handle page click event
+function handlePageClick(page) {
+    currentPage.value = page;
+}
 
 async function fetchActivityLogs() {
     // Ensure a device is selected before proceeding
@@ -209,6 +150,13 @@ function sortArrow(col) {
     }
 }
 
+function prettifyString(str) {
+  return str
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 // ---------------------------------------------------------------------
 
 </script>
@@ -216,4 +164,56 @@ function sortArrow(col) {
 <!-- --------------------------------------------------------------- -->
 
 <style lang="scss" scoped>
-// </style>
+// @import "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css";
+
+::v-deep .pagination {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    gap: 0.5rem;
+
+    font-family: $font-action;
+
+    .page-item {
+        .page-link {
+            display: block;
+            padding: 0.3rem 0.5rem;
+            min-width: 2rem;
+            display: flex;
+            justify-content: center;
+            border: 1px solid $col-gray-300;
+            background-color: $col-white;
+            color: $col-gray-700;
+            text-decoration: none;
+            border-radius: 0.375rem;
+            transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, color 0.15s ease-in-out;
+            cursor: pointer;
+        }
+
+        &:hover:not(.active):not(.disabled) .page-link {
+            background-color: $col-gray-100;
+            border-color: $col-gray-400;
+            color: $col-gray-800;
+        }
+
+        &.disabled .page-link {
+            cursor: not-allowed;
+            opacity: 0.6;
+            pointer-events: none;
+            background-color: $col-gray-50;
+            border-color: $col-gray-200;
+        }
+
+        &.active .page-link {
+            z-index: 3;
+            background-color: $col-zinc-200;
+            border-color: $col-zinc-700;
+            //   color: $col-white;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+        }
+    }
+}
+
+
+
+</style>

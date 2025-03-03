@@ -14,9 +14,10 @@
 <!-- --------------------------------------------------------------- -->
 
 <script setup>
+import { formatToLocalDateTime } from '@/utils/dateTimeUtils';
 import { computed, onMounted } from 'vue';
 import { GoogleMap, Marker, CustomMarker } from 'vue3-google-map';
-import { formatToLocalDateTime, timeElapsed } from '@/utils/utils';
+
 
 // - Props -------------------------------------------------------------
 

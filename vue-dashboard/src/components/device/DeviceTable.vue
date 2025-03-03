@@ -250,7 +250,7 @@ import 'floating-vue/dist/style.css';
 
 import { onMounted, ref, reactive, watch, computed } from 'vue';
 import { useAppStore } from '@/stores/appStore';
-import { formatDateUtil } from '@/utils/utils';
+import { formatDateUtil } from '@/utils/dateTimeUtils';
 
 import LocationModal from '../commen/LocationModal.vue';
 import { useRouter } from 'vue-router';

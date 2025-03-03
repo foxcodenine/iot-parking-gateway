@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	up "github.com/upper/db/v4"
+
 	"github.com/foxcodenine/iot-parking-gateway/internal/helpers"
 	"github.com/google/uuid"
 )
@@ -130,4 +132,42 @@ func (s *SigfoxKeepaliveLog) BulkInsert(keepaliveLogs []SigfoxKeepaliveLog) erro
 	}
 
 	return nil
+}
+
+func (l *SigfoxKeepaliveLog) GetActivityLogs(deviceID string, fromDate, toDate int64) ([]*SigfoxKeepaliveLog, error) {
+	// Validate inputs
+	if deviceID == "" {
+		return nil, helpers.WrapError(fmt.Errorf("device_id cannot be empty"))
+	}
+	if fromDate <= 0 || toDate <= 0 {
+		return nil, helpers.WrapError(fmt.Errorf("invalid timestamps: both fromDate and toDate must be greater than zero"))
+	}
+	if fromDate > toDate {
+		return nil, helpers.WrapError(fmt.Errorf("fromDate cannot be greater than toDate"))
+	}
+
+	// Convert timestamps to time.Time
+	fromTime := time.Unix(fromDate, 0).UTC()
+	toTime := time.Unix(toDate, 0).UTC()
+
+	// Get the collection
+	collection := dbSession.Collection(l.TableName())
+
+	// Query the database for logs in the time range
+	var logs []*SigfoxKeepaliveLog
+
+	err := collection.
+		Find("device_id = ? AND happened_at BETWEEN ? AND ?", deviceID, fromTime, toTime).
+		OrderBy("happened_at ASC").
+		All(&logs)
+
+		// Handle query errors
+	if err != nil {
+		if err == up.ErrNoMoreRows {
+			return nil, nil // No logs found
+		}
+		return nil, helpers.WrapError(fmt.Errorf("failed to fetch activity logs: %w", err))
+	}
+
+	return logs, nil
 }
