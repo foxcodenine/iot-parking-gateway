@@ -5,6 +5,7 @@
             <TheFlashMessage ></TheFlashMessage>  
             
             <TheTabs
+                class="mt-16"
                 :tabsObjectData="tabsObjectData_1"
                 :isDisabled="false"
                 :layoutBreakpoint="500"

@@ -1,5 +1,5 @@
 <template>
-    <div ref="theTabs" class="tabs-mb mt-16" :class="{ 'tabs-dt': isDesktop }">
+    <div ref="theTabs" class="tabs-mb" :class="{ 'tabs-dt': isDesktop }">
         <div v-for="(value, key) in props.tabsObjectData.tabs" :key="key" @click="emitActiveTab(key)"
         class="tabs-mb__item" :class="{
             'tabs-dt__item': isDesktop,

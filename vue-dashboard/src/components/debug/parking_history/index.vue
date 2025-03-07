@@ -5,6 +5,8 @@
             <button class="bbtn bbtn--blue mt-12" @click.prevent="fetchActivityLogs">Retrieve Activity Logs</button>
         </form>
 
+        <!-- show here -->
+
         <paginate v-model="currentPage" :page-count="pageCount" :click-handler="handlePageClick" :prev-text="'Prev'" :next-text="'Next'"
             :container-class="'pagination mt-10'" />
 
@@ -166,7 +168,7 @@ function prettifyString(str) {
 <style lang="scss" scoped>
 // @import "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css";
 
-::v-deep .pagination {
+:deep(){.pagination {
     display: flex;
     justify-content: center;
     list-style: none;
@@ -212,7 +214,7 @@ function prettifyString(str) {
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
         }
     }
-}
+}}
 
 
 

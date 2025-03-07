@@ -6,6 +6,7 @@
 
 
             <TheTabs
+                class="mt-16"
                 :tabsObjectData="tabsObjectData_1"
                 :isDisabled="false"
                 :layoutBreakpoint="500"
@@ -26,7 +27,7 @@
 import TheTabs from '@/components/commen/TheTabs.vue'
 import TheFlashMessage from '@/components/commen/TheFlashMessage.vue';
 import ParkingHistory from '@/components/debug/parking_history/index.vue'
-import KeepaliveHistory from '@/components/debug/keepalive_history/index.vue'
+import KeepaliveHistory from '@/components/debug/keepalive_history/KeepaliveHistory.vue'
 import { markRaw, reactive } from 'vue';
 import { useDeviceStore } from '@/stores/deviceStore';
 
@@ -41,6 +42,8 @@ const componentMap = reactive({
     KeepaliveHistory: markRaw(KeepaliveHistory),
 
 });
+
+
 
 // Reactive state to manage tab data and the active tab identifier
 const tabsObjectData_1 = reactive({
